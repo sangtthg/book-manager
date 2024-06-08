@@ -31,7 +31,7 @@ module.exports.controller = (app, io, socket_list ) => {
                 }
             })
         } )
-    } )
+    } );
 
     app.post('/api/upload_image', (req, res) => {
         const form = new multiparty.Form();
@@ -120,8 +120,8 @@ module.exports.controller = (app, io, socket_list ) => {
                     "message": msg_success
                 })
             }
-        })
-    })
+        });
+    });
 }
 
 function saveImage(imageFile, savePath ) {
