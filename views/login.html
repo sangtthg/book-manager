@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="login.css" />
+  </head>
+  <body>
+    <div class="nen">
+      <div class="tieude">
+        <h1>Đăng Nhập</h1>
+        <p>Điền Thông Tin Của Bạn</p>
+      </div>
+
+      <form id="loginForm" action="/login" method="POST">
+        <div>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            required
+            placeholder="Nhập email"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-control"
+            placeholder="Mật khẩu"
+          />
+          <div class="input-group-append">
+            <span
+              class="input-group-text toggle-password"
+              onclick="togglePassword()"
+            >
+              👁️
+            </span>
+          </div>
+        </div>
+
+        <button type="submit">Đăng Nhập</button>
+      </form>
+    </div>
+  </body>
+  <script>
+    function togglePassword() {
+      var passwordField = document.getElementById("password");
+      var toggleButton = document.querySelector(".toggle-password");
+
+      if (passwordField.type === "password") {
+        passwordField.type = "text";
+        toggleButton.textContent = "👁️";
+      } else {
+        passwordField.type = "password";
+        toggleButton.textContent = "👁️";
+      }
+    }
+
+    document
+      .getElementById("loginForm")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
+        var username = document.getElementById("username").value;
+        var password = document.getElementById("password").value;
+
+        if (username === "sang" && password === "123") {
+          alert("Đăng nhập thành công");
+          // window.location.href = "/giao-dien-moi";
+        } else {
+          alert("Tên đăng nhập hoặc mật khẩu không đúng");
+        }
+      });
+  </script>
+</html>
