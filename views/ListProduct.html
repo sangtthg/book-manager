@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ListProduct</title>
+
+    <link rel="stylesheet" href="css/navbar.css" />
+    <link rel="stylesheet" href="css/table.css" />
+  </head>
+  <body>
+    <div id="navbar-lisProduct" class="navbar-container"></div>
+    <div class="main-content" id="content-lisProduct">
+      <h3 class="h3_table">Danh sách sản phẩm</h3>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Mã khách hàng</th>
+            <th scope="col">Ảnh</th>
+            <th scope="col">Tên khách hàng</th>
+            <th scope="col">Email</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Ngằy đăng ký</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">1</th>
+            <td>Mark</td>
+            <td>Otto</td>
+            <td>@mdo</td>
+            <td>Otto</td>
+            <td>@mdo</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      function loadPage(url) {
+        fetch(url)
+          .then((response) => response.text())
+          .then((data) => {
+            document.getElementById("content-lisProduct").innerHTML = data;
+          });
+      }
+
+      fetch("navbar.html")
+        .then((response) => response.text())
+        .then((data) => {
+          document.getElementById("navbar-lisProduct").innerHTML = data;
+        });
+    </script>
+  </body>
+</html>
