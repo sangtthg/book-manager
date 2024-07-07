@@ -3,13 +3,16 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-require("dotenv").config();
+
+// Xóa các dòng khai báo cors dư thừa ở đây
 const cors = require("cors");
 const fs = require("fs");
 const admin = require("firebase-admin");
 
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
+const adminRouter = require("./routes/admin");
+require("dotenv").config();
 
 const serverPort = process.env.PORT || 3002;
 
@@ -42,13 +45,13 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
 app.use(logger("dev"));
-app.use(logger("dev"));
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
+app.use("/admin", adminRouter);
 app.use("/users", usersRouter);
 
 const corsOptions = {
@@ -84,26 +87,26 @@ app.use(function (err, req, res, next) {
 
 module.exports = app;
 
-server.listen(serverPort);
+server.listen(serverPort, () => {
+  console.log("Server Start : " + serverPort);
+});
 
-console.log("Server Start : " + serverPort);
-
-Array.prototype.swap = (x, y) => {
+Array.prototype.swap = function (x, y) {
   const b = this[x];
   this[x] = this[y];
   this[y] = b;
   return this;
 };
 
-Array.prototype.insert = (index, item) => {
+Array.prototype.insert = function (index, item) {
   this.splice(index, 0, item);
 };
 
-Array.prototype.replace_null = (replace = '""') => {
-  return JSON.parse(JSON.stringify(this).replace(/mull/g, replace));
+Array.prototype.replace_null = function (replace = '""') {
+  return JSON.parse(JSON.stringify(this).replace(/null/g, replace));
 };
 
-String.prototype.replaceAll = (search, replacement) => {
+String.prototype.replaceAll = function (search, replacement) {
   const target = this;
   return target.replace(new RegExp(search, "g"), replacement);
 };
