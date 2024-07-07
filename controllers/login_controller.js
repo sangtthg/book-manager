@@ -25,7 +25,7 @@ module.exports.controller = (app, io, socket_list) => {
             return;
           }
 
-          if (result.length < 0) {
+          if (result.length < 1) {
             res.json({ status: "0", message: msg_invalidUser });
           }
           try {
@@ -57,7 +57,6 @@ module.exports.controller = (app, io, socket_list) => {
               message: msg_success,
             });
           } catch (error) {
-            console.log("error", error);
             return res.json({ status: "0", message: msg_fail });
           }
         }
@@ -138,19 +137,19 @@ module.exports.controller = (app, io, socket_list) => {
 
     helper.CheckParameterValid(res, reqObj, ["email", "password"], () => {
       db.query(
-        'SELECT * FROM `users` WHERE `email` = ? AND  `password` = ? AND `user_status` = "1" AND (`role` = "admin" OR `role` = "member")',
+        'SELECT * FROM `users` WHERE `email` = ? AND `user_status` = "1" AND (`role` = "admin" OR `role` = "member")',
         [reqObj.email, reqObj.password],
         async (err, result) => {
           if (err) {
             helper.ThrowHtmlError(err, res);
             return;
           }
-
-          if (result.length < 0) {
+          if (result.length < 1) {
             res.json({ status: "0", message: msg_invalidUser });
           }
           try {
             const user = result[0];
+            console.log("user", user);
             const compare = await comparePassword(
               reqObj.password,
               user.password
@@ -177,6 +176,7 @@ module.exports.controller = (app, io, socket_list) => {
               message: msg_success,
             });
           } catch (error) {
+            console.log("error", error);
             return res.json({ status: "0", message: msg_fail });
           }
         }
