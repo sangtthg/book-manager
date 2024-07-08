@@ -1,14 +1,18 @@
 const db_helpers = require("../helpers/db_helpers");
 
 // viết 1 hàm selectQuery trong file user.js để lấy thông tin user từ database
-module.exports.selectUser = async (uid) => {
+module.exports.selectUser = async (uid, selects) => {
   return new Promise((resolve, reject) => {
-    const query = `SELECT * FROM users WHERE user_id = '${uid}'`;
+    if (!selects || selects.length == 0) {
+      selects = "*";
+    } else {
+      selects = selects.join(",");
+    }
+    const query = `SELECT ${selects} FROM users WHERE user_id = '${uid}'`;
     db_helpers.query(query, (err, result) => {
       if (err) {
-        reject(null);
+        reject(err);
       }
-      if (result.length === 0) reject(null);
       resolve(result[0]);
     });
   });
