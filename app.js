@@ -3,7 +3,6 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-
 // Xóa các dòng khai báo cors dư thừa ở đây
 const cors = require("cors");
 const fs = require("fs");
@@ -53,6 +52,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/admin", adminRouter);
 app.use("/users", usersRouter);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const corsOptions = {
   origin: "http://localhost:4200",
