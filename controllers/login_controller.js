@@ -1,67 +1,65 @@
 const db = require("./../helpers/db_helpers");
 const helper = require("./../helpers/helpers");
-const multiparty = require("multiparty"); //npm i multiparty
-const fs = require("fs");
 const { sendOTPEmail, verifyOTP } = require("../helpers/email_helpers");
 const jwt = require("../Service/jwt");
 const { comparePassword, hashPassword } = require("../Service/bcrypt");
-const { log } = require("console");
-module.exports.controller = (app, io, socket_list) => {
-  const msg_success = "successfully";
-  const msg_fail = "fail";
-  const msg_invalidUser = "invalid username and password";
+const msg_success = "successfully";
+const msg_fail = "fail";
+const msg_invalidUser = "invalid username and password";
 
-  app.post("/api/login", (req, res) => {
-    helper.Dlog(req.body);
-    var reqObj = req.body;
+const login = async (req, res, isAdmin = true) => {
+  helper.Dlog(req.body);
+  var reqObj = req.body;
 
-    helper.CheckParameterValid(res, reqObj, ["email", "password"], () => {
-      db.query(
-        'SELECT * FROM `users` WHERE `email` = ? AND `user_status` = "1"',
-        [reqObj.email],
-        async (err, result) => {
-          if (err) {
-            helper.ThrowHtmlError(err, res);
-            return;
-          }
+  helper.CheckParameterValid(res, reqObj, ["email", "password"], () => {
+    const query = isAdmin
+      ? 'SELECT * FROM `users` WHERE `email` = ? AND `user_status` = "1" AND (`role` = "admin" OR `role` = "member")'
+      : 'SELECT * FROM `users` WHERE `email` = ? AND `user_status` = "1"';
+    db.query(query, [reqObj.email], async (err, result) => {
+      if (err) {
+        helper.ThrowHtmlError(err, res);
+        return;
+      }
 
-          if (result.length < 1) {
-            res.json({ status: "0", message: msg_invalidUser });
-          }
-          try {
-            const user = result[0];
-            const compare = await comparePassword(
-              reqObj.password,
-              user.password
-            );
-            console.log("compare", compare);
-            if (!compare) {
-              return res.json({ status: "0", message: msg_invalidUser });
-            }
-            const obj = {
-              user_id: user.user_id,
-              role: user.role,
-              created_at: Date.now(),
-            };
-            const token = jwt.sign(obj);
-            if (!token) {
-              return res.json({ status: "0", message: msg_fail });
-            }
-            delete user.password;
-            return res.json({
-              status: "1",
-              data: {
-                user: user,
-                token: token,
-              },
-              message: msg_success,
-            });
-          } catch (error) {
-            return res.json({ status: "0", message: msg_fail });
-          }
+      if (result.length < 1) {
+        res.json({ status: "0", message: msg_invalidUser });
+      }
+      try {
+        const user = result[0];
+        user.avatar = process.env.BASE_URL + user.avatar;
+        const compare = await comparePassword(reqObj.password, user.password);
+        console.log("compare", compare);
+        if (!compare) {
+          return res.json({ status: "0", message: msg_invalidUser });
         }
-      );
+        const obj = {
+          user_id: user.user_id,
+          role: user.role,
+          created_at: Date.now(),
+        };
+        const token = jwt.sign(obj);
+        if (!token) {
+          return res.json({ status: "0", message: msg_fail });
+        }
+        delete user.password;
+        return res.json({
+          status: "1",
+          data: {
+            user: user,
+            token: token,
+          },
+          message: msg_success,
+        });
+      } catch (error) {
+        return res.json({ status: "0", message: msg_fail });
+      }
     });
+  });
+};
+
+module.exports.controller = (app, io, socket_list) => {
+  app.post("/api/login", (req, res) => {
+    login(req, res, false);
   });
 
   //SEND OTP
@@ -132,55 +130,6 @@ module.exports.controller = (app, io, socket_list) => {
 
   //ADMIN
   app.post("/api/admin/login", (req, res) => {
-    helper.Dlog(req.body);
-    var reqObj = req.body;
-
-    helper.CheckParameterValid(res, reqObj, ["email", "password"], () => {
-      db.query(
-        'SELECT * FROM `users` WHERE `email` = ? AND `user_status` = "1" AND (`role` = "admin" OR `role` = "member")',
-        [reqObj.email, reqObj.password],
-        async (err, result) => {
-          if (err) {
-            helper.ThrowHtmlError(err, res);
-            return;
-          }
-          if (result.length < 1) {
-            res.json({ status: "0", message: msg_invalidUser });
-          }
-          try {
-            const user = result[0];
-            console.log("user", user);
-            const compare = await comparePassword(
-              reqObj.password,
-              user.password
-            );
-            if (!compare) {
-              return res.json({ status: "0", message: msg_invalidUser });
-            }
-            const obj = {
-              user_id: user.user_id,
-              role: user.role,
-              created_at: Date.now(),
-            };
-            const token = jwt.sign(obj);
-            if (!token) {
-              return res.json({ status: "0", message: msg_fail });
-            }
-            delete user.password;
-            return res.json({
-              status: "1",
-              data: {
-                user: user,
-                token: token,
-              },
-              message: msg_success,
-            });
-          } catch (error) {
-            console.log("error", error);
-            return res.json({ status: "0", message: msg_fail });
-          }
-        }
-      );
-    });
+    login(req, res, true);
   });
 };
