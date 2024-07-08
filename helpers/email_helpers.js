@@ -8,15 +8,21 @@ const generateRandomOTP = async () => {
 };
 
 const saveOTPToDB = async (email, otp) => {
-  const query = `INSERT INTO otps (email, otp) VALUES ('${email}', '${otp}')`;
-  return new Promise((resolve, reject) =>
+  return new Promise((resolve, reject) => {
+    const query = `INSERT INTO otps (email, otp) VALUES ('${email}', '${otp}')`;
     db.query(query, (err, result) => {
       if (err) {
-        reject(err);
+        reject(new Error(`Lỗi khi lưu OTP vào DB: ${err}`));
       }
-      resolve(result);
-    })
-  );
+      const selectQuery = `SELECT * FROM otps WHERE id = ${result.insertId}`;
+      db.query(selectQuery, (selectErr, selectResult) => {
+        if (selectErr) {
+          reject(new Error(`Lỗi khi lấy OTP từ DB: ${selectErr}`));
+        }
+        resolve(selectResult);
+      });
+    });
+  });
 };
 
 class EmailHelper {
@@ -42,8 +48,9 @@ class EmailHelper {
         throw new Error(`Lỗi khi gửi mã xác nhận Email: ${error}`);
       }
     });
-    await saveOTPToDB(email, otp);
-    return true;
+    const db_otp = await saveOTPToDB(email, otp);
+    console.log("db_otp", db_otp);
+    return db_otp;
   }
 
   static async verifyOTP(id, email, otp) {
