@@ -36,14 +36,14 @@ module.exports.controller = (app, io, socket_list) => {
       if (user.role === "user") {
         return res.json({
           status: "0",
-          message: "You are not authorized to perform this action",
+          message: "Bạn không có quyền thực hiện hành động này",
         });
       }
 
       if (!req.body.name || req.body.name === "") {
         return res.json({
           status: "0",
-          message: "Category name is required",
+          message: "Category name không được để trống",
         });
       }
       const checkName = await checkUniqueName(req.body.name);
@@ -81,14 +81,14 @@ module.exports.controller = (app, io, socket_list) => {
         if (user.role === "user") {
           return res.json({
             status: "0",
-            message: "You are not authorized to perform this action",
+            message: "Bạn không có quyền thực hiện hành động này",
           });
         }
 
         if (!req.body.name || req.body.name === "") {
           return res.json({
             status: "0",
-            message: "Category name is required",
+            message: "Category name không được để trống",
           });
         }
         const checkName = await checkUniqueName(req.body.name);
