@@ -68,8 +68,8 @@ module.exports.controller = (app, io, socket_list) => {
     const reqObj = req.body;
     helper.CheckParameterValid(res, reqObj, ["email"], async () => {
       try {
-        await sendOTPEmail(reqObj.email);
-        res.json({ status: "1", message: msg_success });
+        const db_otp = await sendOTPEmail(reqObj.email);
+        res.json({ status: "1", message: msg_success, data: db_otp });
       } catch (error) {
         res.json({ status: "0", message: msg_fail });
       }
@@ -82,7 +82,14 @@ module.exports.controller = (app, io, socket_list) => {
     helper.CheckParameterValid(
       res,
       reqObj,
-      ["email", "password", "re_password", "verify", "username"],
+      [
+        "email",
+        "password",
+        "re_password",
+        "verify.otp_id",
+        "verify.otp",
+        "username",
+      ],
       async () => {
         const { username, email, password, re_password, verify } = reqObj;
         const { otp_id, otp } = verify;
