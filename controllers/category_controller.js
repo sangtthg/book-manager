@@ -117,4 +117,22 @@ module.exports.controller = (app, io, socket_list) => {
       }
     );
   });
+
+  //GET
+  app.get("/api/category/get", helper.authorization, (req, res) => {
+    const query = `SELECT * FROM categories`;
+    db.query(query, (err, result) => {
+      if (err) {
+        return res.json({
+          status: "0",
+          message: msg_fail,
+        });
+      }
+      return res.json({
+        status: "1",
+        message: msg_success,
+        data: result,
+      });
+    });
+  });
 };
