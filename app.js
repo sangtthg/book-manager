@@ -3,7 +3,6 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-// Xóa các dòng khai báo cors dư thừa ở đây
 const cors = require("cors");
 const fs = require("fs");
 const admin = require("firebase-admin");
@@ -65,7 +64,7 @@ admin.initializeApp({
 });
 
 fs.readdirSync("./controllers").forEach((file) => {
-  if (file.substr(-3) === ".js") {
+  if (file.slice(-3) === ".js") {
     const route = require("./controllers/" + file);
     if (typeof route.controller === "function") {
       route.controller(app, io, user_socket_connect_list);
