@@ -151,11 +151,11 @@
 
       loginForm.addEventListener("submit", function (event) {
         event.preventDefault();
-        window.location.href = "/admin/home";
-        x;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
 
         axios
-          .post("https://hagfish-measured-eft.ngrok-free.app/api/admin/login", {
+          .post("/api/admin/login", {
             email,
             password,
           })
@@ -163,6 +163,9 @@
             console.log(response.data);
             if (response.data.status === "1") {
               alert("Đăng nhập thành công!");
+
+              localStorage.setItem("token", response.data.data.token);
+
               window.location.href = "/admin/home";
             } else {
               alert("Login failed. Please check your credentials.");
@@ -185,6 +188,7 @@
               ? "text"
               : "password";
           passwordInput.setAttribute("type", type);
+          this.textContent = type === "password" ? "Show" : "Hide";
         });
     </script>
   </body>

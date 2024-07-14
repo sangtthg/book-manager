@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Danh sách thể loại</title>
+    <style>
+      table {
+        width: 80%;
+        margin: 20px auto;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      tr:hover {
+        background-color: #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('navbar.ejs') %>
+    <div style="margin-left: 275px">
+      <h3>Danh sách thể loại</h3>
+
+      <table id="category-table">
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Tên thể loại</th>
+            <th scope="col">Người tạo</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <script>
+      const token = localStorage.getItem("token");
+      fetch("/api/category/get", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => {
+          return response.json();
+        })
+        .then((response) => {
+          console.log("Data received:", response);
+          const tableBody = document.querySelector("#category-table tbody");
+          tableBody.innerHTML = "";
+
+          response.data.forEach((category) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${category.category_id}</td>
+                <td>${category.category_name}</td>
+                <td>${category.created_by}</td>
+              `;
+            tableBody.appendChild(row);
+          });
+        })
+        .catch((error) => console.error("Error fetching categories:", error));
+    </script>
+  </body>
+</html>

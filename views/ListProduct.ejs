@@ -4,15 +4,47 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ListProduct</title>
-
-    <link rel="stylesheet" href="css/navbar.css" />
-    <link rel="stylesheet" href="css/table.css" />
   </head>
+  <style>
+    .main {
+      margin-left: 275px;
+    }
+    .h3_table {
+      text-align: left;
+      margin-left: 10px;
+      margin-right: 25px;
+      color: #ff7622;
+    }
+    table {
+      width: 80%;
+      margin: 20px auto;
+      margin-left: 10px;
+      border-collapse: collapse;
+    }
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+      text-align: center;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #ddd;
+    }
+  </style>
   <body>
-    <div id="navbar-lisProduct" class="navbar-container"></div>
-    <div class="main-content" id="content-lisProduct">
+    <%- include('navbar.ejs') %>
+    <div class="main">
       <h3 class="h3_table">Danh sách sản phẩm</h3>
-
+      <div class="category">
+        <a class="nav-link" href="/admin/Catelogy ">Add category</a>
+      </div>
       <table class="table">
         <thead>
           <tr>
@@ -37,20 +69,6 @@
       </table>
     </div>
 
-    <script>
-      function loadPage(url) {
-        fetch(url)
-          .then((response) => response.text())
-          .then((data) => {
-            document.getElementById("content-lisProduct").innerHTML = data;
-          });
-      }
-
-      fetch("navbar.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("navbar-lisProduct").innerHTML = data;
-        });
-    </script>
+    <script></script>
   </body>
 </html>
