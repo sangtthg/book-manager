@@ -8,6 +8,7 @@ const msg_fail = "fail";
 const msg_invalidUser = "invalid username and password";
 
 const login = async (req, res, isAdmin = true) => {
+  console.log("cscscsc");
   helper.Dlog(req.body);
   var reqObj = req.body;
 

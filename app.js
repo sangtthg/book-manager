@@ -13,12 +13,13 @@ const adminRouter = require("./routes/admin");
 require("dotenv").config();
 
 const serverPort = process.env.PORT || 3002;
+const BASE_URL = process.env.BASE_URL;
 
 const app = express();
 const server = require("http").createServer(app);
 var io = require("socket.io")(server, {
   cors: {
-    origin: "http://localhost:4200",
+    origin: BASE_URL,
     methods: ["GET", "POST"],
   },
 });
@@ -54,7 +55,7 @@ app.use("/users", usersRouter);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const corsOptions = {
-  origin: "http://localhost:4200",
+  origin: BASE_URL,
 };
 
 app.use(cors(corsOptions));
