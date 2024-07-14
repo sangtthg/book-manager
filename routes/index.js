@@ -6,4 +6,14 @@ router.get("/", function (req, res, next) {
   res.sendFile(login);
 });
 
+router.post("/api/admin/login", function (req, res) {
+  const { email, password } = req.body;
+
+  if (email === "admin@gmail.com" && password === "password") {
+    req.session.user = { email };
+    res.json({ status: "1" });
+  } else {
+    res.json({ status: "0" });
+  }
+});
 module.exports = router;

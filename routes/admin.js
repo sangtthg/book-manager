@@ -1,8 +1,10 @@
 var express = require("express");
 var router = express.Router();
+var path = require("path");
+const home = path.join(__dirname, "../views/home.html");
 
-router.get("/", function (req, res, next) {
-  res.render("login", { title: "login" });
+router.get("/home", function (req, res, next) {
+  res.render(home, { title: "home" });
 });
 
 module.exports = router;
