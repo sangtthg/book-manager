@@ -16,6 +16,7 @@ const login = async (req, res, isAdmin = true) => {
       ? 'SELECT * FROM `users` WHERE `email` = ? AND `user_status` = "1" AND (`role` = "admin" OR `role` = "member")'
       : 'SELECT * FROM `users` WHERE `email` = ? AND `user_status` = "1"';
     db.query(query, [reqObj.email], async (err, result) => {
+      console.log("nscksdbkjvdskjvds");
       if (err) {
         helper.ThrowHtmlError(err, res);
         return;
