@@ -1,0 +1,10 @@
+{
+  "dbConfig": {
+    "host": "bv9satigypcmdsxb8udk-mysql.services.clever-cloud.com",
+    "user": "u4wxvop0ity2zbu5",
+    "password": "wVsFDHrYgyYWdc5cLx8N",
+    "database": "bv9satigypcmdsxb8udk",
+    "timezone": "+07:00",
+    "charset": "utf8mb4"
+  }
+}
