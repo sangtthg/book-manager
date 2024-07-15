@@ -51,19 +51,19 @@ module.exports.controller = (app, io, socket_list) => {
                 }
 
                 const [user, author, category] = await Promise.all([
-                  selectUser(req.userId),
+                  selectUser(req.auth.user_id),
                   Author.findOne({ where: { author_id: req.body.author_id } }),
                   Category.findOne({
                     where: { category_id: req.body.category_id },
                   }),
                 ]);
 
-                if (user === null || author === null || category === null) {
+                if (!user || !author || !category) {
                   return res.json({
                     status: "0",
-                    message: `${user === null ? "User" : ""}${
-                      author === null ? "Author" : ""
-                    }${category === null ? "Category" : ""} not found`,
+                    message: `${!user ? "User" : ""}${!author ? "Author" : ""}${
+                      !category ? "Category" : ""
+                    } not found`,
                   });
                 }
 
