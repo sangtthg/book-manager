@@ -25,19 +25,119 @@
       tr:hover {
         background-color: #ddd;
       }
+      .addcategory {
+        display: flex;
+      }
+      .dialog {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+
+      .dialog.active {
+        display: block;
+      }
+
+      .dialog-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 500;
+      }
+
+      .dialog-overlay.active {
+        display: block;
+      }
+
+      .dialog .form-group {
+        margin-bottom: 15px;
+      }
+
+      .dialog .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .dialog .form-group input {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+
+      .dialog .form-actions {
+        text-align: right;
+      }
+
+      .dialog .form-actions button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .dialog .form-actions button.cancel {
+        background-color: #6c757d;
+      }
     </style>
   </head>
   <body>
     <%- include('navbar.ejs') %>
     <div style="margin-left: 275px">
       <h3>Danh sách thể loại</h3>
+      <div class="addcategory">
+        <a class="nav-link" href="javascript:void(0)" onclick="openDialog()"
+          >Thêm thể loại</a
+        >
 
+        <div class="dialog-overlay" id="dialogOverlay"></div>
+        <div class="dialog" id="dialog">
+          <h3>Thêm thể loại</h3>
+          <div class="form-group">
+            <label for="categoryName">Tên thể loại</label>
+            <input type="text" id="categoryName" name="categoryName" />
+          </div>
+          <div class="form-actions">
+            <button type="button" onclick="saveCategory()">Lưu</button>
+            <button type="button" class="cancel" onclick="closeDialog()">
+              Hủy
+            </button>
+          </div>
+        </div>
+
+        <div class="dialog" id="editDialog">
+          <h3>Chỉnh sửa thể loại</h3>
+          <div class="form-group">
+            <label for="editCategoryName">Tên thể loại</label>
+            <input type="text" id="editCategoryName" name="categoryName" />
+          </div>
+          <div class="form-actions">
+            <button type="button" onclick="updateCategory()">Cập nhật</button>
+            <button type="button" class="cancel" onclick="closeEditDialog()">
+              Hủy
+            </button>
+          </div>
+        </div>
+      </div>
       <table id="category-table">
         <thead>
           <tr>
             <th scope="col">ID</th>
             <th scope="col">Tên thể loại</th>
             <th scope="col">Người tạo</th>
+            <th scope="col">Chức năng</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -46,30 +146,162 @@
 
     <script>
       const token = localStorage.getItem("token");
-      fetch("/api/category/get", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((response) => {
-          return response.json();
-        })
-        .then((response) => {
-          console.log("Data received:", response);
-          const tableBody = document.querySelector("#category-table tbody");
-          tableBody.innerHTML = "";
 
-          response.data.forEach((category) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${category.category_id}</td>
-                <td>${category.category_name}</td>
-                <td>${category.created_by}</td>
-              `;
-            tableBody.appendChild(row);
-          });
+      function fetchCategories() {
+        fetch("/api/category/get", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         })
-        .catch((error) => console.error("Error fetching categories:", error));
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              const tableBody = document.querySelector("#category-table tbody");
+              tableBody.innerHTML = "";
+
+              data.data.forEach((category) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                  <td>${category.category_id}</td>
+                  <td>${category.category_name}</td>
+                  <td>${category.created_by}</td>
+                  <td>
+                    <button onclick="openEditDialog(${category.category_id}, '${category.category_name}')">Sửa</button>
+                    <button onclick="deleteCategory(${category.category_id})">Xóa</button>
+                  </td>
+                `;
+                tableBody.appendChild(row);
+              });
+            } else {
+              alert(`Lấy danh sách thể loại thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => console.error("Error fetching categories:", error));
+      }
+
+      function openDialog() {
+        document.getElementById("dialog").classList.add("active");
+        document.getElementById("dialogOverlay").classList.add("active");
+      }
+
+      function closeDialog() {
+        document.getElementById("dialog").classList.remove("active");
+        document.getElementById("dialogOverlay").classList.remove("active");
+      }
+
+      function openEditDialog(categoryId, categoryName) {
+        editingCategoryId = categoryId;
+        console.log("ID của dữ liệu cần sửa:", categoryId);
+        console.log("Tên của dữ liệu cần sửa:", categoryName);
+        document.getElementById("editCategoryName").value = categoryName;
+        document.getElementById("editDialog").classList.add("active");
+        document.getElementById("dialogOverlay").classList.add("active");
+      }
+
+      function closeEditDialog() {
+        editingCategoryId = null;
+        document.getElementById("editDialog").classList.remove("active");
+        document.getElementById("dialogOverlay").classList.remove("active");
+        document.getElementById("editCategoryName").value = "";
+      }
+
+      function saveCategory() {
+        const categoryName = document.getElementById("categoryName").value;
+
+        if (!token) {
+          alert("Bạn cần đăng nhập để thêm thể loại.");
+          return;
+        }
+
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const createdBy = payload.user_id;
+
+        fetch("/api/category/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: categoryName,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              alert("Thêm thể loại thành công!");
+              closeDialog();
+              fetchCategories();
+            } else {
+              alert(`Thêm thể loại thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Có lỗi xảy ra.");
+          });
+      }
+
+      function updateCategory() {
+        const categoryName = document.getElementById("editCategoryName").value;
+
+        if (!token) {
+          alert("Bạn cần đăng nhập để chỉnh sửa thể loại.");
+          return;
+        }
+
+        fetch("/api/category/update", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: categoryName,
+            category_id: editingCategoryId,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              alert("Cập nhật thể loại thành công!");
+              closeEditDialog();
+              fetchCategories();
+            } else {
+              alert(`Cập nhật thể loại thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Có lỗi xảy ra.");
+          });
+      }
+
+      function deleteCategory(category_id) {
+        fetch(`/api/category/delete/${categoryId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              alert("Xóa thể loại thành công!");
+              fetchCategories();
+            } else {
+              alert(`Xóa thể loại thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Có lỗi xảy ra.");
+          });
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchCategories);
+
+      closeDialog();
     </script>
   </body>
 </html>

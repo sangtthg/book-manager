@@ -37,13 +37,17 @@
     tr:hover {
       background-color: #ddd;
     }
+    .addbook_category {
+      display: flex;
+    }
   </style>
   <body>
     <%- include('navbar.ejs') %>
     <div class="main">
       <h3 class="h3_table">Danh sách sản phẩm</h3>
-      <div class="category">
-        <a class="nav-link" href="/admin/Catelogy ">Add category</a>
+      <div class="addbook_category">
+        <a class="nav-link" href="/admin/Addbook ">Thêm sách</a>
+        <a class="nav-link" href="/admin/Catelogy ">Thể loại</a>
       </div>
       <table class="table">
         <thead>
@@ -53,7 +57,7 @@
             <th scope="col">Tên khách hàng</th>
             <th scope="col">Email</th>
             <th scope="col">Trạng thái</th>
-            <th scope="col">Ngằy đăng ký</th>
+            <th scope="col">Ngày đăng ký</th>
           </tr>
         </thead>
         <tbody>
