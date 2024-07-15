@@ -2,6 +2,7 @@ const moment = require("moment-timezone");
 const fs = require("fs");
 const { format } = require("path");
 const jwt = require("../Service/jwt");
+const path = require("path");
 const app_debug_mode = true;
 const timezone_name = "Asia/Ho_Chi_Minh";
 const msg_server_internal_error = "Server Internal Error";
@@ -64,6 +65,7 @@ module.exports = {
   CheckParameterValid: (res, jsonObj, checkKeys = [], callback) => {
     let isValid = true;
     let missingParameter = "";
+    console.log(res.body);
 
     const checkNestedKeys = (obj, keyPath) => {
       let currentObject = obj;
@@ -92,6 +94,44 @@ module.exports = {
     res.json({
       status: "0",
       message: "Missing parameter (" + missingParameter + ")",
+    });
+  },
+
+  // viết 1 hàm kiểm tra null
+  CheckParameterNull: (res, jsonObj, checkKeys = [], callback) => {
+    let isValid = true;
+    let missingParameter = "";
+
+    const checkNestedKeys = (obj, keyPath) => {
+      let currentObject = obj;
+      for (let i = 0; i < keyPath.length; i++) {
+        if (
+          !Object.prototype.hasOwnProperty.call(currentObject, keyPath[i]) ||
+          currentObject[keyPath[i]] === null
+        ) {
+          return false;
+        }
+        currentObject = currentObject[keyPath[i]];
+      }
+      return true;
+    };
+
+    checkKeys.forEach((key) => {
+      const keyPath = key.split(".");
+      if (!checkNestedKeys(jsonObj, keyPath)) {
+        isValid = false;
+        missingParameter += key + " ";
+      }
+    });
+
+    if (isValid) return callback();
+
+    if (!app_debug_mode) {
+      missingParameter = "";
+    }
+    res.json({
+      status: "0",
+      message: "Parameter (" + missingParameter + ") cannot be null",
     });
   },
 
@@ -174,6 +214,24 @@ module.exports = {
     // }
     req.auth = auth;
     next();
+  },
+
+  // viết 1 hàm upload file vào thư mục uploads
+  // sửa dụng fs và path để lưu file
+  // trả về tên file
+  uploadFile: async (file) => {
+    const fileName = file.originalname;
+    const arr = fileName.split(".");
+    const newFileName = arr[0] + "-" + Date.now() + "." + arr[1];
+    const filePath = path.join("uploads", newFileName);
+
+    try {
+      await fs.promises.writeFile(filePath, file.buffer);
+      return `uploads/${newFileName}`;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
   },
 };
 
