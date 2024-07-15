@@ -73,8 +73,6 @@ fs.readdirSync("./controllers").forEach((file) => {
   }
 });
 
-//
-
 app.use(function (req, res, next) {
   next(createError(404));
 });
