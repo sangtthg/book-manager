@@ -44,6 +44,13 @@ module.exports.controller = (app, io, socket_list) => {
             async () => {
               try {
                 const file = req.file;
+
+                if (!file) {
+                  return res.json({
+                    status: "0",
+                    message: "File not found",
+                  });
+                }
                 if (!file.mimetype.startsWith("image/")) {
                   return res.json({
                     status: "0",
@@ -260,4 +267,84 @@ module.exports.controller = (app, io, socket_list) => {
       });
     }
   );
+
+  // viết 1 api cho màn home trả về 2 danh sách:
+  // 1. sách mới xuất bản
+  // 2. sách bán chạy
+  app.get("/api/home", async (req, res) => {
+    try {
+      // where 12 tháng gần nhất
+
+      const newBooks = await Book.findAll({
+        where: { publication_year: new Date().getFullYear() },
+        order: [["created_at", "DESC"]],
+        limit: 10,
+      });
+
+      const bestSellerBooks = await Book.findAll({
+        order: [["purchase_count", "DESC"]],
+        limit: 10,
+      });
+
+      const newBooksData = await Promise.all(
+        newBooks.map(async (book) => {
+          const author = await Author.findOne({
+            where: { author_id: book.author_id },
+          });
+
+          return {
+            book_id: book.book_id,
+            title: book.title,
+            author_name: author.author_name,
+            description: book.description,
+            publication_year: book.publication_year,
+            book_avatar: book.book_avatar,
+            old_price: book.old_price,
+            new_price: book.new_price,
+            views_count: book.views_count,
+            purchase_count: book.purchase_count,
+            used_books: book.used_books,
+          };
+        })
+      );
+
+      const bestSellerBooksData = await Promise.all(
+        bestSellerBooks.map(async (book) => {
+          const author = await Author.findOne({
+            where: { author_id: book.author_id },
+          });
+
+          return {
+            book_id: book.book_id,
+            title: book.title,
+            author_name: author.author_name,
+            description: book.description,
+            publication_year: book.publication_year,
+            book_avatar: book.book_avatar,
+            old_price: book.old_price,
+            new_price: book.new_price,
+            views_count: book.views_count,
+            purchase_count: book.purchase_count,
+            used_books: book.used_books,
+          };
+        })
+      );
+
+      if (newBooks && bestSellerBooks) {
+        return res.json({
+          status: "1",
+          message: msg_success,
+          data: {
+            new_books: newBooksData,
+            best_seller_books: bestSellerBooksData,
+          },
+        });
+      }
+
+      return res.json({ status: "0", message: msg_fail });
+    } catch (error) {
+      console.log("/api/home error: ", error);
+      res.json({ status: "0", message: msg_fail });
+    }
+  });
 };
