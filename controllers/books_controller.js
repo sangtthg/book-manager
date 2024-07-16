@@ -5,6 +5,7 @@ const Book = require("../models/book_model");
 const Category = require("../models/category_model");
 const { selectUser } = require("../Service/user");
 const { uppercase } = require("../utilities/string/uppercase");
+const { uploadFileToCloud } = require("../helpers/upload_helpers");
 const msg_success = "successfully";
 const msg_fail = "fail";
 const upload = multer();
@@ -74,7 +75,8 @@ module.exports.controller = (app, io, socket_list) => {
                   });
                 }
 
-                const fileName = await helpers.uploadFile(file);
+                const url = await uploadFileToCloud(file);
+
                 const {
                   title,
                   author_id,
@@ -91,7 +93,7 @@ module.exports.controller = (app, io, socket_list) => {
                   category_id,
                   description: uppercase(description),
                   publication_year,
-                  book_avatar: fileName,
+                  book_avatar: url,
                   old_price,
                   new_price,
                 });
@@ -125,12 +127,10 @@ module.exports.controller = (app, io, socket_list) => {
 
       const bookData = await Promise.all(
         books.map(async (book) => {
-          const author = await Author.findOne({
-            where: { author_id: book.author_id },
-          });
-          const category = await Category.findOne({
-            where: { category_id: book.category_id },
-          });
+          const [author, category] = await Promise.all([
+            Author.findOne({ where: { author_id: book.author_id } }),
+            Category.findOne({ where: { category_id: book.category_id } }),
+          ]);
 
           return {
             book_id: book.book_id,
@@ -139,7 +139,7 @@ module.exports.controller = (app, io, socket_list) => {
             category_name: category.category_name,
             description: book.description,
             publication_year: book.publication_year,
-            book_avatar: `${process.env.BASE_URL}${book.book_avatar}`,
+            book_avatar: book.book_avatar,
             old_price: book.old_price,
             new_price: book.new_price,
             views_count: book.views_count,
@@ -166,4 +166,98 @@ module.exports.controller = (app, io, socket_list) => {
       res.json({ status: "0", message: msg_fail });
     }
   });
+
+  //Update book
+  app.post(
+    "/api/book/update",
+    helpers.authorization,
+    upload.single("book_avatar"),
+    async (req, res) => {
+      helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
+        helpers.CheckParameterNull(res, req.body, ["book_id"], async () => {
+          try {
+            const file = req.file;
+            const book = await Book.findOne({
+              where: { book_id: req.body.book_id },
+            });
+
+            if (!book) {
+              return res.json({
+                status: "0",
+                message: "Book not found",
+              });
+            }
+
+            const url = file ? await uploadFileToCloud(file) : book.book_avatar;
+
+            const {
+              title,
+              author_id,
+              category_id,
+              description,
+              publication_year,
+              old_price,
+              new_price,
+            } = req.body;
+
+            if (author_id !== null) {
+              const author = await Author.findOne({ where: { author_id } });
+              if (!author) {
+                return res.json({
+                  status: "0",
+                  message: "Author not found",
+                });
+              }
+            }
+
+            if (category_id !== null) {
+              const category = await Category.findOne({
+                where: { category_id },
+              });
+              if (!category) {
+                return res.json({
+                  status: "0",
+                  message: "Category not found",
+                });
+              }
+            }
+
+            const updateData = {
+              title: title !== null ? uppercase(title) : book.title,
+              author_id: author_id !== null ? author_id : book.author_id,
+              category_id:
+                category_id !== null ? category_id : book.category_id,
+              description:
+                description !== null
+                  ? uppercase(description)
+                  : book.description,
+              publication_year:
+                publication_year !== null
+                  ? publication_year
+                  : book.publication_year,
+              book_avatar: url,
+              old_price: old_price !== null ? old_price : book.old_price,
+              new_price: new_price !== null ? new_price : book.new_price,
+            };
+
+            const updatedBook = await Book.update(updateData, {
+              where: { book_id: req.body.book_id },
+            });
+
+            if (updatedBook) {
+              return res.json({
+                status: "1",
+                message: msg_success,
+              });
+            }
+
+            return res.json({ status: "0", message: msg_fail });
+          } catch (error) {
+            console.log("/api/book/update error: ", error);
+            res.json({ status: "0", message: msg_fail });
+          }
+        });
+      });
+    }
+  );
 };
