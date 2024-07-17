@@ -128,9 +128,13 @@ module.exports.controller = (app, io, socket_list) => {
 
   app.get("/api/book/get", helpers.authorization, async (req, res) => {
     try {
-      const { page = 1, pageSize = 10 } = req.body;
-      const offset = (page - 1) * pageSize;
-      const limit = parseInt(pageSize);
+      const page = req.body.page || 1;
+      const limit = req.body.limit || 10;
+      const { search = "", category_id } = req.body.query || {
+        search: "",
+        category_id: undefined,
+      };
+      const offset = (page - 1) * limit;
 
       const [results, metadata] = await sequelizeHelpers.query(
         `
@@ -153,6 +157,9 @@ INNER JOIN
     authors ON books.author_id = authors.author_id
 INNER JOIN 
     categories ON books.category_id = categories.category_id
+    WHERE books.title LIKE '%${search}%' ${
+          category_id ? `AND books.category_id = ${category_id}` : ""
+        }
 LIMIT ${limit} OFFSET ${offset}
         `
       );
@@ -273,8 +280,6 @@ LIMIT ${limit} OFFSET ${offset}
   // 2. sách bán chạy
   app.get("/api/home/get-list-book", async (req, res) => {
     try {
-      // where 12 tháng gần nhất
-
       const newBooks = await Book.findAll({
         where: { publication_year: new Date().getFullYear() },
         order: [["created_at", "DESC"]],
@@ -346,5 +351,56 @@ LIMIT ${limit} OFFSET ${offset}
       console.log("/api/home error: ", error);
       res.json({ status: "0", message: msg_fail });
     }
+  });
+
+  app.get("/api/book/get-detail", helpers.authorization, async (req, res) => {
+    helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
+      helpers.CheckParameterNull(res, req.body, ["book_id"], async () => {
+        try {
+          const book = await Book.findOne({
+            where: { book_id: req.body.book_id },
+          });
+
+          if (!book) {
+            return res.json({
+              status: "0",
+              message: "Book not found",
+            });
+          }
+
+          const author = await Author.findOne({
+            where: { author_id: book.author_id },
+          });
+
+          const category = await Category.findOne({
+            where: { category_id: book.category_id },
+          });
+
+          const data = {
+            book_id: book.book_id,
+            title: book.title,
+            author_name: author.author_name,
+            category_name: category.category_name,
+            description: book.description,
+            publication_year: book.publication_year,
+            book_avatar: book.book_avatar,
+            old_price: book.old_price,
+            new_price: book.new_price,
+            views_count: book.views_count,
+            purchase_count: book.purchase_count,
+            used_books: book.used_books,
+          };
+
+          return res.json({
+            status: "1",
+            message: msg_success,
+            data,
+          });
+        } catch (error) {
+          console.log("/api/book/get-detail error: ", error);
+          res.json({ status: "0", message: msg_fail });
+        }
+      });
+    });
   });
 };
