@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelizeHelpers = require("../helpers/sequelize_helpers");
+const { avatarDefault } = require("../constants/common");
 const User = sequelizeHelpers.define(
   "User",
   {
@@ -23,7 +24,7 @@ const User = sequelizeHelpers.define(
     },
     avatar: {
       type: DataTypes.STRING(255),
-      defaultValue: "uploads/default_avatar.png",
+      defaultValue: avatarDefault,
     },
     auth_token: {
       type: DataTypes.STRING(100),
@@ -41,10 +42,12 @@ const User = sequelizeHelpers.define(
     created_at: {
       type: DataTypes.DATE,
       allowNull: true,
+      defaultValue: DataTypes.NOW,
     },
     updated_at: {
       type: DataTypes.DATE,
       allowNull: true,
+      defaultValue: DataTypes.NOW,
     },
     role: {
       type: DataTypes.ENUM,
