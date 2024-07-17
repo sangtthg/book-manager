@@ -233,6 +233,16 @@ module.exports = {
       return null;
     }
   },
+
+  // viết 1 hàm check xem có phải là admin không
+  // nếu là admin thì next
+  // nếu không phải admin thì trả về lỗi
+  checkRole(req, res, next) {
+    if (req.auth.role !== "admin") {
+      return res.json({ status: "0", message: "Error" });
+    }
+    next();
+  },
 };
 
 function serverDateTime(format) {

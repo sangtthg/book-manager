@@ -6,6 +6,8 @@ const Category = require("../models/category_model");
 const { selectUser } = require("../Service/user");
 const { uppercase } = require("../utilities/string/uppercase");
 const { uploadFileToCloud } = require("../helpers/upload_helpers");
+const { Sequelize } = require("sequelize");
+const sequelizeHelpers = require("../helpers/sequelize_helpers");
 const msg_success = "successfully";
 const msg_fail = "fail";
 const upload = multer();
@@ -129,39 +131,37 @@ module.exports.controller = (app, io, socket_list) => {
       const offset = (page - 1) * pageSize;
       const limit = parseInt(pageSize);
 
-      const books = await Book.findAll({ offset, limit });
-
-      const bookData = await Promise.all(
-        books.map(async (book) => {
-          const [author, category] = await Promise.all([
-            Author.findOne({ where: { author_id: book.author_id } }),
-            Category.findOne({ where: { category_id: book.category_id } }),
-          ]);
-
-          return {
-            book_id: book.book_id,
-            title: book.title,
-            author_name: author.author_name,
-            category_name: category.category_name,
-            description: book.description,
-            publication_year: book.publication_year,
-            book_avatar: book.book_avatar,
-            old_price: book.old_price,
-            new_price: book.new_price,
-            views_count: book.views_count,
-            purchase_count: book.purchase_count,
-            used_books: book.used_books,
-          };
-        })
+      const [results, metadata] = await sequelizeHelpers.query(
+        `
+        SELECT 
+    books.book_id,
+    books.title,
+    authors.author_name,
+    categories.category_name,
+    books.description,
+    books.publication_year,
+    books.book_avatar,
+    books.old_price,
+    books.new_price,
+    books.views_count,
+    books.purchase_count,
+    books.used_books
+FROM 
+    books
+INNER JOIN 
+    authors ON books.author_id = authors.author_id
+INNER JOIN 
+    categories ON books.category_id = categories.category_id
+LIMIT ${limit} OFFSET ${offset}
+        `
       );
-
-      if (books) {
+      if (results) {
         return res.json({
           status: "1",
           message: msg_success,
           data: {
-            total: bookData.length,
-            data: bookData,
+            total: results.length,
+            data: results,
           },
         });
       }

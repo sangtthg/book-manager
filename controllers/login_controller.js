@@ -8,14 +8,13 @@ const msg_fail = "fail";
 const msg_invalidUser = "invalid username and password";
 
 const login = async (req, res, isAdmin = true) => {
-  console.log("cscscsc");
   helper.Dlog(req.body);
   var reqObj = req.body;
 
   helper.CheckParameterValid(res, reqObj, ["email", "password"], () => {
     const query = isAdmin
-      ? 'SELECT * FROM `users` WHERE `email` = ? AND `user_status` = "1" AND (`role` = "admin" OR `role` = "member")'
-      : 'SELECT * FROM `users` WHERE `email` = ? AND `user_status` = "1"';
+      ? "SELECT * FROM `users` WHERE `email` = 'sang@gmail.com' AND `user_status` = 1 AND (`role` = 'admin' OR `role` = 'member')"
+      : "SELECT * FROM `users` WHERE `email` = ? AND `user_status` = 1";
     db.query(query, [reqObj.email], async (err, result) => {
       if (err) {
         helper.ThrowHtmlError(err, res);
