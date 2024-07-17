@@ -40,39 +40,335 @@
     .addbook_category {
       display: flex;
     }
+    .dialog {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
+
+    .dialog.active {
+      display: block;
+    }
+
+    .dialog-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 500;
+    }
+
+    .dialog-overlay.active {
+      display: block;
+    }
+
+    .dialog .form-group {
+      margin-bottom: 15px;
+    }
+
+    .dialog .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .dialog .form-group input,
+    .dialog .form-group textarea,
+    .dialog .form-group select {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    .dialog .form-actions {
+      text-align: right;
+    }
+
+    .dialog .form-actions button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .dialog .form-actions button.cancel {
+      background-color: #6c757d;
+    }
   </style>
   <body>
     <%- include('navbar.ejs') %>
     <div class="main">
       <h3 class="h3_table">Danh sách sản phẩm</h3>
       <div class="addbook_category">
-        <a class="nav-link" href="/admin/Addbook ">Thêm sách</a>
+        <a class="nav-link" href="javascript:void(0)" onclick="openDialog()"
+          >Thêm sách</a
+        >
+        <a class="nav-link" href="/admin/Author ">Tác giả</a>
         <a class="nav-link" href="/admin/Catelogy ">Thể loại</a>
       </div>
-      <table class="table">
+      <table id="book-table">
         <thead>
           <tr>
-            <th scope="col">Mã khách hàng</th>
-            <th scope="col">Ảnh</th>
-            <th scope="col">Tên khách hàng</th>
-            <th scope="col">Email</th>
-            <th scope="col">Trạng thái</th>
-            <th scope="col">Ngày đăng ký</th>
+            <th>ID</th>
+            <th>Tiêu đề</th>
+            <th>Tác giả</th>
+            <th>Thể loại</th>
+            <th>Mô tả</th>
+            <th>Năm xuất bản</th>
+            <th>Ảnh bìa</th>
+            <th>Giá cũ</th>
+            <th>Giá mới</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr>
-        </tbody>
+        <tbody></tbody>
       </table>
+      <div class="addbook">
+        <div class="dialog-overlay" id="dialogOverlay"></div>
+        <div class="dialog" id="dialog">
+          <h3>Thêm sách</h3>
+          <div class="form-group">
+            <label for="bookTitle">Tiêu đề</label>
+            <input type="text" id="bookTitle" name="title" />
+          </div>
+          <div class="form-group">
+            <label for="authorSelect">Tác giả</label>
+            <select id="authorSelect" name="author_id"></select>
+          </div>
+          <div class="form-group">
+            <label for="categorySelect">Thể loại</label>
+            <select id="categorySelect" name="category_id"></select>
+          </div>
+          <div class="form-group">
+            <label for="description">Mô tả</label>
+            <textarea id="description" name="description"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="publicationYear">Năm xuất bản</label>
+            <input type="text" id="publicationYear" name="publication_year" />
+          </div>
+          <div class="form-group">
+            <label for="oldPrice">Giá cũ</label>
+            <input type="text" id="oldPrice" name="old_price" />
+          </div>
+          <div class="form-group">
+            <label for="newPrice">Giá mới</label>
+            <input type="text" id="newPrice" name="new_price" />
+          </div>
+          <div class="form-group">
+            <label for="bookAvatar">Ảnh bìa sách</label>
+            <input type="file" id="bookAvatar" name="book_avatar" />
+          </div>
+          <div class="form-actions">
+            <button type="button" onclick="saveBook()">Lưu</button>
+            <button type="button" class="cancel" onclick="closeDialog()">
+              Hủy
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script></script>
+    <script>
+      const token = localStorage.getItem("token");
+
+      function fetchBooks() {
+        fetch("/api/book/get", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data.status === "1") {
+              const tableBody = document.querySelector("#book-table tbody");
+              tableBody.innerHTML = "";
+
+              data.data.data.forEach((book) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+            <td>${book.book_id}</td>
+            <td>${book.title}</td>
+            <td>${book.author_name}</td>
+            <td>${book.category_name}</td>
+            <td>${book.description}</td>
+            <td>${book.publication_year}</td>
+            <td><img src="${book.book_avatar}" alt="${book.title}" width="50"></td>
+            <td>${book.old_price}</td>
+            <td>${book.new_price}</td>
+          `;
+                tableBody.appendChild(row);
+              });
+            } else {
+              alert(`Lấy danh sách sách thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching books:", error);
+            alert(`Có lỗi xảy ra khi lấy danh sách sách: ${error.message}`);
+          });
+      }
+
+      let page = 1;
+      const limit = 10;
+
+      function fetchAuthors() {
+        const token = localStorage.getItem("token");
+
+        function loadMoreAuthors() {
+          fetch(`/api/author/get?page=${page}&limit=${limit}`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "1") {
+                const authorSelect = document.getElementById("authorSelect");
+                data.data.rows.forEach((author) => {
+                  const option = document.createElement("option");
+                  option.value = author.author_id;
+                  option.textContent = author.author_name;
+                  authorSelect.appendChild(option);
+                });
+                page++;
+              } else {
+                alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
+              }
+            })
+            .catch((error) => console.error("Error fetching authors:", error));
+        }
+        window.addEventListener("scroll", () => {
+          if (
+            window.scrollY + window.innerHeight >=
+            document.body.scrollHeight
+          ) {
+            loadMoreAuthors();
+          }
+        });
+        loadMoreAuthors();
+      }
+
+      function fetchCategories() {
+        fetch("/api/category/get", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              const categorySelect = document.getElementById("categorySelect");
+              categorySelect.innerHTML = "";
+              data.data.forEach((category) => {
+                const option = document.createElement("option");
+                option.value = category.category_id;
+                option.textContent = category.category_name;
+                categorySelect.appendChild(option);
+              });
+            } else {
+              alert(`Lấy danh sách thể loại thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => console.error("Error fetching categories:", error));
+      }
+
+      // function openDialog() {
+      //   fetchAuthors();
+      //   fetchCategories();
+      //   document.getElementById("dialog").classList.add("active");
+      //   document.getElementById("dialogOverlay").classList.add("active");
+      // }
+      function openDialog() {
+        Promise.all([fetchAuthors(), fetchCategories()])
+          .then(() => {
+            document.getElementById("dialog").classList.add("active");
+            document.getElementById("dialogOverlay").classList.add("active");
+          })
+          .catch((error) => {
+            console.error("Error fetching data:", error);
+            alert("Có lỗi xảy ra khi tải dữ liệu.");
+          });
+      }
+
+      function closeDialog() {
+        document.getElementById("dialog").classList.remove("active");
+        document.getElementById("dialogOverlay").classList.remove("active");
+      }
+
+      function saveBook() {
+        const formData = new FormData();
+        formData.append("title", document.getElementById("bookTitle").value);
+        formData.append(
+          "author_id",
+          document.getElementById("authorSelect").value
+        );
+        formData.append(
+          "category_id",
+          document.getElementById("categorySelect").value
+        );
+        formData.append(
+          "description",
+          document.getElementById("description").value
+        );
+        formData.append(
+          "publication_year",
+          document.getElementById("publicationYear").value
+        );
+        formData.append("old_price", document.getElementById("oldPrice").value);
+        formData.append("new_price", document.getElementById("newPrice").value);
+        formData.append(
+          "book_avatar",
+          document.getElementById("bookAvatar").files[0]
+        );
+
+        fetch("/api/book/add", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              alert("Thêm sách thành công!");
+              closeDialog();
+              fetchBooks();
+            } else {
+              alert(`Thêm sách thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Có lỗi xảy ra.");
+          });
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchBooks);
+
+      closeDialog();
+    </script>
   </body>
 </html>

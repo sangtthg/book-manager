@@ -7,6 +7,7 @@ const home = path.join(__dirname, "../views/home.ejs");
 const ListProduct = path.join(__dirname, "../views/ListProduct.ejs");
 const Account = path.join(__dirname, "../views/Account.ejs");
 const Catelogy = path.join(__dirname, "../views/Catelogy.ejs");
+const Author = path.join(__dirname, "../views/Author.ejs");
 
 router.get("/home", function (req, res, next) {
   res.render(home);
@@ -23,7 +24,9 @@ router.get("/Account", function (req, res, next) {
 });
 
 router.get("/Catelogy", function (req, res, next) {
-  console.log("cabscacakjhbckajsbk");
   res.render(Catelogy);
+});
+router.get("/Author", function (req, res, next) {
+  res.render(Author);
 });
 module.exports = router;

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Danh sách tác giả</title>
+    <style>
+      table {
+        width: 80%;
+        margin: 20px auto;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      tr:hover {
+        background-color: #ddd;
+      }
+      .addcategory {
+        display: flex;
+      }
+      .dialog {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+      .dialog.active {
+        display: block;
+      }
+      .dialog-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 500;
+      }
+      .dialog-overlay.active {
+        display: block;
+      }
+      .dialog .form-group {
+        margin-bottom: 15px;
+      }
+      .dialog .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      .dialog .form-group input {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      .dialog .form-actions {
+        text-align: right;
+      }
+      .dialog .form-actions button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .dialog .form-actions button.cancel {
+        background-color: #6c757d;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('navbar.ejs') %>
+    <div style="margin-left: 275px">
+      <h3>Danh sách tác giả</h3>
+      <div class="addcategory">
+        <a class="nav-link" href="javascript:void(0)" onclick="openDialog()"
+          >Thêm tác giả</a
+        >
+
+        <div class="dialog-overlay" id="dialogOverlay"></div>
+        <div class="dialog" id="dialog">
+          <h3>Thêm tác giả</h3>
+          <div class="form-group">
+            <label for="authorName">Tên tác giả</label>
+            <input type="text" id="authorName" name="authorName" />
+          </div>
+          <div class="form-actions">
+            <button type="button" onclick="saveAuthor()">Lưu</button>
+            <button type="button" class="cancel" onclick="closeDialog()">
+              Hủy
+            </button>
+          </div>
+        </div>
+
+        <div class="dialog" id="editDialog">
+          <h3>Chỉnh sửa tác giả</h3>
+          <div class="form-group">
+            <label for="editAuthorName">Tên tác giả</label>
+            <input type="text" id="editAuthorName" name="authorName" />
+          </div>
+          <div class="form-actions">
+            <button type="button" onclick="updateAuthor()">Cập nhật</button>
+            <button type="button" class="cancel" onclick="closeEditDialog()">
+              Hủy
+            </button>
+          </div>
+        </div>
+      </div>
+      <table id="author-table">
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Tên tác giả</th>
+            <th scope="col">Người tạo</th>
+            <th scope="col">Chức năng</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <script>
+      const token = localStorage.getItem("token");
+
+      function fetchAuthors() {
+        fetch("/api/author/get", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              const tableBody = document.querySelector("#author-table tbody");
+              tableBody.innerHTML = "";
+
+              data.data.rows.forEach((author) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                <td>${author.author_id}</td>
+                <td>${author.author_name}</td>
+                <td>${author.created_by}</td>
+                <td>
+                  <button onclick="openEditDialog(${author.author_id}, '${author.author_name}')">Sửa</button>
+                  <button onclick="deleteAuthor(${author.author_id})">Xóa</button>
+                </td>
+              `;
+                tableBody.appendChild(row);
+              });
+            } else {
+              alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => console.error("Error fetching authors:", error));
+      }
+
+      function openDialog() {
+        document.getElementById("dialog").classList.add("active");
+        document.getElementById("dialogOverlay").classList.add("active");
+      }
+
+      function closeDialog() {
+        document.getElementById("dialog").classList.remove("active");
+        document.getElementById("dialogOverlay").classList.remove("active");
+      }
+
+      function openEditDialog(authorId, authorName) {
+        editingAuthorId = authorId;
+        console.log("ID của dữ liệu cần sửa:", authorId);
+        console.log("Tên của dữ liệu cần sửa:", authorName);
+        document.getElementById("editAuthorName").value = authorName;
+        document.getElementById("editDialog").classList.add("active");
+        document.getElementById("dialogOverlay").classList.add("active");
+      }
+
+      function closeEditDialog() {
+        editingAuthorId = null;
+        document.getElementById("editDialog").classList.remove("active");
+        document.getElementById("dialogOverlay").classList.remove("active");
+        document.getElementById("editAuthorName").value = "";
+      }
+
+      function saveAuthor() {
+        const authorName = document.getElementById("authorName").value;
+
+        if (!token) {
+          alert("Bạn cần đăng nhập để thêm tác giả.");
+          return;
+        }
+
+        fetch("/api/author/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: authorName,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              alert("Thêm tác giả thành công!");
+              closeDialog();
+              fetchAuthors();
+            } else {
+              alert(`Thêm tác giả thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Có lỗi xảy ra.");
+          });
+      }
+
+      function updateAuthor() {
+        const authorName = document.getElementById("editAuthorName").value;
+
+        if (!token) {
+          alert("Bạn cần đăng nhập để chỉnh sửa tác giả.");
+          return;
+        }
+
+        fetch("/api/author/update", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: authorName,
+            id: editingAuthorId,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              alert("Cập nhật tác giả thành công!");
+              closeEditDialog();
+              fetchAuthors();
+            } else {
+              alert(`Cập nhật tác giả thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Có lỗi xảy ra.");
+          });
+      }
+
+      function deleteAuthor(authorId) {
+        fetch(`/api/author/delete/${authorId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              alert("Xóa tác giả thành công!");
+              fetchAuthors();
+            } else {
+              alert(`Xóa tác giả thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Có lỗi xảy ra.");
+          });
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchAuthors);
+
+      closeDialog();
+    </script>
+  </body>
+</html>

@@ -83,7 +83,6 @@ module.exports.controller = (app, io, socket_list) => {
                 }
 
                 const url = await uploadFileToCloud(file);
-
                 const {
                   title,
                   author_id,

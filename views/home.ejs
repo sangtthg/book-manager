@@ -3,19 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trang chủ</title>
-
-    <style>
-      .main-content {
-        margin-left: 260px;
-        padding: 20px;
-      }
-    </style>
+    <title>Danh sách sách</title>
+    <style></style>
   </head>
   <body>
     <%- include('navbar.ejs') %>
+    <div style="margin-left: 275px">
+      <h3>Danh sách sách</h3>
+    </div>
 
-    <div style="margin-left: 275px">Trang chủ</div>
-    <script></script>
+    <script>
+      const token = localStorage.getItem("token");
+    </script>
   </body>
 </html>
