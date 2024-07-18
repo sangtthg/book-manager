@@ -20,6 +20,7 @@ module.exports.controller = (app, io, socket_list) => {
     helper.authorization,
     helper.checkRole,
     (req, res) => {
+
       const limit = req.body.limit || 10;
       const page = req.body.page || 1;
       const offset = (page - 1) * limit;
@@ -41,7 +42,43 @@ module.exports.controller = (app, io, socket_list) => {
         .catch((err) => {
           console.log("/api/users/get", err);
           res.json({ status: "0", message: msg_fail });
+      helper.CheckParameterValid(res, req.body, ["query.roles"], async () => {
+        helper.CheckParameterNull(res, req.body, ["query.roles"], async () => {
+          const limit = req.body.limit || 10;
+          const page = req.body.page || 1;
+          const offset = (page - 1) * limit;
+          const roles = req.body.query.roles;
+          const search = req.body.query.search || "";
+
+          const whereRoleObj = roles.length > 0 ? { role: roles } : {};
+          User.findAll({
+            attributes: { exclude: ["password"] },
+            where: {
+              user_id: {
+                [Op.ne]: req.auth.user_id,
+              },
+              ...whereRoleObj,
+              [Op.or]: {
+                email: {
+                  [Op.like]: `%${search}%`,
+                },
+                username: {
+                  [Op.like]: `%${search}%`,
+                },
+              },
+            },
+            limit: limit,
+            offset: offset,
+          })
+            .then((result) => {
+              res.json({ status: "1", message: msg_success, data: result });
+            })
+            .catch((err) => {
+              console.log("/api/users/get", err);
+              res.json({ status: "0", message: msg_fail });
+            });
         });
+      });
     }
   );
 
