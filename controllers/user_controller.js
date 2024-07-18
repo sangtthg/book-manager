@@ -44,6 +44,35 @@ module.exports.controller = (app, io, socket_list) => {
         });
     }
   );
+  app.get(
+    "/api/user/getadmin",
+    helper.authorization,
+    helper.checkRole,
+    (req, res) => {
+      const limit = req.body.limit || 10;
+      const page = req.body.page || 1;
+      const offset = (page - 1) * limit;
+      //lấy ra theo option trên nhưng trừ trường password và trừ chính user đó
+      User.findAll({
+        attributes: { exclude: ["password"] },
+        where: {
+          user_id: {
+            [Op.ne]: req.auth.user_id,
+          },
+          role: "admin",
+        },
+        limit: limit,
+        offset: offset,
+      })
+        .then((result) => {
+          res.json({ status: "1", message: msg_success, data: result });
+        })
+        .catch((err) => {
+          console.log("/api/users/get", err);
+          res.json({ status: "0", message: msg_fail });
+        });
+    }
+  );
   app.post(
     "/api/user/add",
     helper.authorization,

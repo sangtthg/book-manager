@@ -415,7 +415,7 @@ module.exports.controller = (app, io, socket_list) => {
     }
   });
 
-  app.get("/api/book/get-detail", helpers.authorization, async (req, res) => {
+  app.post("/api/book/get-detail", helpers.authorization, async (req, res) => {
     helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
       helpers.CheckParameterNull(res, req.body, ["book_id"], async () => {
         try {
@@ -452,7 +452,6 @@ module.exports.controller = (app, io, socket_list) => {
             purchase_count: book.purchase_count,
             used_books: book.used_books,
           };
-
           return res.json({
             status: "1",
             message: msg_success,
