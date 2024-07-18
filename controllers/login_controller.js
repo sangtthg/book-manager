@@ -117,7 +117,7 @@ module.exports.controller = (app, io, socket_list) => {
               return res.json({ status: "0", message: "Lỗi mã hóa mật khẩu" });
             }
             db.query(
-              'INSERT INTO `users` (`email`, `password`, `username`, `user_status`, `created_at`, `updated_at`) VALUES (?, ?, ?, "1", NOW(), NOW())',
+              "INSERT INTO `users` (`email`, `password`, `username`, `user_status`, `created_at`, `updated_at`) VALUES (?, ?, ?, 1, NOW(), NOW())",
               [reqObj.email, passwordCrypt, reqObj.username],
               (err, result) => {
                 if (err) {
