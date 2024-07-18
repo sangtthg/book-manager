@@ -1,5 +1,9 @@
 const helper = require("../helpers/helpers");
-const { sendOTPEmail, verifyOTP } = require("../helpers/email_helpers");
+const {
+  sendOTPEmail,
+  verifyOTP,
+  sendMail,
+} = require("../helpers/email_helpers");
 const jwt = require("../Service/jwt");
 const { comparePassword, hashPassword } = require("../Service/bcrypt");
 const { selectUser } = require("../Service/user");
@@ -69,12 +73,12 @@ module.exports.controller = (app, io, socket_list) => {
       helper.CheckParameterValid(
         res,
         req.body,
-        ["email", "password", "role", "username"],
+        ["email", "role", "username"],
         async () => {
           helper.CheckParameterNull(
             res,
             req.body,
-            ["email", "password", "role", "username"],
+            ["email", "role", "username"],
             async () => {
               try {
                 const user = await selectUser(req.auth.user_id);
@@ -107,8 +111,9 @@ module.exports.controller = (app, io, socket_list) => {
                 }
 
                 const avatar = await uploadFileToCloud(req.file);
-                const hash = await hashPassword(req.body.password);
-
+                const password = Math.random().toString(36).slice(-8);
+                sendMail(req.body.email, "Mật khẩu bạn là", password);
+                const hash = await hashPassword(password);
                 User.create({
                   email: req.body.email,
                   password: hash,

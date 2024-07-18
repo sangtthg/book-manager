@@ -26,6 +26,29 @@ const saveOTPToDB = async (email, otp) => {
 };
 
 class EmailHelper {
+  static sendMail = async (email, title, content) => {
+    if (!regexEmail(email)) throw new Error("Email không đúng định dạng");
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.USER_SEND_EMAIL,
+        pass: process.env.PASS_SEND_EMAIL,
+      },
+    });
+    let mailOptions = {
+      from: process.env.USER_SEND_EMAIL,
+      to: email,
+      subject: title,
+      text: content,
+    };
+    transporter.sendMail(mailOptions, async (error, info) => {
+      if (error) {
+        console.log(error);
+        throw new Error(`Lỗi khi gửi mã xác nhận Email: ${error}`);
+      }
+    });
+  };
+
   static async sendOTPEmail(email) {
     if (!regexEmail(email)) throw new Error("Email không đúng định dạng");
     const otp = await generateRandomOTP();
