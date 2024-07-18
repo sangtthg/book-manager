@@ -9,7 +9,7 @@ const Account = path.join(__dirname, "../views/Account.ejs");
 const Catelogy = path.join(__dirname, "../views/Catelogy.ejs");
 const Author = path.join(__dirname, "../views/Author.ejs");
 const User = path.join(__dirname, "../views/User.ejs");
-
+const Member = path.join(__dirname, "../views/Member.ejs");
 router.get("/home", function (req, res, next) {
   res.render(home);
 });
@@ -32,5 +32,8 @@ router.get("/Author", function (req, res, next) {
 });
 router.get("/User", function (req, res, next) {
   res.render(User);
+});
+router.get("/Member", function (req, res, next) {
+  res.render(Member);
 });
 module.exports = router;

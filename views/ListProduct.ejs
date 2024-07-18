@@ -120,8 +120,9 @@
       <table id="book-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Tiêu đề</th>
+            <th>STT</th>
+            <th>Mã Sách</th>
+            <th>Tên Sách</th>
             <th>Tác giả</th>
             <th>Thể loại</th>
             <th>Mô tả</th>
@@ -190,6 +191,8 @@
       let currentPage = 1;
       const itemsPerPage = 10;
       function fetchBooks() {
+        const limit = 10;
+        const offset = (page - 1) * limit;
         fetch("/api/book/get", {
           method: "GET",
           headers: {
@@ -208,21 +211,29 @@
               const tableBody = document.querySelector("#book-table tbody");
               tableBody.innerHTML = "";
 
-              data.data.data.forEach((book) => {
+              data.data.data.forEach((book, index) => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
+                <td>${index + 1}</td>
             <td>${book.book_id}</td>
             <td>${book.title}</td>
             <td>${book.author_name}</td>
             <td>${book.category_name}</td>
             <td>${book.description}</td>
             <td>${book.publication_year}</td>
-            <td><img src="${book.book_avatar}" alt="${book.title}" width="50"></td>
+            <td><img src="${book.book_avatar}" alt="${
+                  book.title
+                }" width="50"></td>
             <td>${book.old_price}</td>
             <td>${book.new_price}</td>
           `;
                 tableBody.appendChild(row);
               });
+              const pageIndicator = document.getElementById("page-indicator");
+              pageIndicator.textContent = `Trang ${page}`;
+
+              // Update currentPage globally after fetching
+              currentPage = page;
             } else {
               alert(`Lấy danh sách sách thất bại: ${data.message}`);
             }
@@ -313,12 +324,6 @@
           .catch((error) => console.error("Error fetching categories:", error));
       }
 
-      // function openDialog() {
-      //   fetchAuthors();
-      //   fetchCategories();
-      //   document.getElementById("dialog").classList.add("active");
-      //   document.getElementById("dialogOverlay").classList.add("active");
-      // }
       function openDialog() {
         Promise.all([fetchAuthors(), fetchCategories()])
           .then(() => {

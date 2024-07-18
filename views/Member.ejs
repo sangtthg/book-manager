@@ -82,12 +82,20 @@
       .dialog .form-actions button.cancel {
         background-color: #6c757d;
       }
+      .addbook_category {
+        display: flex;
+      }
     </style>
   </head>
   <body>
     <%- include('navbar.ejs') %>
     <div style="margin-left: 275px">
-      <h3>Danh sách khách hàng</h3>
+      <h3>Danh sách thành viên</h3>
+      <div class="addbook_category">
+        <a class="nav-link" href="javascript:void(0)" onclick="openDialog()"
+          >Thêm thành viên</a
+        >
+      </div>
       <table id="author-table">
         <thead>
           <tr>
@@ -98,17 +106,47 @@
             <th scope="col">Ảnh</th>
             <th scope="col">Trạng thái</th>
             <th scope="col">Ngày đăng ký</th>
+            <th scope="col">Chức năng</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
-
+    <div class="dialog-overlay" id="dialog-overlay"></div>
+    <div class="dialog" id="add-member-dialog">
+      <form id="add-member-form">
+        <div class="form-group">
+          <label for="username">Tên đăng nhập:</label>
+          <input type="text" id="username" name="username" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Mật khẩu:</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <div class="form-group">
+          <label for="role">Quyền:</label>
+          <select id="role" name="role" required>
+            <option value="admin">Quản trị viên</option>
+            <option value="member">Thành viên</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="submit">Thêm thành viên</button>
+          <button type="button" class="cancel" onclick="closeDialog()">
+            Hủy
+          </button>
+        </div>
+      </form>
+    </div>
     <script>
       const token = localStorage.getItem("token");
 
       function fetchAuthors() {
-        fetch("/api/user/get", {
+        fetch("/api/user/getadmin", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -139,6 +177,12 @@
                 }" style="width: 50px; height: 50px;"></td>
               <td>${user.user_status}</td>
               <td>${formattedDate}</td>
+              <td>
+                <button onclick="openEditDialog(${user.user_id}, '${
+                  user.username
+                }')">Sửa</button>
+                <button onclick="deleteUser(${user.user_id})">Xóa</button>
+              </td>
             `;
                 tableBody.appendChild(row);
               });
@@ -148,6 +192,55 @@
           })
           .catch((error) => console.error("Error fetching authors:", error));
       }
+
+      function openDialog() {
+        const dialog = document.getElementById("add-member-dialog");
+        const overlay = document.getElementById("dialog-overlay");
+        dialog.classList.add("active");
+        overlay.classList.add("active");
+      }
+
+      function closeDialog() {
+        const dialog = document.getElementById("add-member-dialog");
+        const overlay = document.getElementById("dialog-overlay");
+        dialog.classList.remove("active");
+        overlay.classList.remove("active");
+      }
+      const addMemberForm = document.getElementById("add-member-form");
+
+      // addMemberForm.addEventListener("submit", function (event) {
+      //   event.preventDefault();
+
+      //   const username = document.getElementById("username").value;
+      //   const email = document.getElementById("email").value;
+      //   const password = document.getElementById("password").value;
+      //   const role = document.getElementById("role").value;
+
+      //   fetch("/api/user/add", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //     body: JSON.stringify({
+      //       username,
+      //       email,
+      //       password,
+      //       role,
+      //     }),
+      //   })
+      //     .then((response) => response.json())
+      //     .then((data) => {
+      //       if (data.status === "1") {
+      //         alert("Thêm thành viên thành công!");
+      //         fetchAuthors(); // Reload the author list after adding a member
+      //         closeDialog();
+      //       } else {
+      //         alert(`Thêm thành viên thất bại: ${data.message}`);
+      //       }
+      //     })
+      //     .catch((error) => console.error("Lỗi khi thêm thành viên:", error));
+      // });
 
       document.addEventListener("DOMContentLoaded", fetchAuthors);
     </script>

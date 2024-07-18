@@ -125,7 +125,8 @@
       <table id="author-table">
         <thead>
           <tr>
-            <th scope="col">ID</th>
+            <th scope="col">STT</th>
+            <th scope="col">ID tác giả</th>
             <th scope="col">Tên tác giả</th>
             <th scope="col">Người tạo</th>
             <th scope="col">Chức năng</th>
@@ -150,15 +151,20 @@
               const tableBody = document.querySelector("#author-table tbody");
               tableBody.innerHTML = "";
 
-              data.data.rows.forEach((author) => {
+              data.data.rows.forEach((author, index) => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
+                <td>${index + 1}</td>
                 <td>${author.author_id}</td>
                 <td>${author.author_name}</td>
                 <td>${author.created_by}</td>
                 <td>
-                  <button onclick="openEditDialog(${author.author_id}, '${author.author_name}')">Sửa</button>
-                  <button onclick="deleteAuthor(${author.author_id})">Xóa</button>
+                  <button onclick="openEditDialog(${author.author_id}, '${
+                  author.author_name
+                }')">Sửa</button>
+                  <button onclick="deleteAuthor(${
+                    author.author_id
+                  })">Xóa</button>
                 </td>
               `;
                 tableBody.appendChild(row);
