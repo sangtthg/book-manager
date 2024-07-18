@@ -133,6 +133,12 @@
         </thead>
         <tbody></tbody>
       </table>
+      <div class="pagination">
+        <button onclick="previousPage()">Trang trước</button>
+        <span id="page-indicator">Trang 1</span>
+        <button onclick="nextPage()">Trang sau</button>
+      </div>
+
       <div class="addbook">
         <div class="dialog-overlay" id="dialogOverlay"></div>
         <div class="dialog" id="dialog">
@@ -181,7 +187,8 @@
 
     <script>
       const token = localStorage.getItem("token");
-
+      let currentPage = 1;
+      const itemsPerPage = 10;
       function fetchBooks() {
         fetch("/api/book/get", {
           method: "GET",
@@ -224,6 +231,18 @@
             console.error("Error fetching books:", error);
             alert(`Có lỗi xảy ra khi lấy danh sách sách: ${error.message}`);
           });
+      }
+
+      function previousPage() {
+        if (currentPage > 1) {
+          currentPage--;
+          fetchBooks(currentPage);
+        }
+      }
+
+      function nextPage() {
+        currentPage++;
+        fetchBooks(currentPage);
       }
 
       let page = 1;
@@ -366,7 +385,9 @@
           });
       }
 
-      document.addEventListener("DOMContentLoaded", fetchBooks);
+      document.addEventListener("DOMContentLoaded", () =>
+        fetchBooks(currentPage)
+      );
 
       closeDialog();
     </script>

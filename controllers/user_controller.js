@@ -30,6 +30,7 @@ module.exports.controller = (app, io, socket_list) => {
           user_id: {
             [Op.ne]: req.auth.user_id,
           },
+          // role: "user", //////////
         },
         limit: limit,
         offset: offset,
