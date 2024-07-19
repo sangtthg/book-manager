@@ -285,7 +285,7 @@ module.exports.controller = (app, io, socket_list) => {
   // 2. sách bán chạy
   app.get(
     "/api/home/get-list-book",
-    helpers.authorization,
+    // helpers.authorization,
     async (req, res) => {
       try {
         const [newBooks, bestSellerBooks, mostViewBooks, randomBooks] =
