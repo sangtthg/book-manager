@@ -60,10 +60,11 @@ class EmailHelper {
       },
     });
     let mailOptions = {
-      from: process.env.USER_SEND_EMAIL,
+      from: `Book App <${process.env.USER_SEND_EMAIL}>`,
       to: email,
       subject: "Email Xác Minh",
-      text: `Mã xác minh của bạn là: ${otp}.`,
+      text: `Đây là mã xác minh của bạn có hiệu lực trong 5 phút:\n\nMã OTP: 
+      ${otp}\n\nVui lòng không chia sẻ mã này cho bất kỳ ai.`,
     };
     transporter.sendMail(mailOptions, async (error, info) => {
       if (error) {
@@ -77,7 +78,7 @@ class EmailHelper {
   }
 
   static async verifyOTP(id, email, otp) {
-    const query = `SELECT * FROM otps WHERE id = '${id}' AND email = '${email}' AND otp = '${otp}' AND created_at > NOW() - INTERVAL 5 MINUTE`;
+    const query = `SELECT * FROM otps WHERE id = '${id}' AND email = '${email}' AND otp = '${otp}' AND created_at > NOW() - INTERVAL  MINUTE`;
     return new Promise((resolve, reject) =>
       db.query(query, (err, res) => {
         if (err) {
