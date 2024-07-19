@@ -3,110 +3,122 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ListProduct</title>
+    <title>Danh sách sản phẩm</title>
+    <style>
+      .main {
+        margin-left: 275px;
+      }
+      .h3_table {
+        text-align: left;
+        margin-left: 10px;
+        margin-right: 25px;
+        color: #ff7622;
+      }
+      table {
+        width: 95%;
+        margin: 20px auto;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      tr:hover {
+        background-color: #ddd;
+      }
+      .addbook_category {
+        display: flex;
+        margin-left: 10px;
+      }
+      .dialog {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+      .dialog.active {
+        display: block;
+      }
+      .dialog-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 500;
+      }
+      .dialog-overlay.active {
+        display: block;
+      }
+      .dialog .form-group {
+        margin-bottom: 15px;
+      }
+      .dialog .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      .dialog .form-group input,
+      .dialog .form-group textarea,
+      .dialog .form-group select {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      .dialog .form-actions {
+        text-align: right;
+      }
+      .dialog .form-actions button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .dialog .form-actions button.cancel {
+        background-color: #6c757d;
+      }
+      .pagination {
+        margin: 20px auto;
+        text-align: center;
+      }
+      .pagination button {
+        padding: 10px 20px;
+        margin: 0 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .pagination span {
+        margin: 0 10px;
+      }
+      .ellipsis {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+        display: block;
+      }
+    </style>
   </head>
-  <style>
-    .main {
-      margin-left: 275px;
-    }
-    .h3_table {
-      text-align: left;
-      margin-left: 10px;
-      margin-right: 25px;
-      color: #ff7622;
-    }
-    table {
-      width: 95%;
-      margin: 20px auto;
-      margin-left: 10px;
-      margin-right: 10px;
-      border-collapse: collapse;
-    }
-    th,
-    td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background-color: #f2f2f2;
-      text-align: center;
-    }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    tr:hover {
-      background-color: #ddd;
-    }
-    .addbook_category {
-      display: flex;
-    }
-    .dialog {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 300px;
-      padding: 20px;
-      background-color: white;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-    }
-
-    .dialog.active {
-      display: block;
-    }
-
-    .dialog-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 500;
-    }
-
-    .dialog-overlay.active {
-      display: block;
-    }
-
-    .dialog .form-group {
-      margin-bottom: 15px;
-    }
-
-    .dialog .form-group label {
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    .dialog .form-group input,
-    .dialog .form-group textarea,
-    .dialog .form-group select {
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-    }
-
-    .dialog .form-actions {
-      text-align: right;
-    }
-
-    .dialog .form-actions button {
-      padding: 10px 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .dialog .form-actions button.cancel {
-      background-color: #6c757d;
-    }
-  </style>
   <body>
     <%- include('navbar.ejs') %>
     <div class="main">
@@ -115,8 +127,8 @@
         <a class="nav-link" href="javascript:void(0)" onclick="openDialog()"
           >Thêm sách</a
         >
-        <a class="nav-link" href="/admin/Author ">Tác giả</a>
-        <a class="nav-link" href="/admin/Catelogy ">Thể loại</a>
+        <a class="nav-link" href="/admin/Author">Tác giả</a>
+        <a class="nav-link" href="/admin/Category">Thể loại</a>
       </div>
       <table id="book-table">
         <thead>
@@ -131,6 +143,7 @@
             <th>Ảnh bìa</th>
             <th>Giá cũ</th>
             <th>Giá mới</th>
+            <th>Chức năng</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -144,7 +157,7 @@
       <div class="addbook">
         <div class="dialog-overlay" id="dialogOverlay"></div>
         <div class="dialog" id="dialog">
-          <h3>Thêm sách</h3>
+          <h3 id="dialog-title">Thêm sách</h3>
           <div class="form-group">
             <label for="bookTitle">Tiêu đề</label>
             <input type="text" id="bookTitle" name="title" />
@@ -188,13 +201,15 @@
     </div>
 
     <script>
-      const token = localStorage.getItem("token");
       let currentPage = 1;
       const itemsPerPage = 10;
-      function fetchBooks() {
-        const limit = 10;
-        const offset = (page - 1) * limit;
-        fetch("/api/book/get", {
+      let isEditMode = false;
+      let editBookId = null;
+      const token = localStorage.getItem("token");
+
+      function fetchBooks(page = currentPage) {
+        const offset = (page - 1) * itemsPerPage;
+        fetch(`/api/book/get?limit=${itemsPerPage}&offset=${offset}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -216,24 +231,34 @@
                 const row = document.createElement("tr");
                 row.innerHTML = `
                 <td>${index + 1}</td>
-            <td>${book.book_id}</td>
-            <td>${book.title}</td>
-            <td>${book.author_name}</td>
-            <td>${book.category_name}</td>
-            <td>${book.description}</td>
-            <td>${book.publication_year}</td>
-            <td><img src="${book.book_avatar}" alt="${
+                <td>${book.book_id}</td>
+                <td>${book.title}</td>
+                <td>${book.author_name}</td>
+                <td>${book.category_name}</td>
+                <td class="ellipsis">${book.description}</td>
+                <td>${book.publication_year}</td>
+                <td><img src="${book.book_avatar}" alt="${
                   book.title
                 }" width="50"></td>
-            <td>${book.old_price}</td>
-            <td>${book.new_price}</td>
-          `;
+                <td>${book.old_price}</td>
+                <td>${book.new_price}</td>
+                <td>
+                  <button onclick="openEditDialog(${book.book_id}, '${
+                  book.title
+                }', '${book.author_id}', '${book.category_id}', '${
+                  book.description
+                }', '${book.publication_year}', '${book.old_price}', '${
+                  book.new_price
+                }', '${book.book_avatar}')">Sửa</button>
+                  <button onclick="deleteBook(${book.book_id})">Xóa</button>
+                </td>
+              `;
                 tableBody.appendChild(row);
               });
+
               const pageIndicator = document.getElementById("page-indicator");
               pageIndicator.textContent = `Trang ${page}`;
 
-              // Update currentPage globally after fetching
               currentPage = page;
             } else {
               alert(`Lấy danh sách sách thất bại: ${data.message}`);
@@ -247,56 +272,38 @@
 
       function previousPage() {
         if (currentPage > 1) {
-          currentPage--;
-          fetchBooks(currentPage);
+          fetchBooks(currentPage - 1);
         }
       }
 
       function nextPage() {
-        currentPage++;
-        fetchBooks(currentPage);
+        fetchBooks(currentPage + 1);
       }
 
-      let page = 1;
-      const limit = 100;
-
       function fetchAuthors() {
-        const token = localStorage.getItem("token");
-
-        function loadMoreAuthors() {
-          fetch(`/api/author/get?page=${page}&limit=${limit}`, {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
+        const authorSelect = document.getElementById("authorSelect");
+        fetch("/api/author/get", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              authorSelect.innerHTML = "";
+              data.data.rows.forEach((author) => {
+                const option = document.createElement("option");
+                option.value = author.author_id;
+                option.textContent = author.author_name;
+                authorSelect.appendChild(option);
+              });
+            } else {
+              alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
+            }
           })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.status === "1") {
-                const authorSelect = document.getElementById("authorSelect");
-                data.data.rows.forEach((author) => {
-                  const option = document.createElement("option");
-                  option.value = author.author_id;
-                  option.textContent = author.author_name;
-                  authorSelect.appendChild(option);
-                });
-                page++;
-              } else {
-                alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
-              }
-            })
-            .catch((error) => console.error("Error fetching authors:", error));
-        }
-        window.addEventListener("scroll", () => {
-          if (
-            window.scrollY + window.innerHeight >=
-            document.body.scrollHeight
-          ) {
-            loadMoreAuthors();
-          }
-        });
-        loadMoreAuthors();
+          .catch((error) => console.error("Error fetching authors:", error));
       }
 
       function fetchCategories() {
@@ -326,15 +333,35 @@
       }
 
       function openDialog() {
-        Promise.all([fetchAuthors(), fetchCategories()])
-          .then(() => {
-            document.getElementById("dialog").classList.add("active");
-            document.getElementById("dialogOverlay").classList.add("active");
-          })
-          .catch((error) => {
-            console.error("Error fetching data:", error);
-            alert("Có lỗi xảy ra khi tải dữ liệu.");
-          });
+        fetchAuthors();
+        fetchCategories();
+        document.getElementById("dialog").classList.add("active");
+        document.getElementById("dialogOverlay").classList.add("active");
+      }
+
+      function openEditDialog(
+        bookId,
+        title,
+        authorId,
+        categoryId,
+        description,
+        publicationYear,
+        oldPrice,
+        newPrice,
+        bookAvatar
+      ) {
+        isEditMode = true;
+        editBookId = bookId;
+        openDialog();
+
+        document.getElementById("dialog-title").textContent = "Sửa sách";
+        document.getElementById("bookTitle").value = title;
+        document.getElementById("authorSelect").value = authorId;
+        document.getElementById("categorySelect").value = categoryId;
+        document.getElementById("description").value = description;
+        document.getElementById("publicationYear").value = publicationYear;
+        document.getElementById("oldPrice").value = oldPrice;
+        document.getElementById("newPrice").value = newPrice;
       }
 
       function closeDialog() {
@@ -363,13 +390,19 @@
         );
         formData.append("old_price", document.getElementById("oldPrice").value);
         formData.append("new_price", document.getElementById("newPrice").value);
-        formData.append(
-          "book_avatar",
-          document.getElementById("bookAvatar").files[0]
-        );
 
-        fetch("/api/book/add", {
-          method: "POST",
+        const bookAvatarInput = document.getElementById("bookAvatar");
+        if (bookAvatarInput.files[0]) {
+          formData.append("book_avatar", bookAvatarInput.files[0]);
+        }
+
+        const url = isEditMode
+          ? `/api/book/edit/${editBookId}`
+          : "/api/book/add";
+        const method = isEditMode ? "PUT" : "POST";
+
+        fetch(url, {
+          method: method,
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -378,24 +411,30 @@
           .then((response) => response.json())
           .then((data) => {
             if (data.status === "1") {
-              alert("Thêm sách thành công!");
-              closeDialog();
+              alert(`${isEditMode ? "Cập nhật" : "Thêm"} sách thành công`);
               fetchBooks();
+              closeDialog();
             } else {
-              alert(`Thêm sách thất bại: ${data.message}`);
+              alert(
+                `${isEditMode ? "Cập nhật" : "Thêm"} sách thất bại: ${
+                  data.message
+                }`
+              );
             }
           })
           .catch((error) => {
-            console.error("Error:", error);
-            alert("Có lỗi xảy ra.");
+            console.error("Error saving book:", error);
+            alert(
+              `Có lỗi xảy ra khi ${isEditMode ? "cập nhật" : "thêm"} sách: ${
+                error.message
+              }`
+            );
           });
       }
 
       document.addEventListener("DOMContentLoaded", () =>
         fetchBooks(currentPage)
       );
-
-      closeDialog();
     </script>
   </body>
 </html>

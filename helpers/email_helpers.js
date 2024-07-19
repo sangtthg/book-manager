@@ -64,11 +64,9 @@ class EmailHelper {
       to: email,
       subject: "Email Xác Minh",
       html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
       <p>Đây là mã xác minh của bạn có hiệu lực trong 5 phút:</p>
-      <h1 style="text-align: center;">Mã OTP: <strong>${otp}</strong></h1>
+      <h1 style="text-align: center;"><strong>${otp}</strong></h1>
       <p style="color: red;">Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
-    </div>
     `,
     };
     transporter.sendMail(mailOptions, async (error, info) => {

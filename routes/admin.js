@@ -24,7 +24,7 @@ router.get("/Account", function (req, res, next) {
   res.render(Account);
 });
 
-router.get("/Catelogy", function (req, res, next) {
+router.get("/Category", function (req, res, next) {
   res.render(Catelogy);
 });
 router.get("/Author", function (req, res, next) {
