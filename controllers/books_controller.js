@@ -159,7 +159,7 @@ module.exports.controller = (app, io, socket_list) => {
     WHERE books.title LIKE '%${search}%' ${
           category_id ? `AND books.category_id = ${category_id}` : ""
         }
-  LIMIT ${limit} OFFSET ${offset}
+  LIMIT ${limit} OFFSET ${offset} ORDER BY books.created_at DESC
         `
       );
 
@@ -283,137 +283,144 @@ module.exports.controller = (app, io, socket_list) => {
   // viết 1 api cho màn home trả về 2 danh sách:
   // 1. sách mới xuất bản
   // 2. sách bán chạy
-  app.get("/api/home/get-list-book", async (req, res) => {
-    try {
-      const [newBooks, bestSellerBooks, mostViewBooks, randomBooks] =
-        await Promise.all([
-          Book.findAll({
-            where: { publication_year: new Date().getFullYear() },
-            order: [["created_at", "DESC"]],
-            limit: 7,
-          }),
-          Book.findAll({
-            order: [["purchase_count", "DESC"]],
-            limit: 7,
-          }),
-          Book.findAll({
-            order: [["views_count", "DESC"]],
-            limit: 7,
-          }),
-          Book.findAll({
-            order: Sequelize.literal("rand()"),
-            limit: 7,
-          }),
-        ]);
+  app.get(
+    "/api/home/get-list-book",
+    helpers.authorization,
+    async (req, res) => {
+      try {
+        const [newBooks, bestSellerBooks, mostViewBooks, randomBooks] =
+          await Promise.all([
+            Book.findAll({
+              where: { publication_year: new Date().getFullYear() },
+              order: [["created_at", "DESC"]],
+              limit: 7,
+            }),
+            Book.findAll({
+              order: [["purchase_count", "DESC"]],
+              limit: 7,
+            }),
+            Book.findAll({
+              order: [["views_count", "DESC"]],
+              limit: 7,
+            }),
+            Book.findAll({
+              order: Sequelize.literal("rand()"),
+              limit: 7,
+            }),
+          ]);
 
-      const newBooksData = await Promise.all(
-        newBooks.map(async (book) => {
-          const author = await Author.findOne({
-            where: { author_id: book.author_id },
+        const newBooksData = await Promise.all(
+          newBooks.map(async (book) => {
+            const author = await Author.findOne({
+              where: { author_id: book.author_id },
+            });
+
+            if (author)
+              return {
+                book_id: book.book_id,
+                title: book.title,
+                author_name: author.author_name || "",
+                description: book.description,
+                publication_year: book.publication_year,
+                book_avatar: book.book_avatar,
+                old_price: book.old_price,
+                new_price: book.new_price,
+                views_count: book.views_count,
+                purchase_count: book.purchase_count,
+                used_books: book.used_books,
+              };
+          })
+        );
+
+        const bestSellerBooksData = await Promise.all(
+          bestSellerBooks.map(async (book) => {
+            const author = await Author.findOne({
+              where: { author_id: book.author_id },
+            });
+
+            if (author)
+              return {
+                book_id: book.book_id,
+                title: book.title,
+                author_name: author.author_name,
+                description: book.description,
+                publication_year: book.publication_year,
+                book_avatar: book.book_avatar,
+                old_price: book.old_price,
+                new_price: book.new_price,
+                views_count: book.views_count,
+                purchase_count: book.purchase_count,
+                used_books: book.used_books,
+              };
+          })
+        );
+
+        mostViewBooksData = await Promise.all(
+          mostViewBooks.map(async (book) => {
+            const author = await Author.findOne({
+              where: { author_id: book.author_id },
+            });
+            if (author)
+              return {
+                book_id: book.book_id,
+                title: book.title,
+                author_name: author.author_name,
+                description: book.description,
+                publication_year: book.publication_year,
+                book_avatar: book.book_avatar,
+                old_price: book.old_price,
+                new_price: book.new_price,
+                views_count: book.views_count,
+                purchase_count: book.purchase_count,
+                used_books: book.used_books,
+              };
+          })
+        );
+
+        randomBooksData = await Promise.all(
+          randomBooks.map(async (book) => {
+            const author = await Author.findOne({
+              where: { author_id: book.author_id },
+            });
+
+            if (author)
+              return {
+                book_id: book.book_id,
+                title: book.title,
+                author_name: author.author_name,
+                description: book.description,
+                publication_year: book.publication_year,
+                book_avatar: book.book_avatar,
+
+                old_price: book.old_price,
+                new_price: book.new_price,
+                views_count: book.views_count,
+                purchase_count: book.purchase_count,
+                used_books: book.used_books,
+              };
+          })
+        );
+
+        if (newBooks && bestSellerBooks) {
+          return res.json({
+            status: "1",
+            message: msg_success,
+            data: {
+              new_books: newBooksData,
+              best_seller_books: bestSellerBooksData,
+              most_view_books: mostViewBooksData,
+              random_books: randomBooksData,
+            },
           });
+        }
 
-          return {
-            book_id: book.book_id,
-            title: book.title,
-            author_name: author.author_name,
-            description: book.description,
-            publication_year: book.publication_year,
-            book_avatar: book.book_avatar,
-            old_price: book.old_price,
-            new_price: book.new_price,
-            views_count: book.views_count,
-            purchase_count: book.purchase_count,
-            used_books: book.used_books,
-          };
-        })
-      );
-
-      const bestSellerBooksData = await Promise.all(
-        bestSellerBooks.map(async (book) => {
-          const author = await Author.findOne({
-            where: { author_id: book.author_id },
-          });
-
-          return {
-            book_id: book.book_id,
-            title: book.title,
-            author_name: author.author_name,
-            description: book.description,
-            publication_year: book.publication_year,
-            book_avatar: book.book_avatar,
-            old_price: book.old_price,
-            new_price: book.new_price,
-            views_count: book.views_count,
-            purchase_count: book.purchase_count,
-            used_books: book.used_books,
-          };
-        })
-      );
-
-      mostViewBooksData = await Promise.all(
-        mostViewBooks.map(async (book) => {
-          const author = await Author.findOne({
-            where: { author_id: book.author_id },
-          });
-
-          return {
-            book_id: book.book_id,
-            title: book.title,
-            author_name: author.author_name,
-            description: book.description,
-            publication_year: book.publication_year,
-            book_avatar: book.book_avatar,
-            old_price: book.old_price,
-            new_price: book.new_price,
-            views_count: book.views_count,
-            purchase_count: book.purchase_count,
-            used_books: book.used_books,
-          };
-        })
-      );
-
-      randomBooksData = await Promise.all(
-        randomBooks.map(async (book) => {
-          const author = await Author.findOne({
-            where: { author_id: book.author_id },
-          });
-
-          return {
-            book_id: book.book_id,
-            title: book.title,
-            author_name: author.author_name,
-            description: book.description,
-            publication_year: book.publication_year,
-            book_avatar: book.book_avatar,
-
-            old_price: book.old_price,
-            new_price: book.new_price,
-            views_count: book.views_count,
-            purchase_count: book.purchase_count,
-            used_books: book.used_books,
-          };
-        })
-      );
-
-      if (newBooks && bestSellerBooks) {
-        return res.json({
-          status: "1",
-          message: msg_success,
-          data: {
-            new_books: newBooksData,
-            best_seller_books: bestSellerBooksData,
-            most_view_books: mostViewBooksData,
-            random_books: randomBooksData,
-          },
-        });
+        return res.json({ status: "0", message: msg_fail });
+      } catch (error) {
+        console.log("/api/home error: ", error);
+        res.json({ status: "0", message: msg_fail });
       }
-
-      return res.json({ status: "0", message: msg_fail });
-    } catch (error) {
-      console.log("/api/home error: ", error);
-      res.json({ status: "0", message: msg_fail });
     }
-  });
+  );
 
   app.post("/api/book/get-detail", helpers.authorization, async (req, res) => {
     helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
