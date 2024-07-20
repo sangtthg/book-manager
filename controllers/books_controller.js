@@ -125,7 +125,7 @@ module.exports.controller = (app, io, socket_list) => {
     }
   );
 
-  app.get("/api/book/get", helpers.authorization, async (req, res) => {
+  app.post("/api/book/get", helpers.authorization, async (req, res) => {
     try {
       const page = req.body.page || 1;
       const limit = req.body.limit || 10;
@@ -284,7 +284,7 @@ module.exports.controller = (app, io, socket_list) => {
   // viết 1 api cho màn home trả về 2 danh sách:
   // 1. sách mới xuất bản
   // 2. sách bán chạy
-  app.get(
+  app.post(
     "/api/home/get-list-book",
     // helpers.authorization,
     async (req, res) => {
