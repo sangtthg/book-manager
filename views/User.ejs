@@ -3,163 +3,88 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Danh sách tác giả</title>
+    <title>Danh sách đơn hàng</title>
     <style>
       table {
-        width: 80%;
-        margin: 20px auto;
+        width: 100%;
         border-collapse: collapse;
       }
       th,
       td {
-        border: 1px solid #ddd;
+        border: 1px solid black;
         padding: 8px;
-        text-align: center;
+        text-align: left;
       }
       th {
         background-color: #f2f2f2;
-      }
-      tr:nth-child(even) {
-        background-color: #f9f9f9;
-      }
-      tr:hover {
-        background-color: #ddd;
-      }
-      .addcategory {
-        display: flex;
-      }
-      .dialog {
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 300px;
-        padding: 20px;
-        background-color: white;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-      }
-      .dialog.active {
-        display: block;
-      }
-      .dialog-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 500;
-      }
-      .dialog-overlay.active {
-        display: block;
-      }
-      .dialog .form-group {
-        margin-bottom: 15px;
-      }
-      .dialog .form-group label {
-        display: block;
-        margin-bottom: 5px;
-      }
-      .dialog .form-group input {
-        width: 100%;
-        padding: 8px;
-        box-sizing: border-box;
-      }
-      .dialog .form-actions {
-        text-align: right;
-      }
-      .dialog .form-actions button {
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      .dialog .form-actions button.cancel {
-        background-color: #6c757d;
       }
     </style>
   </head>
   <body>
     <%- include('navbar.ejs') %>
     <div style="margin-left: 275px">
-      <h3>Danh sách khách hàng</h3>
+      <h3>Danh sách đơn hàng</h3>
       <table id="author-table">
         <thead>
           <tr>
             <th scope="col">STT</th>
-            <th scope="col">Tên khách hàng</th>
-            <th scope="col">Email</th>
-
-            <th scope="col">Ảnh</th>
+            <th scope="col">Mã đơn hàng</th>
+            <th scope="col">Mã khách hàng</th>
+            <th scope="col">Mã sách</th>
+            <th scope="col">Số lượng</th>
             <th scope="col">Trạng thái</th>
             <th scope="col">Ngày đăng ký</th>
+            <th scope="col">Ngày cập nhật</th>
           </tr>
         </thead>
-        <tbody></tbody>
+        <tbody id="cart-tbody"></tbody>
       </table>
     </div>
 
     <script>
       const token = localStorage.getItem("token");
-      function fetchUsers() {
-        const data = {
-          page: 1,
-          limit: 10,
-          query: {
-            search: "",
-            roles: ["admin", "user"],
-          },
-        };
+      fetch("/api/cart/get", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Đảm bảo token hợp lệ
+        },
+        body: JSON.stringify({ page: 1, limit: 10 }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Dữ liệu nhận được từ API:", data);
+          const cartTbody = document.getElementById("cart-tbody");
 
-        fetch("http://localhost:8000/api/user/get", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(data),
+          if (data.status === "1" && data.data && data.data.data.length > 0) {
+            const cartItems = data.data.data;
+            cartTbody.innerHTML = cartItems
+              .map((item, index) => {
+                console.log(`Mã đơn hàng ${index + 1}: ${item.cart_id}`); // Log dữ liệu lên console
+                return `
+                    <tr>
+                      <td>${index + 1}</td>
+                      <td>${item.cart_id}</td>
+                      <td>${item.user_id}</td>
+                      <td>${item.book_id}</td>
+                      <td>${item.quantity}</td>
+                      <td>${item.status}</td>
+                      <td>${new Date(
+                        item.created_date
+                      ).toLocaleDateString()}</td>
+                      <td>${new Date(
+                        item.modify_date
+                      ).toLocaleDateString()}</td>
+                    </tr>
+                  `;
+              })
+              .join("");
+          } else {
+            cartTbody.innerHTML =
+              "<tr><td colspan='8'>Không có dữ liệu đơn hàng</td></tr>";
+          }
         })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "1") {
-              const tableBody = document.querySelector("#author-table tbody");
-              tableBody.innerHTML = "";
-
-              data.data.forEach((user, index) => {
-                const createdAt = new Date(user.created_at);
-                const formattedDate = `${createdAt
-                  .getDate()
-                  .toString()
-                  .padStart(2, "0")}-${(createdAt.getMonth() + 1)
-                  .toString()
-                  .padStart(2, "0")}-${createdAt.getFullYear()}`;
-
-                const row = document.createElement("tr");
-                row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${user.username}</td>
-            <td>${user.email}</td>
-            <td><img src="${user.avatar}" alt="${
-                  user.username
-                }" style="width: 50px; height: 50px;"></td>
-            <td>${user.user_status}</td>
-            <td>${formattedDate}</td>
-          `;
-                tableBody.appendChild(row);
-              });
-            } else {
-              alert(`Lấy danh sách người dùng thất bại: ${data.message}`);
-            }
-          })
-          .catch((error) => console.error("Error fetching users:", error));
-      }
-
-      document.addEventListener("DOMContentLoaded", fetchUsers);
+        .catch((err) => console.error("Lỗi khi lấy dữ liệu giỏ hàng:", err));
     </script>
   </body>
 </html>

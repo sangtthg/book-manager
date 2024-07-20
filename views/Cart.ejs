@@ -3,10 +3,89 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Account</title>
+    <title>Danh sách đơn hàng</title>
+    <style>
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
   </head>
   <body>
     <%- include('navbar.ejs') %>
-    <div style="margin-left: 275px">Tài khoản</div>
+    <div style="margin-left: 275px">
+      <h3>Danh sách đơn hàng</h3>
+      <table id="author-table">
+        <thead>
+          <tr>
+            <th scope="col">STT</th>
+            <th scope="col">Mã đơn hàng</th>
+            <th scope="col">Mã khách hàng</th>
+            <th scope="col">Mã sách</th>
+            <th scope="col">Số lượng</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Ngày đăng ký</th>
+            <th scope="col">Ngày cập nhật</th>
+          </tr>
+        </thead>
+        <tbody id="cart-tbody"></tbody>
+      </table>
+    </div>
+
+    <script>
+      console.log("====================================");
+      console.log("sáng");
+      console.log("====================================");
+      document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("token");
+        fetch("/api/cart/get", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Thay thế bằng token thực tế của bạn
+          },
+          body: JSON.stringify({ page: 1, limit: 10 }),
+        })
+          .then((response) => {
+            console.log("HTTP Response Status:", response.status);
+            return response.json();
+          })
+          .then((data) => {
+            console.log("Dữ liệu nhận được từ API:", data);
+            if (data.status === "1") {
+              const cartItems = data.data.data;
+              const cartTbody = document.getElementById("cart-tbody");
+              cartTbody.innerHTML = cartItems
+                .map(
+                  (item, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${item.cart_id}</td>
+          <td>${item.user_id}</td>
+          <td>${item.Book.book_id}</td>
+          <td>${item.quantity}</td>
+          <td>${item.status}</td>
+          <td>${new Date(item.created_date).toLocaleDateString()}</td>
+          <td>${new Date(item.modify_date).toLocaleDateString()}</td>
+        </tr>
+      `
+                )
+                .join("");
+            } else {
+              alert("Không có dữ liệu đơn hàng");
+            }
+          })
+          .catch((err) => console.error("Lỗi khi lấy dữ liệu giỏ hàng:", err));
+      });
+    </script>
   </body>
 </html>
