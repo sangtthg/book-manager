@@ -53,7 +53,7 @@ module.exports.controller = (app, io, socket_list) => {
     });
   });
 
-  app.get("/api/cart/get", helpers.authorization, (req, res) => {
+  app.post("/api/cart/get", helpers.authorization, (req, res) => {
     const user_id = req.auth.user_id;
     const { page = 1, limit = 10 } = req.body;
     const offset = (page - 1) * limit;

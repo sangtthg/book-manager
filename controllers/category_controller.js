@@ -119,7 +119,7 @@ module.exports.controller = (app, io, socket_list) => {
   });
 
   //GET
-  app.get("/api/category/get", helper.authorization, (req, res) => {
+  app.post("/api/category/get", helper.authorization, (req, res) => {
     const query = `SELECT * FROM categories`;
     db.query(query, (err, result) => {
       if (err) {

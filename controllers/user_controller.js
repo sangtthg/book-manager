@@ -18,8 +18,9 @@ const {
   msg_success,
   avatarDefault,
 } = require("../constants/common");
+const { checkSex } = require("../utilities/int/check_sex");
 module.exports.controller = (app, io, socket_list) => {
-  app.get(
+  app.post(
     "/api/user/get",
     helper.authorization,
     helper.checkRole,
@@ -68,7 +69,7 @@ module.exports.controller = (app, io, socket_list) => {
     }
   );
 
-  app.get(
+  app.post(
     "/api/user/getadmin",
     helper.authorization,
     helper.checkRole,
@@ -106,12 +107,12 @@ module.exports.controller = (app, io, socket_list) => {
       helper.CheckParameterValid(
         res,
         req.body,
-        ["email", "role", "username"],
+        ["email", "role", "username", "sex"],
         async () => {
           helper.CheckParameterNull(
             res,
             req.body,
-            ["email", "role", "username"],
+            ["email", "role", "username", "sex"],
             async () => {
               try {
                 const user = await selectUser(req.auth.user_id);
@@ -143,6 +144,13 @@ module.exports.controller = (app, io, socket_list) => {
                   });
                 }
 
+                const isSex = checkSex(req.body.sex);
+                if (!isSex) {
+                  return res.json({
+                    status: "0",
+                    message: "Giới tính không hợp lệ",
+                  });
+                }
                 const avatar = await uploadFileToCloud(req.file);
                 const password = Math.random().toString(36).slice(-8);
                 sendMail(req.body.email, "Mật khẩu bạn là", password);
@@ -153,6 +161,7 @@ module.exports.controller = (app, io, socket_list) => {
                   role: req.body.role,
                   username: req.body.username,
                   avatar: avatar || avatarDefault,
+                  sex: req.body.sex,
                 })
                   .then((result) => {
                     res.json({ status: "1", message: msg_success });
@@ -181,12 +190,12 @@ module.exports.controller = (app, io, socket_list) => {
       helper.CheckParameterValid(
         res,
         req.body,
-        ["user_id", "email", "role", "username"],
+        ["user_id", "email", "role", "username", "sex"],
         async () => {
           helper.CheckParameterNull(
             res,
             req.body,
-            ["user_id", "email", "role", "username"],
+            ["user_id", "email", "role", "username", "sex"],
             async () => {
               try {
                 if (req.auth.role === "user") {
@@ -219,6 +228,15 @@ module.exports.controller = (app, io, socket_list) => {
                   });
                 }
 
+                const isSex = checkSex(req.body.sex);
+
+                if (!isSex) {
+                  return res.json({
+                    status: "0",
+                    message: "Giới tính không hợp lệ",
+                  });
+                }
+
                 const avatar = await uploadFileToCloud(req.file);
 
                 User.update(
@@ -227,6 +245,8 @@ module.exports.controller = (app, io, socket_list) => {
                     role: req.body.role,
                     username: req.body.username,
                     avatar: avatar || checkEmail.avatar || avatarDefault,
+                    sex: req.body.sex,
+                    updated_at: new Date(),
                   },
                   {
                     where: {
@@ -294,7 +314,7 @@ module.exports.controller = (app, io, socket_list) => {
           return res.json({ status: "0", message: "Lỗi mã hóa mật khẩu" });
         }
         const newUser = await User.update(
-          { password: passwordCrypt },
+          { password: passwordCrypt, updated_at: new Date() },
           { where: { user_id: req.auth.user_id } }
         );
         console.log("case 5");
