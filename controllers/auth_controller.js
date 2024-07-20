@@ -1,8 +1,9 @@
-const db = require("./../helpers/db_helpers");
-const helper = require("./../helpers/helpers");
+const db = require("../helpers/db_helpers");
+const helper = require("../helpers/helpers");
 const { sendOTPEmail, verifyOTP } = require("../helpers/email_helpers");
 const jwt = require("../Service/jwt");
 const { comparePassword, hashPassword } = require("../Service/bcrypt");
+const User = require("../models/user_model");
 const msg_success = "successfully";
 const msg_fail = "fail";
 const msg_invalidUser = "invalid username and password";
@@ -26,7 +27,7 @@ const login = async (req, res, isAdmin = true) => {
       }
       try {
         const user = result[0];
-        const compare = await comparePassword(reqObj.password, user.password);
+        const compare = comparePassword(reqObj.password, user.password);
         console.log("compare", compare);
         if (!compare) {
           return res.json({ status: "0", message: msg_invalidUser });
@@ -88,6 +89,7 @@ module.exports.controller = (app, io, socket_list) => {
         "verify.otp_id",
         "verify.otp",
         "username",
+        "address",
       ],
       async () => {
         const { username, email, password, re_password, verify } = reqObj;
@@ -121,7 +123,7 @@ module.exports.controller = (app, io, socket_list) => {
               [reqObj.email, passwordCrypt, reqObj.username],
               (err, result) => {
                 if (err) {
-                  helper.ThrowHtmlError(err, res);
+                  console.log("/api/register", err);
                   return;
                 }
 

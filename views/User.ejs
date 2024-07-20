@@ -1,252 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Danh sách khách hàng</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f7f9;
-      margin: 0;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-    h3 {
-      color: #333;
-      margin-bottom: 20px;
-      font-size: 24px; /* Kích thước tiêu đề */
-      text-align: left; /* Căn trái tiêu đề */
-    }
-    .container {
-      max-width: 1000px; /* Giảm kích thước tối đa của container */
-      margin-left: auto; /* Căn phải container */
-      margin-right: 20px; /* Khoảng cách bên phải */
-      padding: 20px;
-      background: #fff; /* Thêm nền trắng cho container */
-      border-radius: 8px; /* Bo tròn góc cho container */
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Thêm bóng cho container */
-      position: relative; /* Đặt vị trí tương đối để căn chỉnh các phần tử bên trong */
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      text-align: right; /* Căn chỉnh nội dung bảng sang bên phải */
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background-color: #007bff;
-      color: white;
-      font-weight: bold;
-    }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    tr:hover {
-      background-color: #f1f1f1;
-    }
-    .status-circle {
-      display: inline-block;
-      width: 16px; /* Kích thước nhỏ hơn cho vòng tròn trạng thái */
-      height: 16px;
-      border-radius: 50%;
-    }
-    .status-success {
-      background-color: red;
-    }
-    .status-failed {
-      background-color: green;
-    }
-    .status-description {
-      display: flex;
-      align-items: center;
-      justify-content: center; /* Căn giữa các mô tả trạng thái */
-      gap: 15px;
-      margin: 20px 0;
-    }
-    .status-description div {
-      display: flex;
-      align-items: center;
-    }
-    .status-description span {
-      margin-left: 5px; /* Khoảng cách nhỏ hơn bên trái mô tả trạng thái */
-      font-size: 14px; /* Kích thước font nhỏ hơn */
-      color: #555;
-    }
-    .controls {
-      display: flex;
-      justify-content: flex-end; /* Căn phải các điều khiển */
-      align-items: center;
-      margin: 20px 0;
-      gap: 10px;
-    }
-    .pagination {
-      display: flex;
-      align-items: center;
-      gap: 5px; /* Khoảng cách nhỏ hơn giữa các nút phân trang */
-    }
-    .pagination button {
-      padding: 6px 10px; /* Padding nhỏ hơn */
-      border: none;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 12px; /* Kích thước font nhỏ hơn */
-    }
-    .pagination button:hover {
-      background-color: #0056b3;
-    }
-    .pagination button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    .search-container {
-      position: absolute;
-      right: 20px; /* Đặt ô tìm kiếm sang bên phải */
-      top: 20px; /* Đặt ô tìm kiếm cách phía trên của container */
-      display: flex;
-      gap: 10px;
-    }
-    .search-container input {
-      padding: 8px; /* Padding nhỏ hơn */
-      width: 250px; /* Chiều rộng nhỏ hơn */
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px; /* Kích thước font nhỏ hơn */
-    }
-    .search-container button {
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 14px; /* Kích thước font nhỏ hơn */
-    }
-    .search-container button:hover {
-      background-color: #0056b3;
-    }
-  </style>
-</head>
-<body>
-  <%- include('navbar.ejs') %>
-  <div class="container">
-    <h3>Danh sách khách hàng</h3>
-    <div class="search-container">
-      <input type="text" id="searchInput" placeholder="Tìm kiếm khách hàng..." />
-      <button onclick="searchAuthors()">Tìm kiếm</button>
-    </div>
-    <table id="author-table">
-      <thead>
-        <tr>
-          <th scope="col">STT</th>
-          <th scope="col">Tên khách hàng</th>
-          <th scope="col">Email</th>
-          <th scope="col">Ảnh</th>
-          <th scope="col">Trạng thái</th>
-          <th scope="col">Ngày đăng ký</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <div class="controls">
-      <div class="pagination">
-        <button id="prevPage">Trang trước </button>
-        <span id="pageInfo"></span>
-        <button id="nextPage">Trang sau</button>
-      </div>
-      <div class="status-description">
-        <div>
-          <div class="status-circle status-failed"></div>
-          <span>Trạng thái thành công</span>
-        </div>
-        <div>
-          <div class="status-circle status-success"></div>
-          <span>Trạng thái thất bại</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const token = localStorage.getItem("token");
-    let currentPage = 1;
-    const itemsPerPage = 5;
-
-    function fetchAuthors(page = 1, searchQuery = "") {
-      const url = searchQuery
-        ? `/api/user/search?query=${searchQuery}&page=${page}&limit=${itemsPerPage}`
-        : `/api/user/get?page=${page}&limit=${itemsPerPage}`;
-
-      fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.status === "1") {
-            const tableBody = document.querySelector("#author-table tbody");
-            tableBody.innerHTML = "";
-
-            data.data.forEach((user, index) => {
-              const createdAt = new Date(user.created_at);
-              const formattedDate = `${createdAt
-                .getDate()
-                .toString()
-                .padStart(2, "0")}-${(createdAt.getMonth() + 1)
-                .toString()
-                .padStart(2, "0")}-${createdAt.getFullYear()}`;
-
-              const statusClass = user.user_status === 'active' ? 'status-success' : 'status-failed';
-
-              const row = document.createElement("tr");
-              row.innerHTML = `
-                <td>${(page - 1) * itemsPerPage + index + 1}</td>
-                <td>${user.username}</td>
-                <td>${user.email}</td>
-                <td><img src="${user.avatar}" alt="${user.username}" style="width: 40px; height: 40px; border-radius: 50%;"></td>
-                <td><div class="status-circle ${statusClass}"></div></td>
-                <td>${formattedDate}</td>
-              `;
-              tableBody.appendChild(row);
-            });
-
-            document.getElementById("pageInfo").textContent = `Trang ${page} của ${Math.ceil(data.total / itemsPerPage)}`;
-
-            document.getElementById("prevPage").disabled = page === 1;
-            document.getElementById("nextPage").disabled = page === Math.ceil(data.total / itemsPerPage);
-          } else {
-            alert(`Lấy danh sách khách hàng thất bại: ${data.message}`);
-          }
-        })
-        .catch((error) => console.error("Error fetching authors:", error));
-    }
-
-    document.getElementById("prevPage").addEventListener("click", () => {
-      if (currentPage > 1) {
-        currentPage--;
-        fetchAuthors(currentPage, document.getElementById("searchInput").value);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Danh sách khách hàng</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        margin: 0;
+        padding: 20px;
       }
-    });
+      h3 {
+        margin-bottom: 20px;
+      }
+      .search-container {
+        margin-bottom: 20px;
+      }
+      .search-container input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      table {
+        width: 80%;
+        margin: 20px auto;
+        border-collapse: collapse;
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+      }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      tr:hover {
+        background-color: #e9ecef;
+      }
+      .status-circle {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .status-success {
+        background-color: #dc3545;
+      }
+      .status-failure {
+        background-color: #28a745;
+      }
+      .status-container {
+        margin-top: 20px;
+        text-align: center;
+      }
+      .status-container span {
+        display: inline-block;
+        margin: 0 10px;
+        font-size: 16px;
+        font-weight: bold;
+      }
+      .status-success-msg {
+        color: #28a745;
+      }
+      .status-failure-msg {
+        color: #dc3545;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('navbar.ejs') %>
+    <div style="margin-left: 275px">
+      <h3>Danh sách khách hàng</h3>
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Tìm kiếm khách hàng..." onkeyup="searchCustomers()" />
+      </div>
+      <table id="author-table">
+        <thead>
+          <tr>
+            <th scope="col">STT</th>
+            <th scope="col">Tên khách hàng</th>
+            <th scope="col">Email</th>
+            <th scope="col">Ảnh</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Ngày đăng ký</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="status-container">
+        <span class="status-circle status-success"></span> Trạng thái thất bại
+        <span class="status-circle status-failure"></span> Trạng thái thất thành công
+      </div>
+    </div>
 
-    document.getElementById("nextPage").addEventListener("click", () => {
-      currentPage++;
-      fetchAuthors(currentPage, document.getElementById("searchInput").value);
-    });
+    <script>
+      const token = localStorage.getItem("token");
 
-    function searchAuthors() {
-      currentPage = 1;
-      fetchAuthors(currentPage, document.getElementById("searchInput").value);
-    }
+      function fetchUsers() {
+        const data = {
+          page: 1,
+          limit: 10,
+          query: {
+            search: "",
+            roles: ["admin", "user"],
+          },
+        };
 
-    document.addEventListener("DOMContentLoaded", () => fetchAuthors(currentPage));
-  </script>
-</body>
+        fetch("/api/user/get", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              const tableBody = document.querySelector("#author-table tbody");
+              tableBody.innerHTML = "";
+
+              data.data.forEach((user, index) => {
+                const createdAt = new Date(user.created_at);
+                const formattedDate = `${createdAt
+                  .getDate()
+                  .toString()
+                  .padStart(2, "0")}-${(createdAt.getMonth() + 1)
+                  .toString()
+                  .padStart(2, "0")}-${createdAt.getFullYear()}`;
+
+                const statusClass = user.user_status === 'active' ? 'status-success' : 'status-failure';
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                  <td>${index + 1}</td>
+                  <td>${user.username}</td>
+                  <td>${user.email}</td>
+                  <td><img src="${user.avatar}" alt="${user.username}" style="width: 50px; height: 50px;"></td>
+                  <td><span class="status-circle ${statusClass}"></span></td>
+                  <td>${formattedDate}</td>
+                `;
+                tableBody.appendChild(row);
+              });
+            } else {
+              alert(`Lấy danh sách người dùng thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => console.error("Error fetching users:", error));
+      }
+
+      function searchCustomers() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const tableRows = document.querySelectorAll('#author-table tbody tr');
+
+        tableRows.forEach(row => {
+          const username = row.children[1].textContent.toLowerCase();
+          const email = row.children[2].textContent.toLowerCase();
+
+          if (username.includes(searchInput) || email.includes(searchInput)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchUsers);
+    </script>
+  </body>
 </html>

@@ -234,6 +234,7 @@
 
     function fetchCategories() {
       fetch("/api/category/get", {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },

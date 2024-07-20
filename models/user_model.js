@@ -1,6 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelizeHelpers = require("../helpers/sequelize_helpers");
 const { avatarDefault } = require("../constants/common");
+const AddressDetail = require("./address_detail_model"); // Import the AddressDetail model
+
 const User = sequelizeHelpers.define(
   "User",
   {
@@ -54,11 +56,28 @@ const User = sequelizeHelpers.define(
       values: ["user", "admin", "member"],
       defaultValue: "user",
     },
+    sex: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    default_address: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: AddressDetail,
+        key: "address_id",
+      },
+    },
   },
   {
     tableName: "users",
-    timestamps: false, // because you have custom field names for timestamps
+    timestamps: false,
   }
 );
+
+User.belongsTo(AddressDetail, {
+  foreignKey: "default_address",
+  as: "defaultAddressDetail",
+});
 
 module.exports = User;

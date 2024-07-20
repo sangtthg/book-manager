@@ -18,8 +18,9 @@ const {
   msg_success,
   avatarDefault,
 } = require("../constants/common");
+const { checkSex } = require("../utilities/int/check_sex");
 module.exports.controller = (app, io, socket_list) => {
-  app.get(
+  app.post(
     "/api/user/get",
     helper.authorization,
     helper.checkRole,
@@ -28,27 +29,47 @@ module.exports.controller = (app, io, socket_list) => {
       const page = req.body.page || 1;
       const offset = (page - 1) * limit;
       //lấy ra theo option trên nhưng trừ trường password và trừ chính user đó
-      User.findAll({
-        attributes: { exclude: ["password"] },
-        where: {
-          user_id: {
-            [Op.ne]: req.auth.user_id,
-          },
-          role: "user",
-        },
-        limit: limit,
-        offset: offset,
-      })
-        .then((result) => {
-          res.json({ status: "1", message: msg_success, data: result });
-        })
-        .catch((err) => {
-          console.log("/api/users/get", err);
-          res.json({ status: "0", message: msg_fail });
+      helper.CheckParameterValid(res, req.body, ["query.roles"], async () => {
+        helper.CheckParameterNull(res, req.body, ["query.roles"], async () => {
+          const limit = req.body.limit || 10;
+          const page = req.body.page || 1;
+          const offset = (page - 1) * limit;
+          const roles = req.body.query.roles;
+          const search = req.body.query.search || "";
+
+          const whereRoleObj = roles.length > 0 ? { role: roles } : {};
+          User.findAll({
+            attributes: { exclude: ["password"] },
+            where: {
+              user_id: {
+                [Op.ne]: req.auth.user_id,
+              },
+              ...whereRoleObj,
+              [Op.or]: {
+                email: {
+                  [Op.like]: `%${search}%`,
+                },
+                username: {
+                  [Op.like]: `%${search}%`,
+                },
+              },
+            },
+            limit: limit,
+            offset: offset,
+          })
+            .then((result) => {
+              res.json({ status: "1", message: msg_success, data: result });
+            })
+            .catch((err) => {
+              console.log("/api/users/get", err);
+              res.json({ status: "0", message: msg_fail });
+            });
         });
+      });
     }
   );
-  app.get(
+
+  app.post(
     "/api/user/getadmin",
     helper.authorization,
     helper.checkRole,
@@ -86,12 +107,12 @@ module.exports.controller = (app, io, socket_list) => {
       helper.CheckParameterValid(
         res,
         req.body,
-        ["email", "role", "username"],
+        ["email", "role", "username", "sex"],
         async () => {
           helper.CheckParameterNull(
             res,
             req.body,
-            ["email", "role", "username"],
+            ["email", "role", "username", "sex"],
             async () => {
               try {
                 const user = await selectUser(req.auth.user_id);
@@ -123,6 +144,13 @@ module.exports.controller = (app, io, socket_list) => {
                   });
                 }
 
+                const isSex = checkSex(req.body.sex);
+                if (!isSex) {
+                  return res.json({
+                    status: "0",
+                    message: "Giới tính không hợp lệ",
+                  });
+                }
                 const avatar = await uploadFileToCloud(req.file);
                 const password = Math.random().toString(36).slice(-8);
                 sendMail(req.body.email, "Mật khẩu bạn là", password);
@@ -133,6 +161,7 @@ module.exports.controller = (app, io, socket_list) => {
                   role: req.body.role,
                   username: req.body.username,
                   avatar: avatar || avatarDefault,
+                  sex: req.body.sex,
                 })
                   .then((result) => {
                     res.json({ status: "1", message: msg_success });
@@ -161,12 +190,12 @@ module.exports.controller = (app, io, socket_list) => {
       helper.CheckParameterValid(
         res,
         req.body,
-        ["user_id", "email", "role", "username"],
+        ["user_id", "email", "role", "username", "sex"],
         async () => {
           helper.CheckParameterNull(
             res,
             req.body,
-            ["user_id", "email", "role", "username"],
+            ["user_id", "email", "role", "username", "sex"],
             async () => {
               try {
                 if (req.auth.role === "user") {
@@ -199,6 +228,15 @@ module.exports.controller = (app, io, socket_list) => {
                   });
                 }
 
+                const isSex = checkSex(req.body.sex);
+
+                if (!isSex) {
+                  return res.json({
+                    status: "0",
+                    message: "Giới tính không hợp lệ",
+                  });
+                }
+
                 const avatar = await uploadFileToCloud(req.file);
 
                 User.update(
@@ -207,6 +245,8 @@ module.exports.controller = (app, io, socket_list) => {
                     role: req.body.role,
                     username: req.body.username,
                     avatar: avatar || checkEmail.avatar || avatarDefault,
+                    sex: req.body.sex,
+                    updated_at: new Date(),
                   },
                   {
                     where: {
@@ -231,4 +271,59 @@ module.exports.controller = (app, io, socket_list) => {
       );
     }
   );
+
+  app.post("/api/user/change-password", helper.authorization, (req, res) => {
+    helper.Dlog(req.body);
+    const reqObj = req.body;
+    helper.CheckParameterValid(
+      res,
+      reqObj,
+      [
+        "password",
+        "new_password",
+        "re_password",
+        "verify",
+        "verify.otp_id",
+        "verify.otp",
+      ],
+      async () => {
+        const { password, new_password, re_password, verify } = reqObj;
+        const { otp_id, otp } = verify;
+        if (new_password !== re_password) {
+          return res.json({ status: "0", message: "Mật khẩu không khớp" });
+        }
+
+        const user = (
+          await User.findOne({ where: { user_id: req.auth.user_id } })
+        ).get();
+
+        const _verifyOTP = await verifyOTP(otp_id, user.email, otp);
+
+        if (!_verifyOTP) {
+          return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
+        }
+
+        const compare = await comparePassword(password, user.password);
+
+        if (!compare) {
+          return res.json({ status: "0", message: msg_invalidUser });
+        }
+        const passwordCrypt = await hashPassword(new_password);
+
+        if (!passwordCrypt) {
+          return res.json({ status: "0", message: "Lỗi mã hóa mật khẩu" });
+        }
+        const newUser = await User.update(
+          { password: passwordCrypt, updated_at: new Date() },
+          { where: { user_id: req.auth.user_id } }
+        );
+        console.log("case 5");
+
+        if (newUser) {
+          return res.json({ status: "1", message: msg_success });
+        }
+        return res.json({ status: "0", message: msg_fail });
+      }
+    );
+  });
 };

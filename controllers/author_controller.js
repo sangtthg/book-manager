@@ -99,7 +99,7 @@ module.exports.controller = (app, io, socket_list) => {
     });
   });
 
-  app.get("/api/author/get", helpers.authorization, async (req, res) => {
+  app.post("/api/author/get", helpers.authorization, async (req, res) => {
     const user = await selectUser(req.auth.user_id);
     if (user.role === "user") {
       return res.json({

@@ -81,7 +81,7 @@ class EmailHelper {
   }
 
   static async verifyOTP(id, email, otp) {
-    const query = `SELECT * FROM otps WHERE id = '${id}' AND email = '${email}' AND otp = '${otp}' AND created_at > NOW() - INTERVAL  MINUTE`;
+    const query = `SELECT * FROM otps WHERE id = '${id}' AND email = '${email}' AND otp = '${otp}' AND created_at > NOW() - INTERVAL 15 MINUTE`;
     return new Promise((resolve, reject) =>
       db.query(query, (err, res) => {
         if (err) {
