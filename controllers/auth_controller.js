@@ -89,6 +89,7 @@ module.exports.controller = (app, io, socket_list) => {
         "verify.otp_id",
         "verify.otp",
         "username",
+        "address",
       ],
       async () => {
         const { username, email, password, re_password, verify } = reqObj;

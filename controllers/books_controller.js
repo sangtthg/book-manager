@@ -159,7 +159,8 @@ module.exports.controller = (app, io, socket_list) => {
     WHERE books.title LIKE '%${search}%' ${
           category_id ? `AND books.category_id = ${category_id}` : ""
         }
-  LIMIT ${limit} OFFSET ${offset} ORDER BY books.created_at DESC
+        ORDER BY books.created_at DESC
+  LIMIT ${limit} OFFSET ${offset}
         `
       );
 
