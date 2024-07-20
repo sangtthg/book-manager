@@ -1,301 +1,395 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Danh sách tác giả</title>
-    <style>
-      table {
-        width: 80%;
-        margin: 20px auto;
-        border-collapse: collapse;
-      }
-      th,
-      td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: center;
-      }
-      th {
-        background-color: #f2f2f2;
-      }
-      tr:nth-child(even) {
-        background-color: #f9f9f9;
-      }
-      tr:hover {
-        background-color: #ddd;
-      }
-      .addcategory {
-        display: flex;
-      }
-      .dialog {
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 300px;
-        padding: 20px;
-        background-color: white;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-      }
-      .dialog.active {
-        display: block;
-      }
-      .dialog-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 500;
-      }
-      .dialog-overlay.active {
-        display: block;
-      }
-      .dialog .form-group {
-        margin-bottom: 15px;
-      }
-      .dialog .form-group label {
-        display: block;
-        margin-bottom: 5px;
-      }
-      .dialog .form-group input {
-        width: 100%;
-        padding: 8px;
-        box-sizing: border-box;
-      }
-      .dialog .form-actions {
-        text-align: right;
-      }
-      .dialog .form-actions button {
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      .dialog .form-actions button.cancel {
-        background-color: #6c757d;
-      }
-    </style>
-  </head>
-  <body>
-    <%- include('navbar.ejs') %>
-    <div style="margin-left: 275px">
-      <h3>Danh sách tác giả</h3>
-      <div class="addcategory">
-        <a class="nav-link" href="javascript:void(0)" onclick="openDialog()"
-          >Thêm tác giả</a
-        >
-
-        <div class="dialog-overlay" id="dialogOverlay"></div>
-        <div class="dialog" id="dialog">
-          <h3>Thêm tác giả</h3>
-          <div class="form-group">
-            <label for="authorName">Tên tác giả</label>
-            <input type="text" id="authorName" name="authorName" />
-          </div>
-          <div class="form-actions">
-            <button type="button" onclick="saveAuthor()">Lưu</button>
-            <button type="button" class="cancel" onclick="closeDialog()">
-              Hủy
-            </button>
-          </div>
-        </div>
-
-        <div class="dialog" id="editDialog">
-          <h3>Chỉnh sửa tác giả</h3>
-          <div class="form-group">
-            <label for="editAuthorName">Tên tác giả</label>
-            <input type="text" id="editAuthorName" name="authorName" />
-          </div>
-          <div class="form-actions">
-            <button type="button" onclick="updateAuthor()">Cập nhật</button>
-            <button type="button" class="cancel" onclick="closeEditDialog()">
-              Hủy
-            </button>
-          </div>
-        </div>
-      </div>
-      <table id="author-table">
-        <thead>
-          <tr>
-            <th scope="col">STT</th>
-            <th scope="col">ID tác giả</th>
-            <th scope="col">Tên tác giả</th>
-            <th scope="col">Người tạo</th>
-            <th scope="col">Chức năng</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Danh sách tác giả</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    table {
+      width: 80%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #e9ecef;
+    }
+    .addcategory {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+    .addcategory a {
+      background-color: #007bff;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    .addcategory a:hover {
+      background-color: #0056b3;
+    }
+    .dialog, .alert-dialog {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px; /* Tăng kích thước dialog */
+      padding: 30px; /* Tăng padding của dialog */
+      background-color: #ffffff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px; /* Đổi góc bo tròn */
+      z-index: 1000;
+    }
+    .dialog.active, .alert-dialog.active {
+      display: block;
+    }
+    .dialog-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6); /* Tăng độ tối của overlay */
+      z-index: 500;
+    }
+    .dialog-overlay.active {
+      display: block;
+    }
+    .dialog .form-group {
+      margin-bottom: 20px; /* Tăng khoảng cách dưới của form-group */
+    }
+    .dialog .form-group label {
+      display: block;
+      margin-bottom: 10px; /* Tăng khoảng cách dưới của label */
+      font-weight: bold;
+    }
+    .dialog .form-group input {
+      width: calc(100% - 22px);
+      padding: 12px; /* Tăng padding của input */
+      box-sizing: border-box;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+    .dialog .form-actions {
+      text-align: right;
+    }
+    .dialog .form-actions button {
+      padding: 14px 28px; /* Tăng padding của nút */
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    .dialog .form-actions button.cancel {
+      background-color: #6c757d;
+    }
+    .dialog .form-actions button:hover {
+      background-color: #0056b3;
+    }
+    .dialog .form-actions button.cancel:hover {
+      background-color: #5a6268;
+    }
+    .alert-dialog {
+      border: 2px solid transparent;
+      padding: 30px; /* Tăng padding của alert-dialog */
+      text-align: center;
+      max-width: 80%;
+    }
+    .alert-dialog.success {
+      border-color: #28a745;
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .alert-dialog.error {
+      border-color: #dc3545;
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .alert-dialog h3 {
+      margin-bottom: 20px; /* Tăng khoảng cách dưới của tiêu đề */
+    }
+    .alert-dialog .form-actions {
+      text-align: center;
+    }
+    .alert-dialog .form-actions button {
+      padding: 14px 28px; /* Tăng padding của nút */
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    .alert-dialog.success button {
+      background-color: #28a745;
+    }
+    .alert-dialog.error button {
+      background-color: #dc3545;
+    }
+    .alert-dialog button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <%- include('navbar.ejs') %>
+  <div style="margin-left: 275px">
+    <h3>Danh sách tác giả</h3>
+    <div class="addcategory">
+      <a class="nav-link" href="javascript:void(0)" onclick="openDialog()">Thêm tác giả</a>
     </div>
 
-    <script>
-      const token = localStorage.getItem("token");
+    <div class="dialog-overlay" id="dialogOverlay"></div>
+    <div class="dialog" id="dialog">
+      <h3>Thêm tác giả</h3>
+      <div class="form-group">
+        <label for="authorName">Tên tác giả</label>
+        <input type="text" id="authorName" name="authorName" />
+      </div>
+      <div class="form-actions">
+        <button type="button" onclick="saveAuthor()">Lưu</button>
+        <button type="button" class="cancel" onclick="closeDialog()">Hủy</button>
+      </div>
+    </div>
 
-      function fetchAuthors() {
-        fetch("/api/author/get", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "1") {
-              const tableBody = document.querySelector("#author-table tbody");
-              tableBody.innerHTML = "";
+    <div class="dialog" id="editDialog">
+      <h3>Chỉnh sửa tác giả</h3>
+      <div class="form-group">
+        <label for="editAuthorName">Tên tác giả</label>
+        <input type="text" id="editAuthorName" name="authorName" />
+      </div>
+      <div class="form-actions">
+        <button type="button" onclick="updateAuthor()">Cập nhật</button>
+        <button type="button" class="cancel" onclick="closeEditDialog()">Hủy</button>
+      </div>
+    </div>
 
-              data.data.rows.forEach((author, index) => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${author.author_id}</td>
-                <td>${author.author_name}</td>
-                <td>${author.created_by}</td>
-                <td>
-                  <button onclick="openEditDialog(${author.author_id}, '${
-                  author.author_name
-                }')">Sửa</button>
-                  <button onclick="deleteAuthor(${
-                    author.author_id
-                  })">Xóa</button>
-                </td>
-              `;
-                tableBody.appendChild(row);
-              });
-            } else {
-              alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
-            }
-          })
-          .catch((error) => console.error("Error fetching authors:", error));
-      }
+    <div class="alert-dialog success" id="successDialog">
+      <h3>Thành công</h3>
+      <div class="form-actions">
+        <button type="button" onclick="closeSuccessDialog()">Đóng</button>
+      </div>
+    </div>
 
-      function openDialog() {
-        document.getElementById("dialog").classList.add("active");
-        document.getElementById("dialogOverlay").classList.add("active");
-      }
+    <div class="alert-dialog error" id="errorDialog">
+      <h3>Thất bại</h3>
+      <div class="form-actions">
+        <button type="button" onclick="closeErrorDialog()">Đóng</button>
+      </div>
+    </div>
 
-      function closeDialog() {
-        document.getElementById("dialog").classList.remove("active");
-        document.getElementById("dialogOverlay").classList.remove("active");
-      }
+    <table id="author-table">
+      <thead>
+        <tr>
+          <th scope="col">STT</th>
+          <th scope="col">ID tác giả</th>
+          <th scope="col">Tên tác giả</th>
+          <th scope="col">Người tạo</th>
+          <th scope="col">Chức năng</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-      function openEditDialog(authorId, authorName) {
-        editingAuthorId = authorId;
-        console.log("ID của dữ liệu cần sửa:", authorId);
-        console.log("Tên của dữ liệu cần sửa:", authorName);
-        document.getElementById("editAuthorName").value = authorName;
-        document.getElementById("editDialog").classList.add("active");
-        document.getElementById("dialogOverlay").classList.add("active");
-      }
+  <script>
+    const token = localStorage.getItem("token");
+    let editingAuthorId = null;
 
-      function closeEditDialog() {
-        editingAuthorId = null;
-        document.getElementById("editDialog").classList.remove("active");
-        document.getElementById("dialogOverlay").classList.remove("active");
-        document.getElementById("editAuthorName").value = "";
-      }
+    function fetchAuthors() {
+      fetch("/api/author/get", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "1") {
+          const tableBody = document.querySelector("#author-table tbody");
+          tableBody.innerHTML = "";
 
-      function saveAuthor() {
-        const authorName = document.getElementById("authorName").value;
-
-        if (!token) {
-          alert("Bạn cần đăng nhập để thêm tác giả.");
-          return;
+          data.data.rows.forEach((author, index) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${author.author_id}</td>
+              <td>${author.author_name}</td>
+              <td>${author.created_by}</td>
+              <td>
+                <button onclick="openEditDialog(${author.author_id}, '${author.author_name}')">Sửa</button>
+                <button onclick="deleteAuthor(${author.author_id})">Xóa</button>
+              </td>
+            `;
+            tableBody.appendChild(row);
+          });
+        } else {
+          showAlertDialog('error', `Lấy danh sách tác giả thất bại: ${data.message}`);
         }
+      })
+      .catch(error => console.error("Error fetching authors:", error));
+    }
 
-        fetch("/api/author/add", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: authorName,
-          }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "1") {
-              alert("Thêm tác giả thành công!");
-              closeDialog();
-              fetchAuthors();
-            } else {
-              alert(`Thêm tác giả thất bại: ${data.message}`);
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Có lỗi xảy ra.");
-          });
+    function openDialog() {
+      document.getElementById("dialog").classList.add("active");
+      document.getElementById("dialogOverlay").classList.add("active");
+    }
+
+    function closeDialog() {
+      document.getElementById("dialog").classList.remove("active");
+      document.getElementById("dialogOverlay").classList.remove("active");
+    }
+
+    function openEditDialog(authorId, authorName) {
+      editingAuthorId = authorId;
+      document.getElementById("editAuthorName").value = authorName;
+      document.getElementById("editDialog").classList.add("active");
+      document.getElementById("dialogOverlay").classList.add("active");
+    }
+
+    function closeEditDialog() {
+      editingAuthorId = null;
+      document.getElementById("editDialog").classList.remove("active");
+      document.getElementById("dialogOverlay").classList.remove("active");
+      document.getElementById("editAuthorName").value = "";
+    }
+
+    function showAlertDialog(type, message) {
+      const dialog = type === 'success' ? document.getElementById("successDialog") : document.getElementById("errorDialog");
+      dialog.querySelector('h3').textContent = message;
+      dialog.classList.add("active");
+      document.getElementById("dialogOverlay").classList.add("active");
+    }
+
+    function closeSuccessDialog() {
+      document.getElementById("successDialog").classList.remove("active");
+      document.getElementById("dialogOverlay").classList.remove("active");
+    }
+
+    function closeErrorDialog() {
+      document.getElementById("errorDialog").classList.remove("active");
+      document.getElementById("dialogOverlay").classList.remove("active");
+    }
+
+    function saveAuthor() {
+      const authorName = document.getElementById("authorName").value;
+
+      if (!token) {
+        alert("Bạn cần đăng nhập để thêm tác giả.");
+        return;
       }
 
-      function updateAuthor() {
-        const authorName = document.getElementById("editAuthorName").value;
-
-        if (!token) {
-          alert("Bạn cần đăng nhập để chỉnh sửa tác giả.");
-          return;
+      fetch("/api/author/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: authorName }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "1") {
+          showAlertDialog('success', "Thêm tác giả thành công!");
+          closeDialog();
+          fetchAuthors();
+        } else {
+          showAlertDialog('error', `Thêm tác giả thất bại: ${data.message}`);
         }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        showAlertDialog('error', "Có lỗi xảy ra.");
+      });
+    }
 
-        fetch("/api/author/update", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: authorName,
-            id: editingAuthorId,
-          }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "1") {
-              alert("Cập nhật tác giả thành công!");
-              closeEditDialog();
-              fetchAuthors();
-            } else {
-              alert(`Cập nhật tác giả thất bại: ${data.message}`);
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Có lỗi xảy ra.");
-          });
+    function updateAuthor() {
+      const authorName = document.getElementById("editAuthorName").value;
+
+      if (!token) {
+        alert("Bạn cần đăng nhập để chỉnh sửa tác giả.");
+        return;
       }
 
-      function deleteAuthor(authorId) {
-        fetch(`/api/author/delete/${authorId}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "1") {
-              alert("Xóa tác giả thành công!");
-              fetchAuthors();
-            } else {
-              alert(`Xóa tác giả thất bại: ${data.message}`);
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Có lỗi xảy ra.");
-          });
-      }
+      fetch("/api/author/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: authorName, id: editingAuthorId }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "1") {
+          showAlertDialog('success', "Cập nhật tác giả thành công!");
+          closeEditDialog();
+          fetchAuthors();
+        } else {
+          showAlertDialog('error', `Cập nhật tác giả thất bại: ${data.message}`);
+        }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        showAlertDialog('error', "Có lỗi xảy ra.");
+      });
+    }
 
-      document.addEventListener("DOMContentLoaded", fetchAuthors);
+    function deleteAuthor(authorId) {
+      fetch(`/api/author/delete/${authorId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "1") {
+          showAlertDialog('success', "Xóa tác giả thành công!");
+          fetchAuthors();
+        } else {
+          showAlertDialog('error', `Xóa tác giả thất bại: ${data.message}`);
+        }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        showAlertDialog('error', "Có lỗi xảy ra.");
+      });
+    }
 
-      closeDialog();
-    </script>
-  </body>
+    document.addEventListener("DOMContentLoaded", fetchAuthors);
+  </script>
+</body>
 </html>
+ x bA
