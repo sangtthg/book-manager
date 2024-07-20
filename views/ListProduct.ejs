@@ -209,8 +209,8 @@
 
       function fetchBooks(page = currentPage) {
         const offset = (page - 1) * itemsPerPage;
-        fetch(`/api/book/get?limit=${itemsPerPage}&offset=${offset}`, {
-          method: "GET",
+        fetch(`/api/book/get`, {
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -283,7 +283,7 @@
       function fetchAuthors() {
         const authorSelect = document.getElementById("authorSelect");
         fetch("/api/author/get", {
-          method: "GET",
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -308,7 +308,7 @@
 
       function fetchCategories() {
         fetch("/api/category/get", {
-          method: "GET",
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",

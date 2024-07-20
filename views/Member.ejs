@@ -147,6 +147,7 @@
 
       function fetchAuthors() {
         fetch("/api/user/getadmin", {
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
           },

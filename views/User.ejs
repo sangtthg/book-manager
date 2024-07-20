@@ -106,12 +106,23 @@
 
     <script>
       const token = localStorage.getItem("token");
+      function fetchUsers() {
+        const data = {
+          page: 1,
+          limit: 10,
+          query: {
+            search: "",
+            roles: ["admin", "user"],
+          },
+        };
 
-      function fetchAuthors() {
-        fetch("/api/user/get", {
+        fetch("http://localhost:8000/api/user/get", {
+          method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify(data),
         })
           .then((response) => response.json())
           .then((data) => {
@@ -130,26 +141,25 @@
 
                 const row = document.createElement("tr");
                 row.innerHTML = `
-                <td>${index + 1}</td>
-              <td>${user.username}</td>
-              <td>${user.email}</td>
-            
-              <td><img src="${user.avatar}" alt="${
+            <td>${index + 1}</td>
+            <td>${user.username}</td>
+            <td>${user.email}</td>
+            <td><img src="${user.avatar}" alt="${
                   user.username
                 }" style="width: 50px; height: 50px;"></td>
-              <td>${user.user_status}</td>
-              <td>${formattedDate}</td>
-            `;
+            <td>${user.user_status}</td>
+            <td>${formattedDate}</td>
+          `;
                 tableBody.appendChild(row);
               });
             } else {
-              alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
+              alert(`Lấy danh sách người dùng thất bại: ${data.message}`);
             }
           })
-          .catch((error) => console.error("Error fetching authors:", error));
+          .catch((error) => console.error("Error fetching users:", error));
       }
 
-      document.addEventListener("DOMContentLoaded", fetchAuthors);
+      document.addEventListener("DOMContentLoaded", fetchUsers);
     </script>
   </body>
 </html>
