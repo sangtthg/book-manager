@@ -7,9 +7,9 @@ const generateRandomOTP = async () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
-const saveOTPToDB = async (email, otp) => {
+const saveOTPToDB = async (email, otp, type) => {
   return new Promise((resolve, reject) => {
-    const query = `INSERT INTO otps (email, otp) VALUES ('${email}', '${otp}')`;
+    const query = `INSERT INTO otps (email, otp, type) VALUES ('${email}', '${otp}', '${type}')`;
     db.query(query, (err, result) => {
       if (err) {
         reject(new Error(`Lỗi khi lưu OTP vào DB: ${err}`));
@@ -49,7 +49,7 @@ class EmailHelper {
     });
   };
 
-  static async sendOTPEmail(email) {
+  static async sendOTPEmail(email, type) {
     if (!regexEmail(email)) throw new Error("Email không đúng định dạng");
     const otp = await generateRandomOTP();
     let transporter = nodemailer.createTransport({
@@ -75,13 +75,13 @@ class EmailHelper {
         throw new Error(`Lỗi khi gửi mã xác nhận Email: ${error}`);
       }
     });
-    const db_otp = await saveOTPToDB(email, otp);
+    const db_otp = await saveOTPToDB(email, otp, type);
     console.log("db_otp", db_otp);
     return db_otp;
   }
 
-  static async verifyOTP(id, email, otp) {
-    const query = `SELECT * FROM otps WHERE id = '${id}' AND email = '${email}' AND otp = '${otp}' AND created_at > NOW() - INTERVAL 15 MINUTE`;
+  static async verifyOTP(id, email, otp, type) {
+    const query = `SELECT * FROM otps WHERE id = '${id}' AND email = '${email}' AND otp = '${otp}' AND type = '${type}' AND created_at > NOW() - INTERVAL 15 MINUTE`;
     return new Promise((resolve, reject) =>
       db.query(query, (err, res) => {
         if (err) {

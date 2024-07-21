@@ -1,10 +1,5 @@
 const helper = require("../helpers/helpers");
-const {
-  sendOTPEmail,
-  verifyOTP,
-  sendMail,
-} = require("../helpers/email_helpers");
-const jwt = require("../Service/jwt");
+const { verifyOTP, sendMail } = require("../helpers/email_helpers");
 const { comparePassword, hashPassword } = require("../Service/bcrypt");
 const { selectUser } = require("../Service/user");
 const User = require("../models/user_model");
