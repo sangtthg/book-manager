@@ -437,7 +437,7 @@ module.exports.controller = (app, io, socket_list) => {
 
           // lấy ra 5 review mới nhất và có rating cao nhất
 
-          const [author, category, reviews] = await Promise.all([
+          const [author, category, [reviews]] = await Promise.all([
             Author.findOne({ where: { author_id: book.author_id } }),
             Category.findOne({ where: { category_id: book.category_id } }),
             sequelizeHelpers.query(
