@@ -281,9 +281,6 @@ module.exports.controller = (app, io, socket_list) => {
     }
   );
 
-  // viết 1 api cho màn home trả về 2 danh sách:
-  // 1. sách mới xuất bản
-  // 2. sách bán chạy
   app.post(
     "/api/home/get-list-book",
     // helpers.authorization,
@@ -438,13 +435,15 @@ module.exports.controller = (app, io, socket_list) => {
             });
           }
 
-          const author = await Author.findOne({
-            where: { author_id: book.author_id },
-          });
+          // lấy ra 5 review mới nhất và có rating cao nhất
 
-          const category = await Category.findOne({
-            where: { category_id: book.category_id },
-          });
+          const [author, category, reviews] = await Promise.all([
+            Author.findOne({ where: { author_id: book.author_id } }),
+            Category.findOne({ where: { category_id: book.category_id } }),
+            sequelizeHelpers.query(
+              `SELECT reviews.review_id, reviews.rating, reviews.comment, reviews.review_images, reviews.created_at, users.username, users.avatar FROM reviews INNER JOIN users ON reviews.user_id = users.user_id WHERE reviews.book_id = ${req.body.book_id} ORDER BY reviews.created_at DESC, reviews.rating DESC LIMIT 5;`
+            ),
+          ]);
 
           const data = {
             book_id: book.book_id,
@@ -459,6 +458,7 @@ module.exports.controller = (app, io, socket_list) => {
             views_count: book.views_count,
             purchase_count: book.purchase_count,
             used_books: book.used_books,
+            reviews: reviews,
           };
           return res.json({
             status: "1",
