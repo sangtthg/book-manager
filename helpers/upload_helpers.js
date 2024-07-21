@@ -27,4 +27,15 @@ const uploadFileToCloud = async (file) => {
   }
 };
 
-module.exports = { uploadFileToCloud };
+const uploadMultipleFilesToCloud = async (files) => {
+  try {
+    const uploadPromises = files.map((file) => uploadFileToCloud(file));
+    const results = await Promise.all(uploadPromises);
+    return results;
+  } catch (error) {
+    console.log("uploadMultipleFiles error: ", error);
+    return null;
+  }
+};
+
+module.exports = { uploadFileToCloud, uploadMultipleFilesToCloud };
