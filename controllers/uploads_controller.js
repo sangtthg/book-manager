@@ -1,8 +1,6 @@
-const db = require("./../helpers/db_helpers");
 const helper = require("./../helpers/helpers");
 const multiparty = require("multiparty"); //npm i multiparty
 const fs = require("fs");
-const { sendOTPEmail } = require("../helpers/email_helpers");
 const imageSavePath = "./public/img/";
 
 module.exports.controller = (app, io, socket_list) => {

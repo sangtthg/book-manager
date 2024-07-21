@@ -1,8 +1,5 @@
 const db = require("../helpers/db_helpers");
 const helper = require("../helpers/helpers");
-const { sendOTPEmail, verifyOTP } = require("../helpers/email_helpers");
-const jwt = require("../Service/jwt");
-const { comparePassword, hashPassword } = require("../Service/bcrypt");
 const { selectUser } = require("../Service/user");
 const msg_success = "successfully";
 const msg_fail = "fail";
