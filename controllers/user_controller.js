@@ -15,7 +15,7 @@ const {
 } = require("../constants/common");
 const { checkSex } = require("../utilities/int/check_sex");
 module.exports.controller = (app, io, socket_list) => {
-  app.post(
+  app.post(//
     "/api/user/get",
     helper.authorization,
     helper.checkRole,
