@@ -149,7 +149,8 @@ module.exports.controller = (app, io, socket_list) => {
     books.new_price,
     books.views_count,
     books.purchase_count,
-    books.used_books
+    books.used_books,
+    ((books.old_price - books.new_price) / books.old_price) * 100 as discount_percentage
   FROM 
     books
   INNER JOIN 
@@ -172,7 +173,10 @@ module.exports.controller = (app, io, socket_list) => {
         return res.json({
           status: "1",
           message: msg_success,
+
           data: {
+            page: page,
+            limit: limit,
             total: results.length,
             totalAll: totalAll[0].totalAll,
             data: results,

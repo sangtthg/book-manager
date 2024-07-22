@@ -74,7 +74,10 @@ module.exports.controller = (app, io, socket_list) => {
               .then((result) => {
                 res.json({
                   status: "1",
-                  data: {totalAll: result.count, data: result.rows},
+                  data: {
+                    totalAll: result.count,
+                    data: result.rows
+                  },
                 });
               })
               .catch((err) => {
