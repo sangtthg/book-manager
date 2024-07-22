@@ -55,11 +55,12 @@ module.exports.controller = (app, io, socket_list) => {
 
   app.post("/api/cart/get", helpers.authorization, (req, res) => {
     const user_id = req.auth.user_id;
-    const { page = 1, limit = 10 } = req.body;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
     CartDetail.findAndCountAll({
-      where: { user_id },
+      where: {user_id},
       limit,
       offset,
       include: [
@@ -70,16 +71,16 @@ module.exports.controller = (app, io, socket_list) => {
       ],
       order: [["created_date", "DESC"]],
     })
-      .then((result) => {
-        res.json({
-          status: "1",
-          data: { totalAll: result.count, data: result.rows },
-        });
-      })
-      .catch((err) => {
-        console.log("/api/cart/get", err);
-        res.json({ status: "0", message: msg_fail });
-      });
+              .then((result) => {
+                res.json({
+                  status: "1",
+                  data: {totalAll: result.count, data: result.rows},
+                });
+              })
+              .catch((err) => {
+                console.log("/api/cart/get", err);
+                res.json({status: "0", message: msg_fail});
+              });
   });
 
   //delete cart
