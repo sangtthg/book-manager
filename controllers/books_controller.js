@@ -292,7 +292,7 @@ module.exports.controller = (app, io, socket_list) => {
         const [newBooks, bestSellerBooks, mostViewBooks, randomBooks] =
           await Promise.all([
             Book.findAll({
-              where: { publication_year: new Date().getFullYear() },
+              // where: { publication_year: new Date().getFullYear() },
               order: [["created_at", "DESC"]],
               limit: 7,
             }),
