@@ -82,6 +82,26 @@ module.exports.controller = (app, io, socket_list) => {
       });
   });
 
+  //total number of cart items
+  app.get("/api/cart/total-items", helpers.authorization, async (req, res) => {
+    const user_id = req.auth.user_id;
+
+    try {
+      const totalItems = await CartDetail.sum('quantity', {
+        where: { user_id },
+      });
+
+      res.json({
+        status: "1",
+        message: msg_success,
+        totalItems: totalItems || 0,
+      });
+    } catch (err) {
+      console.log("/api/cart/total-items error:", err);
+      res.json({ status: "0", message: msg_fail });
+    }
+  });
+
   //delete cart
   app.post("/api/cart/delete", helpers.authorization, (req, res) => {
     const reqObj = req.body;
