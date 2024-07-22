@@ -351,6 +351,8 @@ module.exports.controller = (app, io, socket_list) => {
                 book_avatar: book.book_avatar,
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage:
+                    ((book.old_price - book.new_price) / book.old_price) * 100,
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
@@ -373,6 +375,8 @@ module.exports.controller = (app, io, socket_list) => {
                 book_avatar: book.book_avatar,
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage:
+                    ((book.old_price - book.new_price) / book.old_price) * 100,
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
@@ -397,6 +401,8 @@ module.exports.controller = (app, io, socket_list) => {
 
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage:
+                    ((book.old_price - book.new_price) / book.old_price) * 100,
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
