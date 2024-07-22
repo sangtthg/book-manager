@@ -53,7 +53,7 @@ module.exports.controller = (app, io, socket_list) => {
     });
   });
 
-  app.post("/api/cart/get", helpers.authorization, (req, res) => {
+  app.get("/api/cart/get", helpers.authorization, (req, res) => {
     const user_id = req.auth.user_id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
