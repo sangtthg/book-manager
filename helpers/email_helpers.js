@@ -81,14 +81,14 @@ class EmailHelper {
   }
 
   static async verifyOTP(id, email, otp, type) {
-    const query = `SELECT * FROM otps WHERE id = '${id}' AND email = '${email}' AND otp = '${otp}' AND type = '${type}' AND created_at > NOW() - INTERVAL 15 MINUTE`;
+    const query = `SELECT * FROM otps WHERE id = '${id}' AND email = '${email}' AND otp = '${otp}' AND type = '${type}' AND created_at > NOW() - INTERVAL 5 MINUTE`;
     return new Promise((resolve, reject) =>
-        db.query(query, (err, res) => {
-          if (err) {
-            reject(err);
-          }
-          resolve(res.length > 0);
-        })
+      db.query(query, (err, res) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(res.length > 0);
+      })
     );
   }
 }
