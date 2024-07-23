@@ -6,30 +6,14 @@ const msg_fail = "fail";
 
 module.exports.controller = (app, io, socket_list) => {
   //add cart
-  app.post("/api/cart/add", helpers.authorization, (req, res) => {
+  app.post("/api/cart/add", helpers.authorization, async (req, res) => {
     const reqObj = req.body;
     helpers.CheckParameterValid(res, reqObj, ["listCart"], async () => {
       const listCart = reqObj.listCart || [];
       const user_id = req.auth.user_id;
-      const data = [];
-      const listBookId = [];
-      for (let index = 0; index < listCart.length; index++) {
-        const { book_id, quantity } = listCart[index];
-        if (book_id === undefined || quantity === undefined) {
-          return res.json({ status: "0", message: "Invalid data" });
-        }
-        if (quantity < 1) {
-          return res.json({ status: "0", message: "Invalid quantity" });
-        }
-        data.push({
-          user_id,
-          book_id,
-          quantity,
-        });
-        listBookId.push(book_id);
-      }
+      const listBookId = listCart.map(item => item.book_id);
 
-      if (data.length === 0) {
+      if (listBookId.length === 0) {
         return res.json({ status: "0", message: "Invalid data" });
       }
 
@@ -41,15 +25,51 @@ module.exports.controller = (app, io, socket_list) => {
         return res.json({ status: "0", message: "Invalid book" });
       }
 
-      CartDetail.bulkCreate(data)
-        .then((result) => {
-          console.log(result);
-          res.json({ status: "1", message: msg_success });
-        })
-        .catch((err) => {
-          console.log("/api/cart/add", err);
-          res.json({ status: "0", message: msg_fail });
+      const existingCartItems = await CartDetail.findAll({
+        where: { user_id, book_id: listBookId },
+      });
+
+      const dataToAddOrUpdate = [];
+      const existingBookIds = existingCartItems.map(item => item.book_id);
+
+      for (let item of listCart) {
+        const { book_id, quantity } = item;
+        if (quantity < 1) {
+          return res.json({ status: "0", message: "Invalid quantity" });
+        }
+
+        const book = books.find(book => book.book_id === book_id);
+        const book_title_in_cart = book.title;
+
+        const existingCartItem = existingCartItems.find(cartItem => cartItem.book_id === book_id);
+        if (existingCartItem) {
+          existingCartItem.quantity += quantity;
+          existingCartItem.modify_date = new Date();
+          existingCartItem.book_title_in_cart = book_title_in_cart;
+          dataToAddOrUpdate.push(existingCartItem.save());
+        } else {
+          dataToAddOrUpdate.push(
+              CartDetail.create({
+                user_id,
+                book_id,
+                quantity,
+                book_title_in_cart,
+              })
+          );
+        }
+      }
+
+      try {
+        await Promise.all(dataToAddOrUpdate);
+        const updatedCartItems = await CartDetail.findAll({
+          where: { user_id },
+          order: [['modify_date', 'DESC']],
         });
+        res.json({ status: "1", message: "Success", data: updatedCartItems });
+      } catch (err) {
+        console.log("/api/cart/add", err);
+        res.json({ status: "0", message: "Fail" });
+      }
     });
   });
 
