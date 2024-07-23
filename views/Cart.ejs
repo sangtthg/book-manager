@@ -42,18 +42,22 @@
     </div>
 
     <script>
-      console.log("====================================");
-      console.log("sáng");
-      console.log("====================================");
       document.addEventListener("DOMContentLoaded", () => {
         const token = localStorage.getItem("token");
         fetch("/api/cart/get", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Thay thế bằng token thực tế của bạn
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ page: 1, limit: 10 }),
+          // body: JSON.stringify({
+          //   listCart: [
+          //     {
+          //       book_id: 2,
+          //       quantity: 2,
+          //     },
+          //   ],
+          // }),
         })
           .then((response) => {
             console.log("HTTP Response Status:", response.status);
@@ -63,28 +67,39 @@
             console.log("Dữ liệu nhận được từ API:", data);
             if (data.status === "1") {
               const cartItems = data.data.data;
+              console.log("====================================");
+              console.log("dataaaa", data);
+              console.log("====================================");
+              console.log("Danh sách đơn hàng:", cartItems);
+
               const cartTbody = document.getElementById("cart-tbody");
-              cartTbody.innerHTML = cartItems
-                .map(
-                  (item, index) => `
+              cartTbody.innerHTML = cartItems.length
+                ? cartItems
+                    .map(
+                      (item, index) => `
         <tr>
           <td>${index + 1}</td>
           <td>${item.cart_id}</td>
           <td>${item.user_id}</td>
-          <td>${item.Book.book_id}</td>
+          <td>${item.Book ? item.Book.book_id : "N/A"}</td>
           <td>${item.quantity}</td>
           <td>${item.status}</td>
           <td>${new Date(item.created_date).toLocaleDateString()}</td>
           <td>${new Date(item.modify_date).toLocaleDateString()}</td>
         </tr>
       `
-                )
-                .join("");
+                    )
+                    .join("")
+                : "<tr><td colspan='8'>Không có dữ liệu</td></tr>";
             } else {
-              alert("Không có dữ liệu đơn hàng");
+              alert(
+                "Không có dữ liệu đơn hàng hoặc dữ liệu không đúng định dạng"
+              );
             }
           })
-          .catch((err) => console.error("Lỗi khi lấy dữ liệu giỏ hàng:", err));
+          .catch((err) => {
+            console.error("Lỗi khi lấy dữ liệu giỏ hàng:", err);
+          });
       });
     </script>
   </body>

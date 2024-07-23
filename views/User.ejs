@@ -3,88 +3,197 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Danh sách đơn hàng</title>
+    <title>Danh sách khách hàng</title>
     <style>
-      table {
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+      }
+      h3 {
+        margin-bottom: 20px;
+      }
+      .search-container {
+        margin-bottom: 20px;
+      }
+      .search-container input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
         width: 100%;
+        box-sizing: border-box;
+      }
+      table {
+        width: 80%;
+        margin: 20px auto;
         border-collapse: collapse;
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
       th,
       td {
-        border: 1px solid black;
-        padding: 8px;
-        text-align: left;
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
       }
       th {
-        background-color: #f2f2f2;
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+      }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      tr:hover {
+        background-color: #e9ecef;
+      }
+      .status-circle {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .status-success {
+        background-color: #dc3545;
+      }
+      .status-failure {
+        background-color: #28a745;
+      }
+      .status-container {
+        margin-top: 20px;
+        text-align: center;
+      }
+      .status-container span {
+        display: inline-block;
+        margin: 0 10px;
+        font-size: 16px;
+        font-weight: bold;
+      }
+      .status-success-msg {
+        color: #28a745;
+      }
+      .status-failure-msg {
+        color: #dc3545;
       }
     </style>
   </head>
   <body>
     <%- include('navbar.ejs') %>
     <div style="margin-left: 275px">
-      <h3>Danh sách đơn hàng</h3>
+      <h3>Danh sách khách hàng</h3>
+      <div class="search-container">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Tìm kiếm khách hàng..."
+          onkeyup="searchCustomers()"
+        />
+      </div>
       <table id="author-table">
         <thead>
           <tr>
             <th scope="col">STT</th>
-            <th scope="col">Mã đơn hàng</th>
-            <th scope="col">Mã khách hàng</th>
-            <th scope="col">Mã sách</th>
-            <th scope="col">Số lượng</th>
+            <th scope="col">Tên khách hàng</th>
+            <th scope="col">Email</th>
+            <th scope="col">Ảnh</th>
             <th scope="col">Trạng thái</th>
             <th scope="col">Ngày đăng ký</th>
-            <th scope="col">Ngày cập nhật</th>
           </tr>
         </thead>
-        <tbody id="cart-tbody"></tbody>
+        <tbody></tbody>
       </table>
+      <div class="status-container">
+        <span class="status-circle status-success"></span> Trạng thái thất bại
+        <span class="status-circle status-failure"></span> Trạng thái thất thành
+        công
+      </div>
     </div>
 
     <script>
       const token = localStorage.getItem("token");
-      fetch("/api/cart/get", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Đảm bảo token hợp lệ
-        },
-        body: JSON.stringify({ page: 1, limit: 10 }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Dữ liệu nhận được từ API:", data);
-          const cartTbody = document.getElementById("cart-tbody");
 
-          if (data.status === "1" && data.data && data.data.data.length > 0) {
-            const cartItems = data.data.data;
-            cartTbody.innerHTML = cartItems
-              .map((item, index) => {
-                console.log(`Mã đơn hàng ${index + 1}: ${item.cart_id}`); // Log dữ liệu lên console
-                return `
-                    <tr>
-                      <td>${index + 1}</td>
-                      <td>${item.cart_id}</td>
-                      <td>${item.user_id}</td>
-                      <td>${item.book_id}</td>
-                      <td>${item.quantity}</td>
-                      <td>${item.status}</td>
-                      <td>${new Date(
-                        item.created_date
-                      ).toLocaleDateString()}</td>
-                      <td>${new Date(
-                        item.modify_date
-                      ).toLocaleDateString()}</td>
-                    </tr>
-                  `;
-              })
-              .join("");
-          } else {
-            cartTbody.innerHTML =
-              "<tr><td colspan='8'>Không có dữ liệu đơn hàng</td></tr>";
-          }
+      function fetchUsers() {
+        const data = {
+          page: 1,
+          limit: 10,
+          query: {
+            search: "",
+            roles: ["admin", "user"],
+          },
+        };
+
+        fetch("/api/user/get", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
         })
-        .catch((err) => console.error("Lỗi khi lấy dữ liệu giỏ hàng:", err));
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              const tableBody = document.querySelector("#author-table tbody");
+              tableBody.innerHTML = "";
+
+              data.data.forEach((user, index) => {
+                const createdAt = new Date(user.created_at);
+                const formattedDate = `${createdAt
+                  .getDate()
+                  .toString()
+                  .padStart(2, "0")}-${(createdAt.getMonth() + 1)
+                  .toString()
+                  .padStart(2, "0")}-${createdAt.getFullYear()}`;
+
+                const statusClass =
+                  user.user_status === "active"
+                    ? "status-success"
+                    : "status-failure";
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                  <td>${index + 1}</td>
+                  <td>${user.username}</td>
+                  <td>${user.email}</td>
+                  <td><img src="${user.avatar}" alt="${
+                  user.username
+                }" style="width: 50px; height: 50px;"></td>
+                  <td><span class="status-circle ${statusClass}"></span></td>
+                  <td>${formattedDate}</td>
+                `;
+                tableBody.appendChild(row);
+              });
+            } else {
+              alert(`Lấy danh sách người dùng thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => console.error("Error fetching users:", error));
+      }
+
+      function searchCustomers() {
+        const searchInput = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const tableRows = document.querySelectorAll("#author-table tbody tr");
+
+        tableRows.forEach((row) => {
+          const username = row.children[1].textContent.toLowerCase();
+          const email = row.children[2].textContent.toLowerCase();
+
+          if (username.includes(searchInput) || email.includes(searchInput)) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchUsers);
     </script>
   </body>
 </html>

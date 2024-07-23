@@ -11,6 +11,7 @@ const Author = path.join(__dirname, "../views/Author.ejs");
 const User = path.join(__dirname, "../views/User.ejs");
 const Member = path.join(__dirname, "../views/Member.ejs");
 const Cart = path.join(__dirname, "../views/Cart.ejs");
+const Edit_book = path.join(__dirname, "../views/edit_book.ejs");
 
 router.get("/home", function (req, res, next) {
   res.render(home);

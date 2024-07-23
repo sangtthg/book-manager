@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Danh sách sản phẩm</title>
     <style>
+      /* CSS giữ nguyên */
       .main {
         margin-left: 275px;
       }
@@ -124,9 +125,13 @@
     <div class="main">
       <h3 class="h3_table">Danh sách sản phẩm</h3>
       <div class="addbook_category">
-        <a class="nav-link" href="javascript:void(0)" onclick="openDialog()"
-          >Thêm sách</a
+        <a
+          class="nav-link"
+          href="javascript:void(0)"
+          onclick="openCreateDialog()"
         >
+          Thêm sách
+        </a>
         <a class="nav-link" href="/admin/Author">Tác giả</a>
         <a class="nav-link" href="/admin/Category">Thể loại</a>
       </div>
@@ -201,15 +206,15 @@
     </div>
 
     <script>
-      let currentPage = 1;
-      const itemsPerPage = 10;
       let isEditMode = false;
       let editBookId = null;
       const token = localStorage.getItem("token");
+      const itemsPerPage = 10;
+      let currentPage = 1;
 
       function fetchBooks(page = currentPage) {
         const offset = (page - 1) * itemsPerPage;
-        fetch(`/api/book/get`, {
+        fetch(`/api/book/get?page=${page}`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -243,14 +248,19 @@
                 <td>${book.old_price}</td>
                 <td>${book.new_price}</td>
                 <td>
-                  <button onclick="openEditDialog(${book.book_id}, '${
-                  book.title
-                }', '${book.author_id}', '${book.category_id}', '${
-                  book.description
-                }', '${book.publication_year}', '${book.old_price}', '${
-                  book.new_price
-                }', '${book.book_avatar}')">Sửa</button>
+                  <button onclick="openEditDialog(
+                      ${book.book_id}, 
+                      '${book.title}', 
+                      '${book.author_id}', 
+                      '${book.category_id}', 
+                      '${book.description}', 
+                      '${book.publication_year}', 
+                      '${book.old_price}', 
+                      '${book.new_price}', 
+                      '${book.book_avatar}'
+                    )">Sửa</button>
                   <button onclick="deleteBook(${book.book_id})">Xóa</button>
+                
                 </td>
               `;
                 tableBody.appendChild(row);
@@ -268,16 +278,6 @@
             console.error("Error fetching books:", error);
             alert(`Có lỗi xảy ra khi lấy danh sách sách: ${error.message}`);
           });
-      }
-
-      function previousPage() {
-        if (currentPage > 1) {
-          fetchBooks(currentPage - 1);
-        }
-      }
-
-      function nextPage() {
-        fetchBooks(currentPage + 1);
       }
 
       function fetchAuthors() {
@@ -350,6 +350,7 @@
         newPrice,
         bookAvatar
       ) {
+        console.log("openEditDialog called with", bookId, title); // Thêm log để kiểm tra
         isEditMode = true;
         editBookId = bookId;
         openDialog();
@@ -363,14 +364,31 @@
         document.getElementById("oldPrice").value = oldPrice;
         document.getElementById("newPrice").value = newPrice;
       }
+      function resetDialog() {
+        document.getElementById("dialog-title").textContent = "Thêm sách";
+        document.getElementById("bookTitle").value = "";
+        document.getElementById("authorSelect").value = "";
+        document.getElementById("categorySelect").value = "";
+        document.getElementById("description").value = "";
+        document.getElementById("publicationYear").value = "";
+        document.getElementById("oldPrice").value = "";
+        document.getElementById("newPrice").value = "";
+      }
+      function openCreateDialog() {
+        resetDialog();
+        openDialog();
+      }
 
       function closeDialog() {
         document.getElementById("dialog").classList.remove("active");
         document.getElementById("dialogOverlay").classList.remove("active");
+        isEditMode = false;
+        editBookId = null;
       }
 
       function saveBook() {
         const formData = new FormData();
+
         formData.append("title", document.getElementById("bookTitle").value);
         formData.append(
           "author_id",
@@ -390,17 +408,14 @@
         );
         formData.append("old_price", document.getElementById("oldPrice").value);
         formData.append("new_price", document.getElementById("newPrice").value);
-
+        formData.append("book_id", editBookId);
         const bookAvatarInput = document.getElementById("bookAvatar");
         if (bookAvatarInput.files[0]) {
           formData.append("book_avatar", bookAvatarInput.files[0]);
         }
 
-        const url = isEditMode
-          ? `/api/book/edit/${editBookId}`
-          : "/api/book/add";
-        const method = isEditMode ? "PUT" : "POST";
-
+        const url = isEditMode ? `/api/book/update` : "/api/book/add";
+        const method = "POST";
         fetch(url, {
           method: method,
           headers: {
@@ -412,7 +427,7 @@
           .then((data) => {
             if (data.status === "1") {
               alert(`${isEditMode ? "Cập nhật" : "Thêm"} sách thành công`);
-              fetchBooks();
+              fetchBooks(currentPage);
               closeDialog();
             } else {
               alert(
@@ -423,13 +438,44 @@
             }
           })
           .catch((error) => {
-            console.error("Error saving book:", error);
+            console.log("Error saving book:", error);
             alert(
               `Có lỗi xảy ra khi ${isEditMode ? "cập nhật" : "thêm"} sách: ${
                 error.message
               }`
             );
           });
+      }
+      async function deleteBook(bookId) {
+        try {
+          const response = await fetch("/api/book/delete", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ book_id: bookId }),
+          });
+
+          const result = await response.json();
+
+          if (result.status === "1") {
+            alert("Xóa sách thành công");
+
+            const bookElement = document.querySelector(`#book-${bookId}`);
+            if (bookElement) {
+              bookElement.remove();
+            } else {
+              console.warn(`Phần tử với ID book-${bookId} không tồn tại`);
+            }
+            location.reload();
+          } else {
+            alert("Xóa sách thất bại: " + result.message);
+          }
+        } catch (error) {
+          console.error("Error deleting book:", error);
+          alert("Có lỗi xảy ra. Vui lòng thử lại sau.");
+        }
       }
 
       document.addEventListener("DOMContentLoaded", () =>

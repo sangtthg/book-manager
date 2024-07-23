@@ -281,6 +281,35 @@ module.exports.controller = (app, io, socket_list) => {
     }
   );
 
+  app.post("/api/book/delete", helpers.authorization, async (req, res) => {
+    helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
+      helpers.CheckParameterNull(res, req.body, ["book_id"], async () => {
+        try {
+          const { book_id } = req.body;
+
+          const book = await Book.findOne({ where: { book_id } });
+
+          if (!book) {
+            return res.json({
+              status: "0",
+              message: "Book not found",
+            });
+          }
+
+          await Book.destroy({ where: { book_id } });
+
+          return res.json({
+            status: "1",
+            message: msg_success,
+          });
+        } catch (error) {
+          console.log("/api/book/delete error: ", error);
+          res.json({ status: "0", message: msg_fail });
+        }
+      });
+    });
+  });
+
   // viết 1 api cho màn home trả về 2 danh sách:
   // 1. sách mới xuất bản
   // 2. sách bán chạy
