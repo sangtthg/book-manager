@@ -1,10 +1,5 @@
 const helper = require("../helpers/helpers");
-const {
-  sendOTPEmail,
-  verifyOTP,
-  sendMail,
-} = require("../helpers/email_helpers");
-const jwt = require("../Service/jwt");
+const { verifyOTP, sendMail } = require("../helpers/email_helpers");
 const { comparePassword, hashPassword } = require("../Service/bcrypt");
 const { selectUser } = require("../Service/user");
 const User = require("../models/user_model");
@@ -20,7 +15,7 @@ const {
 } = require("../constants/common");
 const { checkSex } = require("../utilities/int/check_sex");
 module.exports.controller = (app, io, socket_list) => {
-  app.post(
+  app.post(//
     "/api/user/get",
     helper.authorization,
     helper.checkRole,

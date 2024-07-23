@@ -4,6 +4,8 @@ const { sendOTPEmail, verifyOTP } = require("../helpers/email_helpers");
 const jwt = require("../Service/jwt");
 const { comparePassword, hashPassword } = require("../Service/bcrypt");
 const User = require("../models/user_model");
+const OtpTypes = require("../constants/otp_type");
+const Otp = require("../models/otp_model");
 const msg_success = "successfully";
 const msg_fail = "fail";
 const msg_invalidUser = "invalid username and password";
@@ -27,7 +29,7 @@ const login = async (req, res, isAdmin = true) => {
       }
       try {
         const user = result[0];
-        const compare = comparePassword(reqObj.password, user.password);
+        const compare = await comparePassword(reqObj.password, user.password);
         console.log("compare", compare);
         if (!compare) {
           return res.json({ status: "0", message: msg_invalidUser });
@@ -68,7 +70,7 @@ module.exports.controller = (app, io, socket_list) => {
     const reqObj = req.body;
     helper.CheckParameterValid(res, reqObj, ["email"], async () => {
       try {
-        const db_otp = await sendOTPEmail(reqObj.email);
+        const db_otp = await sendOTPEmail(reqObj.email, OtpTypes.REGISTER);
         res.json({ status: "1", message: msg_success, data: db_otp });
       } catch (error) {
         res.json({ status: "0", message: msg_fail });
@@ -97,7 +99,12 @@ module.exports.controller = (app, io, socket_list) => {
         if (password !== re_password) {
           return res.json({ status: "0", message: "Mật khẩu không khớp" });
         }
-        const _verifyOTP = await verifyOTP(otp_id, email, otp);
+        const _verifyOTP = await verifyOTP(
+          otp_id,
+          email,
+          otp,
+          OtpTypes.REGISTER
+        );
         if (!_verifyOTP) {
           return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
         }
@@ -130,6 +137,98 @@ module.exports.controller = (app, io, socket_list) => {
                 res.json({ status: "1", message: msg_success });
               }
             );
+          }
+        );
+      }
+    );
+  });
+
+  app.post("/api/otp/forgot_password", (req, res) => {
+    helper.Dlog(req.body);
+    const reqObj = req.body;
+    helper.CheckParameterValid(res, reqObj, ["email"], async () => {
+      const { email } = reqObj;
+      db.query(
+        "SELECT `user_id`, `email`, `created_at`, `user_status` FROM `users` WHERE `email` = ?",
+        [email],
+        async (err, result) => {
+          if (err) {
+            helper.ThrowHtmlError(err, res);
+            return;
+          }
+
+          if (result.length < 1) {
+            return res.json({ status: "0", message: "Email không tồn tại" });
+          }
+          const user = result[0];
+          const otp = await sendOTPEmail(email, OtpTypes.FORGOT_PASSWORD);
+          res.json({ status: "1", message: msg_success, data: otp });
+        }
+      );
+    });
+  });
+
+  app.post("/api/otp/verify_forgot_password", (req, res) => {
+    helper.Dlog(req.body);
+    const reqObj = req.body;
+    helper.CheckParameterValid(
+      res,
+      reqObj,
+      ["email", "otp_id", "otp"],
+      async () => {
+        const { email, otp_id, otp } = reqObj;
+        const verify = await verifyOTP(
+          otp_id,
+          email,
+          otp,
+          OtpTypes.FORGOT_PASSWORD
+        );
+        if (!verify) {
+          return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
+        }
+        return res.json({ status: "1", message: msg_success });
+      }
+    );
+  });
+
+  app.post("/api/forgot_password", (req, res) => {
+    helper.Dlog(req.body);
+    const reqObj = req.body;
+    helper.CheckParameterValid(
+      res,
+      reqObj,
+      ["verify", "verify.otp_id", "verify.email", "password", "re_password"],
+      async () => {
+        const { password, re_password } = reqObj;
+        const { email, otp_id } = reqObj.verify;
+
+        if (password !== re_password) {
+          return res.json({ status: "0", message: "Mật khẩu không khớp" });
+        }
+
+        const otp = await Otp.findOne({
+          where: { id: otp_id, email, type: OtpTypes.FORGOT_PASSWORD },
+        });
+        if (!otp) {
+          return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
+        }
+
+        const passwordCrypt = await hashPassword(password);
+        if (!passwordCrypt) {
+          return res.json({ status: "0", message: "Lỗi mã hóa mật khẩu" });
+        }
+
+        db.query(
+          "UPDATE `users` SET `password` = ? WHERE `email` = ?",
+          [passwordCrypt, email],
+          (err, result) => {
+            console.log(result);
+            if (err) {
+              console.log("/api/forgot_password", err);
+              res.json({ status: "0", message: msg_fail });
+              return;
+            }
+            res.json({ status: "1", message: msg_success });
           }
         );
       }

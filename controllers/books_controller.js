@@ -149,7 +149,7 @@ module.exports.controller = (app, io, socket_list) => {
     books.new_price,
     books.views_count,
     books.purchase_count,
-    books.used_books
+    books.used_books,
   FROM 
     books
   INNER JOIN 
@@ -172,7 +172,10 @@ module.exports.controller = (app, io, socket_list) => {
         return res.json({
           status: "1",
           message: msg_success,
+
           data: {
+            page: page,
+            limit: limit,
             total: results.length,
             totalAll: totalAll[0].totalAll,
             data: results,
@@ -355,6 +358,9 @@ module.exports.controller = (app, io, socket_list) => {
                 book_avatar: book.book_avatar,
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage: Math.round(
+                  ((book.old_price - book.new_price) / book.old_price) * 100
+                ),
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
@@ -378,6 +384,9 @@ module.exports.controller = (app, io, socket_list) => {
                 book_avatar: book.book_avatar,
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage: Math.round(
+                  ((book.old_price - book.new_price) / book.old_price) * 100
+                ),
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
@@ -400,6 +409,9 @@ module.exports.controller = (app, io, socket_list) => {
                 book_avatar: book.book_avatar,
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage: Math.round(
+                  ((book.old_price - book.new_price) / book.old_price) * 100
+                ),
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
@@ -424,6 +436,9 @@ module.exports.controller = (app, io, socket_list) => {
 
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage: Math.round(
+                  ((book.old_price - book.new_price) / book.old_price) * 100
+                ),
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
@@ -467,13 +482,15 @@ module.exports.controller = (app, io, socket_list) => {
             });
           }
 
-          const author = await Author.findOne({
-            where: { author_id: book.author_id },
-          });
+          // lấy ra 5 review mới nhất và có rating cao nhất
 
-          const category = await Category.findOne({
-            where: { category_id: book.category_id },
-          });
+          const [author, category, [reviews]] = await Promise.all([
+            Author.findOne({ where: { author_id: book.author_id } }),
+            Category.findOne({ where: { category_id: book.category_id } }),
+            sequelizeHelpers.query(
+              `SELECT reviews.review_id, reviews.rating, reviews.comment, reviews.review_images, reviews.created_at, users.username, users.avatar FROM reviews INNER JOIN users ON reviews.user_id = users.user_id WHERE reviews.book_id = ${req.body.book_id} ORDER BY reviews.created_at DESC, reviews.rating DESC LIMIT 5;`
+            ),
+          ]);
 
           const data = {
             book_id: book.book_id,
@@ -485,9 +502,13 @@ module.exports.controller = (app, io, socket_list) => {
             book_avatar: book.book_avatar,
             old_price: book.old_price,
             new_price: book.new_price,
+            discount_percentage: Math.round(
+              ((book.old_price - book.new_price) / book.old_price) * 100
+            ),
             views_count: book.views_count,
             purchase_count: book.purchase_count,
             used_books: book.used_books,
+            reviews: reviews,
           };
           return res.json({
             status: "1",

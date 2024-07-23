@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const saltRounds = 10;
 class Bcrypt {
@@ -6,7 +6,7 @@ class Bcrypt {
     const salt = bcrypt.genSaltSync(saltRounds);
     return bcrypt.hash(`${password}`, salt);
   }
-  static comparePassword(password, hash) {
+  static async comparePassword(password, hash) {
     return bcrypt.compare(`${password}`, hash);
   }
 }
