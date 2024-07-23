@@ -7,7 +7,7 @@
     "dev": "nodemon ./app.js"
   },
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "bootstrap": "^5.3.3",
     "cloudinary": "^2.2.0",
     "config": "^3.3.11",

@@ -149,7 +149,7 @@ module.exports.controller = (app, io, socket_list) => {
     books.new_price,
     books.views_count,
     books.purchase_count,
-    books.used_books
+    books.used_books,
   FROM 
     books
   INNER JOIN 
@@ -172,7 +172,10 @@ module.exports.controller = (app, io, socket_list) => {
         return res.json({
           status: "1",
           message: msg_success,
+
           data: {
+            page: page,
+            limit: limit,
             total: results.length,
             totalAll: totalAll[0].totalAll,
             data: results,
@@ -323,6 +326,8 @@ module.exports.controller = (app, io, socket_list) => {
                 book_avatar: book.book_avatar,
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage:
+                    Math.round(((book.old_price - book.new_price) / book.old_price) * 100),
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
@@ -346,6 +351,8 @@ module.exports.controller = (app, io, socket_list) => {
                 book_avatar: book.book_avatar,
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage:
+                    Math.round(((book.old_price - book.new_price) / book.old_price) * 100),
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
@@ -368,6 +375,8 @@ module.exports.controller = (app, io, socket_list) => {
                 book_avatar: book.book_avatar,
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage:
+                    Math.round(((book.old_price - book.new_price) / book.old_price) * 100),
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
@@ -392,6 +401,8 @@ module.exports.controller = (app, io, socket_list) => {
 
                 old_price: book.old_price,
                 new_price: book.new_price,
+                discount_percentage:
+                    Math.round(((book.old_price - book.new_price) / book.old_price) * 100),
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
@@ -455,6 +466,8 @@ module.exports.controller = (app, io, socket_list) => {
             book_avatar: book.book_avatar,
             old_price: book.old_price,
             new_price: book.new_price,
+            discount_percentage:
+                Math.round(((book.old_price - book.new_price) / book.old_price) * 100),
             views_count: book.views_count,
             purchase_count: book.purchase_count,
             used_books: book.used_books,
