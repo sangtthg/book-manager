@@ -138,29 +138,29 @@ module.exports.controller = (app, io, socket_list) => {
       const [results, metadata] = await sequelizeHelpers.query(
         `
         SELECT 
-    books.book_id,
-    books.title,
-    authors.author_name,
-    categories.category_name,
-    books.description,
-    books.publication_year,
-    books.book_avatar,
-    books.old_price,
-    books.new_price,
-    books.views_count,
-    books.purchase_count,
-    books.used_books,
-  FROM 
-    books
-  INNER JOIN 
-    authors ON books.author_id = authors.author_id
-  INNER JOIN 
-    categories ON books.category_id = categories.category_id
-    WHERE books.title LIKE '%${search}%' ${
+          books.book_id,
+          books.title,
+          authors.author_name,
+          categories.category_name,
+          books.description,
+          books.publication_year,
+          books.book_avatar,
+          books.old_price,
+          books.new_price,
+          books.views_count,
+          books.purchase_count,
+          books.used_books
+        FROM 
+          books
+        INNER JOIN 
+          authors ON books.author_id = authors.author_id
+        INNER JOIN 
+          categories ON books.category_id = categories.category_id
+        WHERE books.title LIKE '%${search}%' ${
           category_id ? `AND books.category_id = ${category_id}` : ""
         }
         ORDER BY books.created_at DESC
-  LIMIT ${limit} OFFSET ${offset}
+        LIMIT ${limit} OFFSET ${offset}
         `
       );
 
