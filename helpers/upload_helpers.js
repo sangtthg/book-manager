@@ -11,14 +11,14 @@ const uploadFileToCloud = async (file) => {
   try {
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader
-        .upload_stream({ folder: "DATN" }, (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        })
-        .end(file.buffer);
+                .upload_stream({ folder: "DATN" }, (error, result) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(result);
+                  }
+                })
+                .end(file.buffer);
     });
     return result.url;
   } catch (error) {

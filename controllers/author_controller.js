@@ -80,15 +80,15 @@ module.exports.controller = (app, io, socket_list) => {
       }
 
       const author = await Author.update(
-        {
-          author_name: uppercase(req.body.name),
-          updated_by: req.auth.user_id,
-        },
-        {
-          where: {
-            author_id: req.body.id,
+          {
+            author_name: uppercase(req.body.name),
+            updated_by: req.auth.user_id,
           },
-        }
+          {
+            where: {
+              author_id: req.body.id,
+            },
+          }
       );
       if (author) {
         return res.json({

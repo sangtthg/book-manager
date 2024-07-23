@@ -70,48 +70,48 @@ module.exports.controller = (app, io, socket_list) => {
 
   app.post("/api/category/update", helper.authorization, (req, res) => {
     helper.CheckParameterValid(
-      res,
-      req.body,
-      ["name", "category_id"],
-      async () => {
-        const user = await selectUser(req.auth.user_id);
-        if (user.role === "user") {
-          return res.json({
-            status: "0",
-            message: "Bạn không có quyền thực hiện hành động này",
-          });
-        }
-
-        if (!req.body.name || req.body.name === "") {
-          return res.json({
-            status: "0",
-            message: "Category name không được để trống",
-          });
-        }
-        const checkName = await checkUniqueName(req.body.name);
-        if (!checkName) {
-          return res.json({
-            status: "0",
-            message: "Category name đã tồn tại",
-          });
-        }
-
-        const query = `UPDATE categories SET category_name = '${formatName(
-          req.body.name
-        )}' WHERE category_id = '${req.body.category_id}'`;
-        db.query(query, (err, result) => {
-          if (err) {
+        res,
+        req.body,
+        ["name", "category_id"],
+        async () => {
+          const user = await selectUser(req.auth.user_id);
+          if (user.role === "user") {
             return res.json({
               status: "0",
-              message: msg_fail,
+              message: "Bạn không có quyền thực hiện hành động này",
             });
           }
-          return res.json({
-            status: "1",
-            message: msg_success,
+
+          if (!req.body.name || req.body.name === "") {
+            return res.json({
+              status: "0",
+              message: "Category name không được để trống",
+            });
+          }
+          const checkName = await checkUniqueName(req.body.name);
+          if (!checkName) {
+            return res.json({
+              status: "0",
+              message: "Category name đã tồn tại",
+            });
+          }
+
+          const query = `UPDATE categories SET category_name = '${formatName(
+          req.body.name
+        )}' WHERE category_id = '${req.body.category_id}'`;
+          db.query(query, (err, result) => {
+            if (err) {
+              return res.json({
+                status: "0",
+                message: msg_fail,
+              });
+            }
+            return res.json({
+              status: "1",
+              message: msg_success,
+            });
           });
-        });
-      }
+        }
     );
   });
 

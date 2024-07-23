@@ -77,5 +77,3 @@ const paymentCallback = async (req, res) => {
 };
 
 module.exports = { paymentCallback };
-
-module.exports = { paymentCallback };
