@@ -14,20 +14,20 @@ module.exports = {
 
   ThrowHtmlError: (err, res) => {
     Dlog(
-      "---------------------------- App is Helpers Throw Crash(" +
+        "---------------------------- App is Helpers Throw Crash(" +
         serverYYYYMMDDHHmmss() +
         ") -------------------------"
     );
     Dlog(err.stack);
 
     fs.appendFile(
-      "./crash_log/Crash" + serverDateTime("YYYY-MM-DD HH mm ss ms") + ".txt",
-      err.stack,
-      (err) => {
-        if (err) {
-          Dlog(err);
+        "./crash_log/Crash" + serverDateTime("YYYY-MM-DD HH mm ss ms") + ".txt",
+        err.stack,
+        (err) => {
+          if (err) {
+            Dlog(err);
+          }
         }
-      }
     );
 
     if (res) {
@@ -37,20 +37,20 @@ module.exports = {
 
   ThrowSocketError: (err, client, eventName) => {
     Dlog(
-      "---------------------------- App is Helpers Throw Crash(" +
+        "---------------------------- App is Helpers Throw Crash(" +
         serverYYYYMMDDHHmmss() +
         ") -------------------------"
     );
     Dlog(err.stack);
 
     fs.appendFile(
-      "./crash_log/Crash" + serverDateTime("YYYY-MM-DD HH mm ss ms") + ".txt",
-      err.stack,
-      (err) => {
-        if (err) {
-          Dlog(err);
+        "./crash_log/Crash" + serverDateTime("YYYY-MM-DD HH mm ss ms") + ".txt",
+        err.stack,
+        (err) => {
+          if (err) {
+            Dlog(err);
+          }
         }
-      }
     );
 
     if (client) {
@@ -106,8 +106,8 @@ module.exports = {
       let currentObject = obj;
       for (let i = 0; i < keyPath.length; i++) {
         if (
-          !Object.prototype.hasOwnProperty.call(currentObject, keyPath[i]) ||
-          currentObject[keyPath[i]] === null
+            !Object.prototype.hasOwnProperty.call(currentObject, keyPath[i]) ||
+            currentObject[keyPath[i]] === null
         ) {
           return false;
         }
@@ -136,11 +136,11 @@ module.exports = {
   },
 
   CheckParameterValidSocket: (
-    client,
-    eventName,
-    jsonObj,
-    checkKeys,
-    callback
+      client,
+      eventName,
+      jsonObj,
+      checkKeys,
+      callback
   ) => {
     let isValid = true;
     let missingParameter = "";
@@ -167,7 +167,7 @@ module.exports = {
 
   createRequestToken: () => {
     const chars =
-      "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let result = "";
     for (let i = 20; i > 0; i--) {
       result += chars[Math.floor(Math.random() * chars.length)];
@@ -178,7 +178,7 @@ module.exports = {
 
   fileNameGenerate: (extension) => {
     const chars =
-      "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let result = "";
     for (let i = 10; i > 0; i--) {
       result += chars[Math.floor(Math.random() * chars.length)];

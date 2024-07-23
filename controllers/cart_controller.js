@@ -128,14 +128,14 @@ module.exports.controller = (app, io, socket_list) => {
       CartDetail.destroy({
         where: { cart_id: data, user_id },
       })
-        .then((result) => {
-          console.log(result);
-          res.json({ status: "1", message: msg_success });
-        })
-        .catch((err) => {
-          console.log("/api/cart/delete", err);
-          res.json({ status: "0", message: msg_fail });
-        });
+                .then((result) => {
+                  console.log(result);
+                  res.json({ status: "1", message: msg_success });
+                })
+                .catch((err) => {
+                  console.log("/api/cart/delete", err);
+                  res.json({ status: "0", message: msg_fail });
+                });
     });
   });
 

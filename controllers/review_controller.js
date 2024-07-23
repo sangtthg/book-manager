@@ -12,77 +12,77 @@ const msg_fail = "fail";
 
 module.exports.controller = (app, io, socket_list) => {
   app.post(
-    "/api/review/add",
-    helpers.authorization,
-    upload.array("review_images"),
-    async (req, res) => {
-      const reqObj = req.body;
-      helpers.CheckParameterValid(
-        res,
-        reqObj,
-        ["book_id", "rating", "comment"],
-        async () => {
-          helpers.CheckParameterNull(
+      "/api/review/add",
+      helpers.authorization,
+      upload.array("review_images"),
+      async (req, res) => {
+        const reqObj = req.body;
+        helpers.CheckParameterValid(
             res,
             reqObj,
             ["book_id", "rating", "comment"],
             async () => {
-              try {
-                const { book_id, rating, comment } = reqObj;
+              helpers.CheckParameterNull(
+                  res,
+                  reqObj,
+                  ["book_id", "rating", "comment"],
+                  async () => {
+                    try {
+                      const { book_id, rating, comment } = reqObj;
 
-                if (rating < 1 || rating > 5) {
-                  return res.json({
-                    status: "0",
-                    message: "Rating không hợp lệ (1-5)",
-                  });
-                }
+                      if (rating < 1 || rating > 5) {
+                        return res.json({
+                          status: "0",
+                          message: "Rating không hợp lệ (1-5)",
+                        });
+                      }
 
-                if (req.files.length > 5) {
-                  return res.json({
-                    status: "0",
-                    message: "Số lượng ảnh không được vượt quá 5",
-                  });
-                }
+                      if (req.files.length > 5) {
+                        return res.json({
+                          status: "0",
+                          message: "Số lượng ảnh không được vượt quá 5",
+                        });
+                      }
 
-                const book = await Book.findOne({ where: { book_id } });
+                      const book = await Book.findOne({ where: { book_id } });
 
-                if (!book) {
-                  return res.json({
-                    status: "0",
-                    message: "Book không tồn tại",
-                  });
-                }
+                      if (!book) {
+                        return res.json({
+                          status: "0",
+                          message: "Book không tồn tại",
+                        });
+                      }
 
-                const uploads = await uploadMultipleFilesToCloud(req.files);
+                      const uploads = await uploadMultipleFilesToCloud(req.files);
 
-                const reviewImagesString = arrayToString(uploads);
+                      const reviewImagesString = arrayToString(uploads);
 
-                console.log(reviewImagesString);
-                const review = await Review.create({
-                  book_id,
-                  user_id: req.auth.user_id,
-                  rating,
-                  comment,
-                  review_images: reviewImagesString,
-                });
+                      console.log(reviewImagesString);
+                      const review = await Review.create({
+                        book_id,
+                        user_id: req.auth.user_id,
+                        rating,
+                        comment,
+                        review_images: reviewImagesString,
+                      });
 
-                return res.json({
-                  status: "1",
-                  message: "Thêm review thành công",
-                  review,
-                });
-              } catch (error) {
-                console.log("error: ", error);
-                return res.json({
-                  status: "0",
-                  message: "Lỗi hệ thống",
-                });
-              }
+                      return res.json({
+                        status: "1",
+                        message: "Thêm review thành công",
+                        review,
+                      });
+                    } catch (error) {
+                      console.log("error: ", error);
+                      return res.json({
+                        status: "0",
+                        message: "Lỗi hệ thống",
+                      });
+                    }
+                  }
+              );
             }
-          );
-        }
-      );
-    }
+        );
+      }
   );
 
   app.post("/api/review/get", helpers.authorization, async (req, res) => {

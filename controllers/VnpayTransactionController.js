@@ -94,8 +94,8 @@ const VnpayTransactionController = {
       let secretKey = "S9U05FEO5JS9QZ7TNFHPWPJVA234YCAG";
       let vnpUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
       let createDate = momentTimeZone()
-        .tz("Asia/Ho_Chi_Minh")
-        .format("yyyyMMDDHHmmss");
+          .tz("Asia/Ho_Chi_Minh")
+          .format("yyyyMMDDHHmmss");
       let amount = totalAmount;
       let orderInfo = `Thanh toan don hang ${trans.order} gia tri ${amount} VND`;
       let orderPayType = "other";
@@ -125,17 +125,17 @@ const VnpayTransactionController = {
       let signData = querystring.stringify(vnp_Params, { encode: false });
       let hmac = crypto.createHmac("sha512", secretKey);
       vnp_Params["vnp_SecureHash"] = hmac
-        .update(Buffer.from(signData, "utf-8"))
-        .digest("hex");
+          .update(Buffer.from(signData, "utf-8"))
+          .digest("hex");
       vnpUrl += "?" + querystring.stringify(vnp_Params, { encode: false });
       await VnpayTransaction.update(
-        {
-          payUrl: vnpUrl,
-          requestData: JSON.stringify(vnp_Params),
-        },
-        {
-          where: { id: trans.id },
-        }
+          {
+            payUrl: vnpUrl,
+            requestData: JSON.stringify(vnp_Params),
+          },
+          {
+            where: { id: trans.id },
+          }
       );
 
       return vnpUrl;
@@ -144,7 +144,7 @@ const VnpayTransactionController = {
 
   verifyInputData: (req, res) => {
     try {
-      const vnp_Params = req.body;
+      let vnp_Params = req.body;
       var secureHash = vnp_Params["vnp_SecureHash"];
       delete vnp_Params["vnp_SecureHash"];
       delete vnp_Params["vnp_SecureHashType"];
@@ -177,12 +177,12 @@ const VnpayTransactionController = {
       vnp_Params["vnp_Amount"] = amount * 100;
       vnp_Params["vnp_OrderInfo"] = info;
       vnp_Params["vnp_TransDate"] =
-        dataReq && dataReq.vnp_CreateDate ? dataReq.vnp_CreateDate : createDate;
+          dataReq && dataReq.vnp_CreateDate ? dataReq.vnp_CreateDate : createDate;
       vnp_Params["vnp_CreateDate"] = createDate;
       vnp_Params["vnp_IpAddr"] = ip;
       vnp_Params = sortObject(vnp_Params);
       var signData =
-        secretKey + querystring.stringify(vnp_Params, { encode: false });
+          secretKey + querystring.stringify(vnp_Params, { encode: false });
 
       var secureHash = "";
       switch (signMethod) {
