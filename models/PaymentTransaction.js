@@ -26,7 +26,7 @@ const PaymentTransaction = sequelize.define("PaymentTransaction", {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  phone: {
+  email: {
     type: DataTypes.STRING,
     allowNull: true,
   },

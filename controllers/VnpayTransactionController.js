@@ -4,6 +4,7 @@ const querystring = require("qs");
 const sha256 = require("sha256");
 const md5 = require("md5");
 const crypto = require("crypto");
+const { VnpayTransaction } = require("../models");
 
 const VnpayTransactionController = {
   STATUS: {
@@ -62,13 +63,23 @@ const VnpayTransactionController = {
       });
       res.json({ payUrl });
     } catch (error) {
-      res.status(500).send(error);
+      console.log(error)
+      // res.status(500).send(error);
     }
   },
 
   createPayUrl: async (opts) => {
     let trans = {};
-    let { customer, order, totalAmount, ip, language = "vn", bankCode, isWeb, merchantReturnUrl } = opts;
+    let {
+      customer,
+      order,
+      totalAmount,
+      ip,
+      language = "vn",
+      bankCode,
+      isWeb,
+      merchantReturnUrl,
+    } = opts;
     if (totalAmount > 0) {
       let ipAddr = ip;
       trans.customer = customer;
@@ -78,11 +89,13 @@ const VnpayTransactionController = {
       trans.status = VnpayTransactionController.STATUS.PROCESSING;
       trans.isWeb = isWeb || 0;
       trans.expAt = moment().add(10, "minutes").valueOf();
-      trans = await VnpayTransaction.create(trans).fetch();
+      trans = await VnpayTransaction.create(trans);
       let tmnCode = "3B82FLAC";
       let secretKey = "S9U05FEO5JS9QZ7TNFHPWPJVA234YCAG";
       let vnpUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-      let createDate = momentTimeZone().tz("Asia/Ho_Chi_Minh").format("yyyyMMDDHHmmss");
+      let createDate = momentTimeZone()
+        .tz("Asia/Ho_Chi_Minh")
+        .format("yyyyMMDDHHmmss");
       let amount = totalAmount;
       let orderInfo = `Thanh toan don hang ${trans.order} gia tri ${amount} VND`;
       let orderPayType = "other";
@@ -92,18 +105,18 @@ const VnpayTransactionController = {
       }
       let currCode = "VND";
       let vnp_Params = {
-        "vnp_Version": "2.1.0",
-        "vnp_Command": "pay",
-        "vnp_TmnCode": tmnCode,
-        "vnp_Locale": locale,
-        "vnp_CurrCode": currCode,
-        "vnp_TxnRef": trans.id,
-        "vnp_OrderInfo": orderInfo,
-        "vnp_OrderType": orderPayType,
-        "vnp_Amount": amount * 100,
-        "vnp_ReturnUrl": merchantReturnUrl,
-        "vnp_IpAddr": ipAddr,
-        "vnp_CreateDate": createDate,
+        vnp_Version: "2.1.0",
+        vnp_Command: "pay",
+        vnp_TmnCode: tmnCode,
+        vnp_Locale: locale,
+        vnp_CurrCode: currCode,
+        vnp_TxnRef: trans.id,
+        vnp_OrderInfo: orderInfo,
+        vnp_OrderType: orderPayType,
+        vnp_Amount: amount * 100,
+        vnp_ReturnUrl: merchantReturnUrl,
+        vnp_IpAddr: ipAddr,
+        vnp_CreateDate: createDate,
       };
       if (bankCode && bankCode !== null && bankCode !== "") {
         vnp_Params["vnp_BankCode"] = bankCode;
@@ -111,12 +124,20 @@ const VnpayTransactionController = {
       vnp_Params = sortObject(vnp_Params);
       let signData = querystring.stringify(vnp_Params, { encode: false });
       let hmac = crypto.createHmac("sha512", secretKey);
-      vnp_Params["vnp_SecureHash"] = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+      vnp_Params["vnp_SecureHash"] = hmac
+        .update(Buffer.from(signData, "utf-8"))
+        .digest("hex");
       vnpUrl += "?" + querystring.stringify(vnp_Params, { encode: false });
-      await VnpayTransaction.updateOne({ id: trans.id }).set({
-        payUrl: vnpUrl,
-        requestData: JSON.stringify(vnp_Params),
-      });
+      await VnpayTransaction.update(
+        {
+          payUrl: vnpUrl,
+          requestData: JSON.stringify(vnp_Params),
+        },
+        {
+          where: { id: trans.id },
+        }
+      );
+
       return vnpUrl;
     }
   },
@@ -155,11 +176,13 @@ const VnpayTransactionController = {
       vnp_Params["vnp_TxnRef"] = transId;
       vnp_Params["vnp_Amount"] = amount * 100;
       vnp_Params["vnp_OrderInfo"] = info;
-      vnp_Params["vnp_TransDate"] = dataReq && dataReq.vnp_CreateDate ? dataReq.vnp_CreateDate : createDate;
+      vnp_Params["vnp_TransDate"] =
+        dataReq && dataReq.vnp_CreateDate ? dataReq.vnp_CreateDate : createDate;
       vnp_Params["vnp_CreateDate"] = createDate;
       vnp_Params["vnp_IpAddr"] = ip;
       vnp_Params = sortObject(vnp_Params);
-      var signData = secretKey + querystring.stringify(vnp_Params, { encode: false });
+      var signData =
+        secretKey + querystring.stringify(vnp_Params, { encode: false });
 
       var secureHash = "";
       switch (signMethod) {

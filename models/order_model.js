@@ -7,14 +7,14 @@ const Order = sequelize.define("Order", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  cartId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  status: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
+  // cartId: {
+  //   type: DataTypes.INTEGER,
+  //   allowNull: false,
+  // },
+  // status: {
+  //   type: DataTypes.STRING,
+  //   allowNull: false,
+  // },
   quantity: {
     type: DataTypes.INTEGER,
     allowNull: false,

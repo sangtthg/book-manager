@@ -1,0 +1,70 @@
+<link
+  rel="stylesheet"
+  href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+  integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/"
+  crossorigin="anonymous"
+/>
+<link
+  rel="stylesheet"
+  href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+  integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+  crossorigin="anonymous"
+/>
+<style type="text/css">
+  .logo {
+    width: 200px;
+    margin-top: 15px;
+  }
+
+  .content {
+    max-width:'100%';
+    max-height: fit-content;
+    margin: auto;
+    padding: 31px;
+    background-color: #ffffff47;
+  }
+</style>
+
+<div class="content">
+  <div class="card text-center">
+    <div class="card-header">
+      <b>Thông tin giao dịch</b>
+    </div>
+    <div class="card-body">
+      <% if(status==='00' ){ %>
+      <h5 class="card-title text-success"><b>Thanh toán thành công!</b></h5>
+      <p class="card-text text-left">Bạn đã thực hiện thanh toán thành công.</p>
+      <p class="text-left"><b>Số tiền:</b> <%=amount||''%> <b> VND</b></p>
+      <p class="text-left">
+        <b>Mã hóa đơn:</b>
+        <%=order||''%>
+      </p>
+      <% } else{ %>
+      <h5 class="card-title text-danger"><b>Thanh toán thất bại!</b></h5>
+      <p class="card-text text-left">
+        Giao dịch thanh toán của bạn không thành công.
+      </p>
+      <p class="text-left"><b>Số tiền:</b> <%=amount||''%><b> VND</b></p>
+      <p class="text-left">
+        <b>Mã hóa đơn:</b>
+        <%=order||''%>
+      </p>
+      <% } %>
+      <img
+        class="logo"
+        src="https://i.ibb.co/jg3XvZ2/minions.jpg"
+      />
+    </div>
+    <div class="card-footer text-muted">
+      <h6 class="text-right">
+        <small>Book manager By Leen</small>
+      </h6>
+    </div>
+  </div>
+  <!-- <p class="title"><i class="fas fa-check-circle"></i> Thành công.</p>
+  <div class="detail">
+    <p>Order: <%=order||''%></p>
+      <p>Amount: <%=amount||''%></p>
+      <p>Status: <%=status||''%></p>
+    </div> -->
+</div>
