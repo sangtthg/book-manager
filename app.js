@@ -6,16 +6,23 @@ const logger = require("morgan");
 const cors = require("cors");
 const fs = require("fs");
 const admin = require("firebase-admin");
+const bodyParser = require("body-parser");
+
+require("dotenv").config();
 
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const adminRouter = require("./routes/admin");
-require("dotenv").config();
+const orderRouter = require("./routes/orderRoutes");
+const VnpayTransactionRoutes = require("./routes/VnpayTransactionRoutes");
+const PaymentRoutes = require("./routes/PaymentRoutes");
 
 const serverPort = process.env.PORT || 3002;
 const BASE_URL = process.env.BASE_URL;
 
 const app = express();
+app.use(bodyParser.json());
+
 const server = require("http").createServer(app);
 var io = require("socket.io")(server, {
   cors: {
@@ -52,6 +59,9 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/admin", adminRouter);
 app.use("/users", usersRouter);
+app.use("/orders", orderRouter);
+app.use("/vnpayTransaction", VnpayTransactionRoutes);
+app.use("/payment", PaymentRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const corsOptions = {
@@ -85,11 +95,19 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-module.exports = app;
+const db = require("./models");
+db.sequelize
+  .sync({ alter: true })
+  .then(() => {
+    server.listen(serverPort, () => {
+      console.log("Server Start : " + serverPort);
+    });
+  })
+  .catch((err) => {
+    console.error("Unable to connect to the database:", err);
+  });
 
-server.listen(serverPort, () => {
-  console.log("Server Start : " + serverPort);
-});
+module.exports = app;
 
 Array.prototype.swap = function (x, y) {
   const b = this[x];
