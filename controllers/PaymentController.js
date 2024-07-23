@@ -13,49 +13,53 @@ const paymentCallback = async (req, res) => {
         .json({ code: 3, message: "Transaction not found" });
     }
 
-    const trans = await PaymentTransaction.findOne({ where: { id: vnpay.order } });
+    const trans = await PaymentTransaction.findOne({
+      where: { id: vnpay.order },
+    });
 
     if (!trans) {
-      return res.status(404).json({ code: 4, message:'Order not found'});
+      return res.status(404).json({ code: 4, message: "Order not found" });
     }
 
-    if (vnp_TransactionStatus === '00') {
+    if (vnp_TransactionStatus === "00") {
       await VnpayTransaction.update(
         { status: VnpayTransaction.STATUS.DONE },
         { where: { id: vnp_TxnRef } }
       );
 
       await PaymentTransaction.update(
-        { status: 'success' },
+        { status: "success" },
         { where: { id: vnpay.order } }
       );
-      await Order.update({
-        orderStatus:'success'
-      },{
-        where:{
-            id:trans.orderId
+      await Order.update(
+        {
+          orderStatus: "success",
+        },
+        {
+          where: {
+            id: trans.orderId,
+          },
         }
-      })
-
+      );
     }
 
-    if (vnp_TransactionStatus === '02') {
+    if (vnp_TransactionStatus === "02") {
       await VnpayTransaction.update(
         { status: VnpayTransaction.STATUS.FAIL },
         { where: { id: vnp_TxnRef } }
       );
 
       await PaymentTransaction.update(
-        { status: 'fail' },
+        { status: "fail" },
         { where: { id: vnpay.order } }
       );
 
       await Order.update(
         {
-          status: 'Cancelled',
+          status: "Cancelled",
           date: 0,
           startTime: 0,
-          noteCancel: 'Hủy thanh toán!',
+          noteCancel: "Hủy thanh toán!",
         },
         { where: { userId: trans.customerId, id: trans.orderId } }
       );
@@ -71,5 +75,7 @@ const paymentCallback = async (req, res) => {
     return res.status(500).send("Internal Server Error");
   }
 };
+
+module.exports = { paymentCallback };
 
 module.exports = { paymentCallback };
