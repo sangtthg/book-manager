@@ -5,5 +5,6 @@ const helpers = require("../helpers/helpers");
 
 router.get("/get-list-order", helpers.authorization, orderController.listOrders);
 router.post("/create-order", helpers.authorization, orderController.createOrder);
+router.post("/pay-order", helpers.authorization, orderController.payOrder);
 
 module.exports = router;

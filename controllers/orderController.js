@@ -20,11 +20,7 @@ exports.createOrder = async (req, res) => {
     if (carts.length === 0) {
       return res.status(400).json({ message: "Giỏ hàng trống", status: "-1" });
     }
-    const user = await User.findOne({
-      where: {
-        user_id,
-      },
-    });
+
     let totalPrice = 0;
     let totalQuantity = 0;
 
@@ -61,31 +57,13 @@ exports.createOrder = async (req, res) => {
       items: JSON.stringify(items),
     });
 
-    await CartDetail.destroy({
-      where: {
-        user_id,
-        status: 1,
-        cart_id: listCart,
-      },
-    });
-    await PaymentTransaction.create({
-      customerId: user_id,
-      fullName: user.username,
-      email: user.email,
-      totalAmount: totalPrice,
-      paymentMethod: "banking",
-      orderId: newOrder.id,
-      totalMoneyAfterDiscount: totalPrice,
-    });
-
-    const payUrl = await VnpayTransactionController.createPayUrl({
-      customer: user_id,
-      order: newOrder.id,
-      totalAmount: totalPrice,
-      ip: req.ip,
-      merchantReturnUrl:
-        "https://book-manager-phi.vercel.app/payment/payment-callback",
-    });
+    // await CartDetail.destroy({
+    //   where: {
+    //     user_id,
+    //     status: 1,
+    //     cart_id: listCart,
+    //   },
+    // });
 
     return res.json({
       status: "0",
@@ -94,8 +72,8 @@ exports.createOrder = async (req, res) => {
       totalPrice: totalPrice,
       totalQuantity: totalQuantity,
       shippingFee: shippingFee,
-      payUrl: payUrl,
-      items
+      // payUrl: payUrl,
+      items,
     });
   } catch (error) {
     console.log(error);
@@ -136,6 +114,51 @@ exports.listOrders = async (req, res) => {
 exports.updateStatus = async (req, res) => {
   try {
   } catch (error) {
+    res.status(500).json({
+      message: "Hệ thống bận!",
+      code: -1,
+    });
+  }
+};
+
+exports.payOrder = async (req, res) => {
+  try {
+    const user_id = req.auth.user_id;
+    const {orderId}=req.body
+    const user = await User.findOne({
+      where: {
+        user_id,
+      },
+    });
+    const orderItem = await Order.findOne({where:{
+      id:orderId
+    }})
+
+    await PaymentTransaction.create({
+      customerId: user_id,
+      fullName: user.username,
+      email: user.email,
+      totalAmount: orderItem.totalPrice,
+      paymentMethod: "banking",
+      orderId,
+      totalMoneyAfterDiscount: orderItem.totalPrice,
+    });
+
+    const payUrl = await VnpayTransactionController.createPayUrl({
+      customer: user_id,
+      order: orderId,
+      totalAmount: orderItem.totalPrice,
+      ip: req.ip,
+      merchantReturnUrl:
+        "https://book-manager-phi.vercel.app/payment/payment-callback",
+    });
+    return res.json({
+      status: "0",
+      message: " Thành công!",
+      payUrl: payUrl,
+    });
+  } catch (error) {
+    console.log(error)
     res.status(500).json({
       message: "Hệ thống bận!",
       code: -1,
