@@ -28,6 +28,8 @@ exports.createOrder = async (req, res) => {
     let totalPrice = 0;
     let totalQuantity = 0;
 
+    const items = [];
+
     for (const cart of carts) {
       const book = await Book.findByPk(cart.book_id);
       if (!book) {
@@ -37,6 +39,12 @@ exports.createOrder = async (req, res) => {
       }
       totalPrice += book.new_price * cart.quantity;
       totalQuantity += cart.quantity;
+      items.push({
+        ...book,
+        totalPrice,
+        totalQuantity,
+        shippingFee,
+      });
     }
 
     totalPrice += shippingFee;
@@ -50,6 +58,7 @@ exports.createOrder = async (req, res) => {
       paymentStatus: "pending",
       orderStatus: "pending",
       address: req.body.address || "Địa chỉ mặc định",
+      items: JSON.stringify(items),
     });
 
     await CartDetail.destroy({

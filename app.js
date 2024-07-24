@@ -97,7 +97,7 @@ app.use(function (err, req, res, next) {
 
 const db = require("./models");
 db.sequelize
-  .sync({ alter: true })
+  .sync()
   .then(() => {
     server.listen(serverPort, () => {
       console.log("Server Start : " + serverPort);

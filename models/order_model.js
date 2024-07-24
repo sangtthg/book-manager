@@ -48,5 +48,9 @@ const Order = sequelize.define("Order", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  items:{
+    type:DataTypes.TEXT,
+    allowNull:false
+  }
 });
 module.exports = Order;

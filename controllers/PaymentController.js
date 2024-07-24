@@ -28,13 +28,15 @@ const paymentCallback = async (req, res) => {
         { where: { id: vnp_TxnRef } }
       );
 
-      await PaymentTransaction.update(
+      const a = await PaymentTransaction.update(
         { status: "success" },
-        { where: { id: vnpay.order } }
+        { where: { orderId: vnpay.order } }
       );
-      await Order.update(
+      console.log(a, "-----");
+      const b = await Order.update(
         {
           orderStatus: "success",
+          paymentStatus: "success",
         },
         {
           where: {
@@ -42,6 +44,7 @@ const paymentCallback = async (req, res) => {
           },
         }
       );
+      console.log(b, "=====");
     }
 
     if (vnp_TransactionStatus === "02") {
@@ -52,15 +55,13 @@ const paymentCallback = async (req, res) => {
 
       await PaymentTransaction.update(
         { status: "fail" },
-        { where: { id: vnpay.order } }
+        { where: { orderId: vnpay.order } }
       );
 
       await Order.update(
         {
-          status: "Cancelled",
-          date: 0,
-          startTime: 0,
-          noteCancel: "Hủy thanh toán!",
+          status: "fail",
+          paymentStatus: "fail",
         },
         { where: { userId: trans.customerId, id: trans.orderId } }
       );
