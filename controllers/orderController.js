@@ -40,7 +40,7 @@ exports.createOrder = async (req, res) => {
       totalPrice += book.new_price * cart.quantity;
       totalQuantity += cart.quantity;
       items.push({
-        ...book,
+        ...book.dataValues,
         totalPrice,
         totalQuantity,
         shippingFee,
@@ -109,7 +109,7 @@ exports.listOrders = async (req, res) => {
     const { status } = req.query;
     let searchConditions = { userId };
     if (status) {
-      searchConditions.status = status;
+      searchConditions.orderStatus = status;
     }
 
     const orders = await Order.findAll({
