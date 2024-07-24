@@ -9,12 +9,12 @@ const generateRandomOTP = async () => {
 
 const saveOTPToDB = async (email, otp, type) => {
   return new Promise((resolve, reject) => {
-    const query = `INSERT INTO otps (email, otp, type) VALUES ('${email}', '${otp}', '${type}')`;
+    const query = `INSERT INTO otps (email, otp, type, created_at) VALUES ('${email}', '${otp}', '${type}', NOW()) `;
     db.query(query, (err, result) => {
       if (err) {
         reject(new Error(`Lỗi khi lưu OTP vào DB: ${err}`));
       }
-      const selectQuery = `SELECT * FROM otps WHERE id = ${result.insertId}`;
+      const selectQuery = `SELECT * FROM otps WHERE id = ${result.insertId} AND type = '${type}'`;
       db.query(selectQuery, (selectErr, selectResult) => {
         if (selectErr) {
           reject(new Error(`Lỗi khi lấy OTP từ DB: ${selectErr}`));
@@ -52,6 +52,7 @@ class EmailHelper {
   static async sendOTPEmail(email, type) {
     if (!regexEmail(email)) throw new Error("Email không đúng định dạng");
     const otp = await generateRandomOTP();
+    console.log(`Mã OTP: ${otp}`);
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -81,15 +82,15 @@ class EmailHelper {
   }
 
   static async verifyOTP(id, email, otp, type) {
-    const query = `SELECT * FROM otps WHERE id = '${id}' AND email = '${email}' AND otp = '${otp}' AND type = '${type}' AND created_at > NOW() - INTERVAL 5 MINUTE`;
-    return new Promise((resolve, reject) =>
-      db.query(query, (err, res) => {
+    const query = `SELECT * FROM otps WHERE id = ? AND email = ? AND otp = ? AND type = ? AND created_at > NOW() - INTERVAL 5 MINUTE`;
+    return new Promise((resolve, reject) => {
+      db.query(query, [id, email, otp, type], (err, res) => {
         if (err) {
           reject(err);
         }
         resolve(res.length > 0);
-      })
-    );
+      });
+    });
   }
 }
 module.exports = EmailHelper;
