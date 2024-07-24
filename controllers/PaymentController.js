@@ -2,20 +2,21 @@ const { VnpayTransaction, PaymentTransaction, Order } = require("../models");
 
 const paymentCallback = async (req, res) => {
   const { vnp_TransactionStatus, vnp_Amount, vnp_TxnRef } = req.query;
-  console.log(req.query);
+  console.log(req.query, "lih");
 
   try {
     const vnpay = await VnpayTransaction.findOne({ where: { id: vnp_TxnRef } });
 
     if (!vnpay) {
       return res
-        .status(404)
-        .json({ code: 3, message: "Transaction not found" });
+          .status(404)
+          .json({ code: 3, message: "Transaction not found" });
     }
 
     const trans = await PaymentTransaction.findOne({
-      where: { id: vnpay.order },
+      where: { orderId: vnpay.order },
     });
+    console.log(trans, "trans");
 
     if (!trans) {
       return res.status(404).json({ code: 4, message: "Order not found" });
@@ -23,45 +24,45 @@ const paymentCallback = async (req, res) => {
 
     if (vnp_TransactionStatus === "00") {
       await VnpayTransaction.update(
-        { status: VnpayTransaction.STATUS.DONE },
-        { where: { id: vnp_TxnRef } }
+          { status: 1 },
+          { where: { id: vnp_TxnRef } }
       );
 
       await PaymentTransaction.update(
-        { status: "success" },
-        { where: { id: vnpay.order } }
+          { status: "success" },
+          { where: { id: vnpay.order } }
       );
       await Order.update(
-        {
-          orderStatus: "success",
-        },
-        {
-          where: {
-            id: trans.orderId,
+          {
+            orderStatus: "success",
           },
-        }
+          {
+            where: {
+              id: trans.orderId,
+            },
+          }
       );
     }
 
     if (vnp_TransactionStatus === "02") {
       await VnpayTransaction.update(
-        { status: VnpayTransaction.STATUS.FAIL },
-        { where: { id: vnp_TxnRef } }
+          { status: 2 },
+          { where: { id: vnp_TxnRef } }
       );
 
       await PaymentTransaction.update(
-        { status: "fail" },
-        { where: { id: vnpay.order } }
+          { status: "fail" },
+          { where: { id: vnpay.order } }
       );
 
       await Order.update(
-        {
-          status: "Cancelled",
-          date: 0,
-          startTime: 0,
-          noteCancel: "Hủy thanh toán!",
-        },
-        { where: { userId: trans.customerId, id: trans.orderId } }
+          {
+            status: "Cancelled",
+            date: 0,
+            startTime: 0,
+            noteCancel: "Hủy thanh toán!",
+          },
+          { where: { userId: trans.customerId, id: trans.orderId } }
       );
     }
 
@@ -77,3 +78,19 @@ const paymentCallback = async (req, res) => {
 };
 
 module.exports = { paymentCallback };
+// STATUS: {
+//     PROCESSING: -1,
+//     REFUND: 0,
+//     DONE: 1,
+//     FAIL: 2,
+//   },
+//   TRANSACTION_STATUS: {
+//     SUCCESS: "00",
+//     PENDING: "01",
+//     FAIL: "02",
+//     VNP_ERROR: "04", //giao dịch đảo, thành công ở ngân hàng nhg chưa thành công ở VNPAY
+//     PENDING_REFUND: "05",
+//     SENT_REFUND: "06", //đã gửi yêu cầu hoàn tiền cho ngân hàng
+//     SPAM: "07", //nghi vấn hack
+//     DENIED_REFUND: "09", //giao dịch hoàn bị từ chối
+//   },
