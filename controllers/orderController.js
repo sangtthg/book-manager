@@ -95,6 +95,7 @@ exports.createOrder = async (req, res) => {
       totalQuantity: totalQuantity,
       shippingFee: shippingFee,
       payUrl: payUrl,
+      items
     });
   } catch (error) {
     console.log(error);
