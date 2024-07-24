@@ -95,17 +95,31 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-const db = require("./models");
-db.sequelize
-  .sync()
+const { sequelize } = require("./models");
+
+sequelize
+  .authenticate()
   .then(() => {
-    server.listen(serverPort, () => {
+    console.log("Database connection has been established successfully.");
+    const server = app.listen(serverPort, () => {
       console.log("Server Start : " + serverPort);
+    });
+
+    process.on("SIGTERM", () => {
+      console.info("SIGTERM signal received.");
+      console.log("Closing http server.");
+      server.close(() => {
+        console.log("Http server closed.");
+        process.exit(0);
+      });
     });
   })
   .catch((err) => {
     console.error("Unable to connect to the database:", err);
+    process.exit(1);
   });
+
+module.exports = app;
 
 module.exports = app;
 
