@@ -110,10 +110,52 @@ exports.listOrders = async (req, res) => {
     });
   }
 };
+exports.listAllOrders = async (req, res) => {
+  try {
+    const { status } = req.query;
+    let searchConditions = {};
+    if (status) {
+      searchConditions.orderStatus = status;
+    }
 
+    const orders = await Order.findAll({
+      where: searchConditions,
+    });
+
+    res.render('orders', {
+      orders,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      code: -1,
+      message: "Hệ thống bận!",
+    });
+  }
+};
 exports.updateStatus = async (req, res) => {
   try {
+    const { orderId, status } = req.body;
+
+    const order = await Order.findOne({
+      where: {
+        id: orderId,
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Không tìm thấy đơn hàng",
+        code: -1,
+      });
+    }
+
+    order.orderStatus = status;
+    await order.save();
+
+    res.redirect('admin/orders');
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       message: "Hệ thống bận!",
       code: -1,
@@ -124,15 +166,17 @@ exports.updateStatus = async (req, res) => {
 exports.payOrder = async (req, res) => {
   try {
     const user_id = req.auth.user_id;
-    const {orderId}=req.body
+    const { orderId } = req.body;
     const user = await User.findOne({
       where: {
         user_id,
       },
     });
-    const orderItem = await Order.findOne({where:{
-      id:orderId
-    }})
+    const orderItem = await Order.findOne({
+      where: {
+        id: orderId,
+      },
+    });
 
     await PaymentTransaction.create({
       customerId: user_id,
@@ -158,7 +202,7 @@ exports.payOrder = async (req, res) => {
       payUrl: payUrl,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({
       message: "Hệ thống bận!",
       code: -1,
