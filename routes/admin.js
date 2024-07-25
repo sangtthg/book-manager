@@ -3,6 +3,7 @@ var router = express.Router();
 
 var path = require("path");
 const { listOrders, listAllOrders, updateStatus } = require("../controllers/orderController");
+const reviewController = require("../controllers/reviewsController");
 const login = path.join(__dirname, "../views/login.ejs");
 const home = path.join(__dirname, "../views/home.ejs");
 const ListProduct = path.join(__dirname, "../views/ListProduct.ejs");
@@ -13,6 +14,8 @@ const User = path.join(__dirname, "../views/User.ejs");
 const Member = path.join(__dirname, "../views/Member.ejs");
 const Cart = path.join(__dirname, "../views/Cart.ejs");
 const order = path.join(__dirname, "../views/orders.ejs");
+const reviews = path.join(__dirname, "../views/reviews.ejs");
+
 router.get("/home", function (req, res, next) {
   res.render(home);
 });
@@ -47,4 +50,8 @@ router.get("/Member", function (req, res, next) {
 router.get("/Cart", function (req, res, next) {
   res.render(Cart);
 });
+router.get('/reviews', (req, res) => {
+  res.render(reviews); // Render view reviews.ejs
+});
+
 module.exports = router;

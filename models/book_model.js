@@ -4,7 +4,7 @@ const Author = require("./author_model");
 const sequelizeHelpers = require("../helpers/sequelize_helpers");
 
 const Book = sequelizeHelpers.define(
-  "Book",
+  "books",
   {
     book_id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     title: { type: DataTypes.STRING(255), allowNull: false },

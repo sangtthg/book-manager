@@ -1,4 +1,5 @@
-const { Review, User } = require("../models");
+const { Op } = require("sequelize");
+const { Review, User, Book } = require("../models");
 
 const reviewController = {
   create: async (req, res) => {
@@ -22,8 +23,58 @@ const reviewController = {
 
   getAll: async (req, res) => {
     try {
-      const reviews = await Review.findAll();
-      res.status(200).json(reviews);
+      const { bookTitle } = req.query;
+
+      let reviews = [];
+      let booksMap = {};
+
+      if (bookTitle) {
+        const books = await Book.findAll({
+          where: {
+            title: {
+              [Op.like]: `%${bookTitle}%`
+            }
+          }
+        });
+
+        console.log('books:', books);
+
+        if (books.length > 0) {
+          const bookIds = books.map(book => book.book_id);
+
+          console.log('bookIds:', bookIds);
+
+          reviews = await Review.findAll({
+            where: {
+              bookId: bookIds
+            }
+          });
+
+          booksMap = books.reduce((map, book) => {
+            map[book.book_id] = book;
+            return map;
+          }, {});
+        }
+      } else {
+        reviews = await Review.findAll();
+
+        const bookIds = [...new Set(reviews.map(review => review.bookId))];
+        
+        console.log('bookIds (from all reviews):', bookIds);
+
+        const books = await Book.findAll({
+          where: {
+            book_id: bookIds
+          }
+        });
+
+        booksMap = books.reduce((map, book) => {
+          map[book.book_id] = book;
+          return map;
+        }, {});
+      }
+
+      res.json({ reviews, booksMap });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

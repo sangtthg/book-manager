@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post("/", helpers.authorization, reviewController.create);
 
-router.get("/", helpers.authorization, reviewController.getAll);
+router.get("/", reviewController.getAll);
 
 router.get("/:id", helpers.authorization, reviewController.getById);
 
