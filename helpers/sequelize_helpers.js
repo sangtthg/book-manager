@@ -10,6 +10,7 @@ const sequelizeHelpers = new Sequelize(
     port: process.env.DB_PORT,
     dialect: "mysql",
     timezone: process.env.DB_TIMEZONE,
+    logging: console.log,
     pool: {
       max: 10,
       min: 0,
