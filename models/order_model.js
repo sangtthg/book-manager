@@ -26,10 +26,12 @@ const Order = sequelize.define("Order", {
   paymentType: {
     type: DataTypes.STRING,
     allowNull: false,
+    defaultValue: "pending",
   },
   paymentStatus: {
     type: DataTypes.STRING,
     allowNull: false,
+    defaultValue: "pending",
   },
   orderStatus: {
     type: DataTypes.STRING,
@@ -48,6 +50,14 @@ const Order = sequelize.define("Order", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  items: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
+  statusShip: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "pending",
+  },
 });
-
 module.exports = Order;
