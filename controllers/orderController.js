@@ -93,7 +93,14 @@ exports.listOrders = async (req, res) => {
       });
     }
 
-    res.json({ orders, code: 0, message: "Thành công!" });
+    const parsedOrders = orders.map(order => {
+      return {
+        ...order.dataValues,
+        items: JSON.parse(order.dataValues.items)
+      };
+    });
+
+    res.json({ orders: parsedOrders, code: 0, message: "Thành công!" });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -102,6 +109,7 @@ exports.listOrders = async (req, res) => {
     });
   }
 };
+
 exports.listAllOrders = async (req, res) => {
   try {
     const { status } = req.query;
