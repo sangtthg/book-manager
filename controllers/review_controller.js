@@ -1,176 +1,150 @@
-const helpers = require("../helpers/helpers");
-const sequelizeHelpers = require("../helpers/sequelize_helpers");
-const { uploadMultipleFilesToCloud } = require("../helpers/upload_helpers");
-const Book = require("../models/book_model");
-const CartDetail = require("../models/cart_detail_model");
-const Review = require("../models/review_model");
-const User = require("../models/user_model");
-const upload = require("../Service/upload");
-const { arrayToString, stringToArray } = require("../utilities/string/string");
-const msg_success = "successfully";
-const msg_fail = "fail";
+const { Op } = require("sequelize");
+const { Review, User, Book } = require("../models");
 
-module.exports.controller = (app, io, socket_list) => {
-  app.post(
-    "/api/review/add",
-    helpers.authorization,
-    upload.array("review_images"),
-    async (req, res) => {
-      const reqObj = req.body;
-      helpers.CheckParameterValid(
-        res,
-        reqObj,
-        ["book_id", "rating", "comment"],
-        async () => {
-          helpers.CheckParameterNull(
-            res,
-            reqObj,
-            ["book_id", "rating", "comment"],
-            async () => {
-              try {
-                const { book_id, rating, comment } = reqObj;
+const reviewController = {
+  create: async (req, res) => {
+    try {
+      const user = await User.findByPk(req.auth.user_id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
-                if (rating < 1 || rating > 5) {
-                  return res.json({
-                    status: "0",
-                    message: "Rating không hợp lệ (1-5)",
-                  });
-                }
-
-                if (req.files.length > 5) {
-                  return res.json({
-                    status: "0",
-                    message: "Số lượng ảnh không được vượt quá 5",
-                  });
-                }
-
-                const book = await Book.findOne({ where: { book_id } });
-
-                if (!book) {
-                  return res.json({
-                    status: "0",
-                    message: "Book không tồn tại",
-                  });
-                }
-
-                const uploads = await uploadMultipleFilesToCloud(req.files);
-
-                const reviewImagesString = arrayToString(uploads);
-
-                console.log(reviewImagesString);
-                const review = await Review.create({
-                  book_id,
-                  user_id: req.auth.user_id,
-                  rating,
-                  comment,
-                  review_images: reviewImagesString,
-                });
-
-                return res.json({
-                  status: "1",
-                  message: "Thêm review thành công",
-                  review,
-                });
-              } catch (error) {
-                console.log("error: ", error);
-                return res.json({
-                  status: "0",
-                  message: "Lỗi hệ thống",
-                });
-              }
-            }
-          );
-        }
-      );
+      const review = await Review.create({
+        ...req.body,
+        userId: req.auth.user_id,
+        reviewerName: user.username,
+        reviewerAvatar: user.avatar,
+      });
+      res.status(201).json(review);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-  );
+  },
 
-  app.post("/api/review/get", helpers.authorization, async (req, res) => {
-    const reqObj = req.body;
-    helpers.CheckParameterValid(res, reqObj, ["book_id"], async () => {
-      helpers.CheckParameterNull(res, reqObj, ["book_id"], async () => {
-        try {
-          const { book_id, page = 1, limit = 10 } = reqObj;
-          const offset = (page - 1) * limit;
-          const reviews = await Review.findAll({
-            attributes: { exclude: ["book_id", "user_id"] },
-            where: { book_id },
-            include: [{ model: User, attributes: ["username", "avatar"] }],
-            order: [["created_at", "DESC"]],
-            limit,
-            offset,
-          });
-          const transformedReviews = reviews.map((review) => {
-            return {
-              review_id: review.review_id,
-              rating: review.rating,
-              comment: review.comment,
-              username: review.User.username,
-              user_avatar: review.User.avatar,
-              review_images: stringToArray(review.review_images),
-              created_at: review.created_at,
-            };
-          });
+  getAll: async (req, res) => {
+    try {
+      const { bookTitle } = req.query;
 
-          return res.json({
-            status: "1",
-            message: "Lấy review thành công",
-            reviews: {
-              total: transformedReviews.length,
-              data: transformedReviews,
+      let reviews = [];
+      let booksMap = {};
+
+      if (bookTitle) {
+        const books = await Book.findAll({
+          where: {
+            title: {
+              [Op.like]: `%${bookTitle}%`,
+            },
+          },
+        });
+
+        console.log("books:", books);
+
+        if (books.length > 0) {
+          const bookIds = books.map((book) => book.book_id);
+
+          console.log("bookIds:", bookIds);
+
+          reviews = await Review.findAll({
+            where: {
+              bookId: bookIds,
             },
           });
-        } catch (error) {
-          console.log("error: ", error);
-          return res.json({
-            status: "0",
-            message: "Lỗi hệ thống",
-          });
+
+          booksMap = books.reduce((map, book) => {
+            map[book.book_id] = book;
+            return map;
+          }, {});
         }
+      } else {
+        reviews = await Review.findAll();
+
+        const bookIds = [...new Set(reviews.map((review) => review.bookId))];
+
+        console.log("bookIds (from all reviews):", bookIds);
+
+        const books = await Book.findAll({
+          where: {
+            book_id: bookIds,
+          },
+        });
+
+        booksMap = books.reduce((map, book) => {
+          map[book.book_id] = book;
+          return map;
+        }, {});
+      }
+
+      res.json({ reviews, booksMap });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  getById: async (req, res) => {
+    try {
+      const { bookId } = req.params;
+
+      if (!bookId) {
+        return res.status(400).json({ error: "bookId is required" });
+      }
+
+      const reviews = await Review.findAll({
+        where: { bookId: bookId },
       });
-    });
-  });
 
-  // delete review
+      if (reviews.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No reviews found for this book" });
+      }
 
-  app.post("/api/review/delete", helpers.authorization, async (req, res) => {
-    const reqObj = req.body;
-    helpers.CheckParameterValid(res, reqObj, ["review_id"], async () => {
-      helpers.CheckParameterNull(res, reqObj, ["review_id"], async () => {
-        try {
-          const { review_id } = reqObj;
-          const review = await Review.findOne({
-            where: { review_id },
-          });
+      const book = await Book.findOne({
+        where: { book_id: bookId },
+      });
 
-          if (!review) {
-            return res.json({
-              status: "0",
-              message: "Review không tồn tại",
-            });
-          }
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
 
-          if (review.user_id !== req.auth.user_id) {
-            return res.json({
-              status: "0",
-              message: "Bạn không có quyền xóa review này",
-            });
-          }
+      res.json({ reviews, book });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
 
-          await Review.destroy({ where: { review_id } });
-
-          return res.json({
-            status: "1",
-            message: "Xóa review thành công",
-          });
-        } catch (error) {
-          console.log("error: ", error);
-          return res.json({
-            status: "0",
-            message: "Lỗi hệ thống",
-          });
+  update: async (req, res) => {
+    try {
+      const review = await Review.findByPk(req.params.id);
+      if (review) {
+        if (review.userId !== req.auth.user_id) {
+          return res.status(403).json({ message: "Unauthorized" });
         }
-      });
-    });
-  });
+        await review.update(req.body);
+        res.status(200).json(review);
+      } else {
+        res.status(404).json({ message: "Review not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  delete: async (req, res) => {
+    try {
+      const review = await Review.findByPk(req.params.id);
+      if (review) {
+        if (review.userId !== req.auth.user_id) {
+          return res.status(403).json({ message: "Unauthorized" });
+        }
+        await review.destroy();
+        res.status(200).json({ message: "Review deleted" });
+      } else {
+        res.status(404).json({ message: "Review not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
 };
+
+module.exports = reviewController;

@@ -16,6 +16,7 @@ const adminRouter = require("./routes/admin");
 const orderRouter = require("./routes/orderRoutes");
 const VnpayTransactionRoutes = require("./routes/VnpayTransactionRoutes");
 const PaymentRoutes = require("./routes/PaymentRoutes");
+const reviewRouter = require('./routes/reviewRoutes');
 
 const serverPort = process.env.PORT || 3002;
 const BASE_URL = process.env.BASE_URL;
@@ -63,6 +64,7 @@ app.use("/orders", orderRouter);
 app.use("/vnpayTransaction", VnpayTransactionRoutes);
 app.use("/payment", PaymentRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use('/reviews', reviewRouter);
 
 const corsOptions = {
   origin: BASE_URL,
@@ -95,17 +97,34 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-const db = require("./models");
-db.sequelize
-  .sync({ alter: true })
+const { sequelize } = require("./models");
+
+sequelize
+  .authenticate()
   .then(() => {
-    server.listen(serverPort, () => {
+    console.log("Database connection has been established successfully.");
+    return sequelize.sync({ force: false, alter: false });
+  })
+  .then(() => {
+    const server = app.listen(serverPort, () => {
       console.log("Server Start : " + serverPort);
+    });
+    console.log("Database synchronized");
+    process.on("SIGTERM", () => {
+      console.info("SIGTERM signal received.");
+      console.log("Closing http server.");
+      server.close(() => {
+        console.log("Http server closed.");
+        process.exit(0);
+      });
     });
   })
   .catch((err) => {
     console.error("Unable to connect to the database:", err);
+    process.exit(1);
   });
+
+module.exports = app;
 
 module.exports = app;
 

@@ -6,6 +6,7 @@ const VnpayTransaction = require('./VnpayTransaction');
 const PaymentTransaction = require('./PaymentTransaction');
 const User = require('./user_model');
 const Review = require('./reviews.model');
+const Book = require('./book_model');
 const db = {
   sequelize,
   Order,
@@ -13,7 +14,8 @@ const db = {
   VnpayTransaction,
   PaymentTransaction,
   User,
-  Review
+  Review,
+  Book
 };
 
 module.exports = db;
