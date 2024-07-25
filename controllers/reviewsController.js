@@ -32,22 +32,22 @@ const reviewController = {
         const books = await Book.findAll({
           where: {
             title: {
-              [Op.like]: `%${bookTitle}%`
-            }
-          }
+              [Op.like]: `%${bookTitle}%`,
+            },
+          },
         });
 
-        console.log('books:', books);
+        console.log("books:", books);
 
         if (books.length > 0) {
-          const bookIds = books.map(book => book.book_id);
+          const bookIds = books.map((book) => book.book_id);
 
-          console.log('bookIds:', bookIds);
+          console.log("bookIds:", bookIds);
 
           reviews = await Review.findAll({
             where: {
-              bookId: bookIds
-            }
+              bookId: bookIds,
+            },
           });
 
           booksMap = books.reduce((map, book) => {
@@ -58,14 +58,14 @@ const reviewController = {
       } else {
         reviews = await Review.findAll();
 
-        const bookIds = [...new Set(reviews.map(review => review.bookId))];
-        
-        console.log('bookIds (from all reviews):', bookIds);
+        const bookIds = [...new Set(reviews.map((review) => review.bookId))];
+
+        console.log("bookIds (from all reviews):", bookIds);
 
         const books = await Book.findAll({
           where: {
-            book_id: bookIds
-          }
+            book_id: bookIds,
+          },
         });
 
         booksMap = books.reduce((map, book) => {
@@ -82,12 +82,31 @@ const reviewController = {
 
   getById: async (req, res) => {
     try {
-      const review = await Review.findByPk(req.params.id);
-      if (review) {
-        res.status(200).json(review);
-      } else {
-        res.status(404).json({ message: "Review not found" });
+      const { bookId } = req.params;
+
+      if (!bookId) {
+        return res.status(400).json({ error: "bookId is required" });
       }
+
+      const reviews = await Review.findAll({
+        where: { bookId: bookId },
+      });
+
+      if (reviews.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No reviews found for this book" });
+      }
+
+      const book = await Book.findOne({
+        where: { book_id: bookId },
+      });
+
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+
+      res.json({ reviews, book });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
