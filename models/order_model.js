@@ -53,7 +53,7 @@ const Order = sequelize.define(
       allowNull: false,
     },
     items: {
-      type: DataTypes.TEXT,
+      type: DataTypes.JSON,
       allowNull: false,
     },
     statusShip: {
