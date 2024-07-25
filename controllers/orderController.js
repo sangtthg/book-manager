@@ -57,14 +57,6 @@ exports.createOrder = async (req, res) => {
       items: JSON.stringify(items),
     });
 
-    // await CartDetail.destroy({
-    //   where: {
-    //     user_id,
-    //     status: 1,
-    //     cart_id: listCart,
-    //   },
-    // });
-
     return res.json({
       status: "0",
       message: " Tạo đơn hàng thành công, tiến hành thanh toán!",
@@ -122,7 +114,7 @@ exports.listAllOrders = async (req, res) => {
       where: searchConditions,
     });
 
-    res.render('orders', {
+    res.render("orders", {
       orders,
     });
   } catch (error) {
@@ -153,7 +145,7 @@ exports.updateStatus = async (req, res) => {
     order.orderStatus = status;
     await order.save();
 
-    res.redirect('admin/orders');
+    res.redirect("admin/orders");
   } catch (error) {
     console.log(error);
     res.status(500).json({

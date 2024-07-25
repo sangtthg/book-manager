@@ -28,12 +28,11 @@ const paymentCallback = async (req, res) => {
         { where: { id: vnp_TxnRef } }
       );
 
-      const a = await PaymentTransaction.update(
+      await PaymentTransaction.update(
         { status: "success" },
         { where: { orderId: vnpay.order } }
       );
-      console.log(a, "-----");
-      const b = await Order.update(
+      await Order.update(
         {
           orderStatus: "success",
           paymentStatus: "success",
@@ -44,7 +43,6 @@ const paymentCallback = async (req, res) => {
           },
         }
       );
-      console.log(b, "=====");
     }
 
     if (vnp_TransactionStatus === "02") {
@@ -60,7 +58,7 @@ const paymentCallback = async (req, res) => {
 
       await Order.update(
         {
-          status: "fail",
+          orderStatus: "fail",
           paymentStatus: "fail",
         },
         { where: { userId: trans.customerId, id: trans.orderId } }
