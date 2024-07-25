@@ -36,6 +36,7 @@ const paymentCallback = async (req, res) => {
         {
           orderStatus: "success",
           paymentStatus: "success",
+          statusShip: "wait_for_delivery",
         },
         {
           where: {
@@ -60,6 +61,7 @@ const paymentCallback = async (req, res) => {
         {
           orderStatus: "fail",
           paymentStatus: "fail",
+          statusShip: "cancel_payment_error",
         },
         { where: { userId: trans.customerId, id: trans.orderId } }
       );
