@@ -30,8 +30,8 @@ exports.createOrder = async (req, res) => {
       const book = await Book.findByPk(cart.book_id);
       if (!book) {
         return res
-          .status(404)
-          .json({ message: "Không tìm thấy sách", status: "-1" });
+            .status(404)
+            .json({ message: "Không tìm thấy sách", status: "-1" });
       }
       totalPrice += book.new_price * cart.quantity;
       totalQuantity += cart.quantity;
@@ -93,7 +93,14 @@ exports.listOrders = async (req, res) => {
       });
     }
 
-    res.json({ orders, code: 0, message: "Thành công!" });
+    const parsedOrders = orders.map(order => {
+      return {
+        ...order.dataValues,
+        items: JSON.parse(order.dataValues.items)
+      };
+    });
+
+    res.json({ orders: parsedOrders, code: 0, message: "Thành công!" });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -102,6 +109,7 @@ exports.listOrders = async (req, res) => {
     });
   }
 };
+
 exports.listAllOrders = async (req, res) => {
   try {
     const { status } = req.query;
@@ -186,7 +194,7 @@ exports.payOrder = async (req, res) => {
       totalAmount: orderItem.totalPrice,
       ip: req.ip,
       merchantReturnUrl:
-        "https://book-manager-phi.vercel.app/payment/payment-callback",
+          "https://book-manager-phi.vercel.app/payment/payment-callback",
     });
     return res.json({
       status: "0",
