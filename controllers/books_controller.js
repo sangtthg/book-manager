@@ -338,7 +338,7 @@ module.exports.controller = (app, io, socket_list) => {
             }),
             Book.findAll({
               order: Sequelize.literal("rand()"),
-              limit: 7,
+              limit: 8,
             }),
           ]);
 
