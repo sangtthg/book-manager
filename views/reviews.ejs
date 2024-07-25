@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Reviews</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-4">
+    <h1 class="mb-4">All Reviews</h1>
+
+    <!-- Tìm kiếm sách -->
+    <form id="search-form" class="mb-4">
+      <div class="input-group">
+        <input type="text" id="search-input" class="form-control" placeholder="Search for books by title">
+        <div class="input-group-append">
+          <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+      </div>
+    </form>
+
+    <div class="row" id="reviews-container">
+      <!-- Reviews will be dynamically added here -->
+    </div>
+  </div>
+
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.8/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchForm = document.getElementById('search-form');
+      const searchInput = document.getElementById('search-input');
+      const fetchReviews = (query = '') => {
+        fetch(`/reviews?bookTitle=${query}`)
+          .then(response => response.json())
+          .then(data => {
+            const reviewsContainer = document.getElementById('reviews-container');
+            reviewsContainer.innerHTML = ''; // Clear previous reviews
+            data.reviews.forEach(review => {
+              const book = data.booksMap[review.bookId];
+              const reviewElement = `
+                <div class="col-md-4 mb-4">
+                  <div class="card">
+                    <img src="${book && book.book_avatar ? book.book_avatar : 'default-image.jpg'}" class="card-img-top" alt="${book ? book.title : 'Book Image'}">
+                    <div class="card-body">
+                      <div class="d-flex align-items-center mb-2">
+                        <img src="${review.reviewerAvatar ? review.reviewerAvatar : 'default-avatar.jpg'}" class="rounded-circle" alt="${review.reviewerName}" style="width: 50px; height: 50px; object-fit: cover;">
+                        <h5 class="ml-3">${review.reviewerName}</h5>
+                      </div>
+                      <h6 class="card-subtitle mb-2 text-muted">
+                        ${book ? `Book: ${book.title}` : 'Book information not available'}
+                      </h6>
+                      <p class="card-text">${review.comment}</p>
+                      <p class="card-text"><small class="text-muted">Reviewed on: ${new Date(review.createdAt).toLocaleDateString()}</small></p>
+                      <p class="card-text"><small class="text-muted">Rating: ${review.rating}</small></p>
+                    </div>
+                  </div>
+                </div>
+              `;
+              reviewsContainer.innerHTML += reviewElement;
+            });
+          })
+          .catch(error => console.error('Error fetching reviews:', error));
+      };
+      // Fetch all reviews on initial load
+      fetchReviews();
+      // Fetch reviews when search form is submitted
+      searchForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const query = searchInput.value.trim();
+        fetchReviews(query);
+      });
+    });
+  </script>
+</body>
+</html>
