@@ -38,7 +38,7 @@ exports.createOrder = async (req, res) => {
       items.push({
         ...book.dataValues,
         totalPrice,
-        totalQuantity,
+        quantity: cart.quantity,
         shippingFee,
       });
     }

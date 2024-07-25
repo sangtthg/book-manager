@@ -26,18 +26,18 @@
             <tr>
               <td><%= order.id %></td>
               <td><%= order.userId %></td>
-              <td><%= order.orderStatus %></td>
+              <td><%= order.statusShip %></td>
               <td><%= order.createdAt %></td>
               <td><%= order.totalPrice %></td>
               <td>
                 <form action="/update-status" method="post" class="form-inline">
                   <input type="hidden" name="orderId" value="<%= order.id %>">
                   <select name="status" class="form-control mr-2">
-                    <option value="pending" <%= order.orderStatus === 'pending' ? 'selected' : '' %>>Pending</option>
-                    <option value="confirmed" <%= order.orderStatus === 'confirmed' ? 'selected' : '' %>>Confirmed</option>
-                    <option value="shipped" <%= order.orderStatus === 'shipped' ? 'selected' : '' %>>Shipped</option>
-                    <option value="delivered" <%= order.orderStatus === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                    <option value="cancelled" <%= order.orderStatus === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                    <option value="pending" <%= order.statusShip === 'pending' ? 'selected' : '' %>>Pending</option>
+                    <option value="confirmed" <%= order.statusShip === 'confirmed' ? 'selected' : '' %>>Confirmed</option>
+                    <option value="shipped" <%= order.statusShip === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                    <option value="delivered" <%= order.statusShip === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                    <option value="cancelled" <%= order.statusShip === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
                   </select>
                   <button type="submit" class="btn btn-primary">Cập nhật</button>
                 </form>
