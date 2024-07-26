@@ -6,7 +6,7 @@
     <title>Danh sách thể loại</title>
     <style>
       table {
-        width: 80%;
+        width: 95%;
         margin: 20px auto;
         border-collapse: collapse;
       }
@@ -17,7 +17,8 @@
         text-align: center;
       }
       th {
-        background-color: #f2f2f2;
+        background-color: #ff7622;
+        color: #fff;
       }
       tr:nth-child(even) {
         background-color: #f9f9f9;
@@ -27,6 +28,7 @@
       }
       .addcategory {
         display: flex;
+        margin-left: 20px;
       }
       .dialog {
         display: none;
@@ -91,16 +93,76 @@
       .dialog .form-actions button.cancel {
         background-color: #6c757d;
       }
+      .addbook_category {
+        display: flex;
+        margin-left: 10px;
+      }
+      .add-book-btn {
+        width: 150px;
+        height: 40px;
+        position: absolute;
+        top: 70px;
+        right: 50px;
+        padding: 5px 10px;
+        background-color: #ff7622;
+        color: white;
+        border: none;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: bold;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      .add-book-btn:hover {
+        background-color: #0056b3;
+      }
+      button.edit-button:hover {
+        background-color: #ff7622;
+      }
+      button.edit-button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      button.delete-button:hover {
+        background-color: #e53935;
+      }
+      button.delete-button {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
     </style>
   </head>
   <body>
     <%- include('navbar.ejs') %>
     <div style="margin-left: 275px">
-      <h3>Danh sách thể loại</h3>
+      <h3 style="color: #ff7622; margin-left: 25px; font-size: 25px">
+        Danh sách thể loại
+      </h3>
       <div class="addcategory">
-        <a class="nav-link" href="javascript:void(0)" onclick="openDialog()"
-          >Thêm thể loại</a
-        >
+        <a class="nav-link" href="/admin/ListProduct">Danh sách Sách</a>
+        <a class="nav-link" href="/admin/Author">Tác giả</a>
+        <button class="add-book-btn" onclick="openDialog()">
+          Thêm thể loại
+        </button>
 
         <div class="dialog-overlay" id="dialogOverlay"></div>
         <div class="dialog" id="dialog">
@@ -134,6 +196,7 @@
       <table id="category-table">
         <thead>
           <tr>
+            <th scope="col">STT</th>
             <th scope="col">ID</th>
             <th scope="col">Tên thể loại</th>
             <th scope="col">Người tạo</th>
@@ -160,15 +223,20 @@
               const tableBody = document.querySelector("#category-table tbody");
               tableBody.innerHTML = "";
 
-              data.data.forEach((category) => {
+              data.data.forEach((category, index) => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
+                <td>${index + 1}</td>
                   <td>${category.category_id}</td>
                   <td>${category.category_name}</td>
                   <td>${category.created_by}</td>
                   <td>
-                    <button onclick="openEditDialog(${category.category_id}, '${category.category_name}')">Sửa</button>
-                    <button onclick="deleteCategory(${category.category_id})">Xóa</button>
+                    <button class="edit-button" onclick="openEditDialog(${
+                      category.category_id
+                    }, '${category.category_name}')">Sửa</button>
+                    <button class="delete-button" onclick="deleteCategory(${
+                      category.category_id
+                    })">Xóa</button>
                   </td>
                 `;
                 tableBody.appendChild(row);

@@ -5,16 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Danh sách sản phẩm</title>
     <style>
-      /* CSS giữ nguyên */
       .main {
         margin-left: 275px;
       }
       .h3_table {
         text-align: left;
-        margin-left: 10px;
-        margin-right: 25px;
+        margin-left: 25px;
+        margin-right: 10px;
         color: #ff7622;
+        font-size: 25px;
       }
+
       table {
         width: 95%;
         margin: 20px auto;
@@ -27,7 +28,8 @@
         text-align: center;
       }
       th {
-        background-color: #f2f2f2;
+        background-color: #ff7622;
+        color: #fff;
       }
       tr:nth-child(even) {
         background-color: #f9f9f9;
@@ -38,6 +40,7 @@
       .addbook_category {
         display: flex;
         margin-left: 10px;
+        width: 300px;
       }
       .dialog {
         display: none;
@@ -50,6 +53,9 @@
         background-color: white;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         z-index: 1000;
+        display: none;
+        max-height: 90%;
+        overflow-y: auto;
       }
       .dialog.active {
         display: block;
@@ -63,6 +69,7 @@
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
         z-index: 500;
+        display: none;
       }
       .dialog-overlay.active {
         display: block;
@@ -112,11 +119,143 @@
         margin: 0 10px;
       }
       .ellipsis {
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
         overflow: hidden;
+        -webkit-line-clamp: 4;
+        line-height: 1.5;
+        max-height: 5.5em;
+        max-width: 210px;
         text-overflow: ellipsis;
+      }
+      .csstitle {
         max-width: 200px;
+      }
+      .dialog.active,
+      .dialog-overlay.active {
         display: block;
+      }
+      #authorSelect,
+      #categorySelect {
+        width: 100%;
+        max-height: 100px;
+        overflow-y: auto;
+      }
+
+      .add-book-btn {
+        width: 150px;
+        height: 40px;
+        position: absolute;
+        top: 70px;
+        right: 50px;
+        padding: 5px 10px;
+        background-color: #ff7622;
+        color: white;
+        font-weight: bold;
+        font-family: "Times New Roman", Times, serif;
+        border: none;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 17px;
+      }
+
+      .add-book-btn:hover {
+        background-color: #0056b3;
+      }
+      button.edit-button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      button.delete-button {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      button.edit-button:hover {
+        background-color: #ff7622;
+      }
+
+      button.delete-button:hover {
+        background-color: #e53935;
+      }
+
+      td button {
+        margin-right: 5px;
+      }
+      .imgPage {
+        width: 20px;
+        height: 20px;
+      }
+      #prevPageBtn {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        display: inline-flex;
+      }
+
+      #prevPageIcon {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+      }
+      .pagination {
+        margin-left: 27px;
+        margin-right: 27px;
+        display: flex;
+        align-items: center;
+        background-color: #fff;
+        padding: 5px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      #page-indicator {
+        position: relative;
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .form-actions button:hover {
+        opacity: 0.9;
+      }
+      input[type="file"] {
+        display: none;
+      }
+
+      .custom-file-upload {
+        display: inline-block;
+        padding: 10px 20px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+        color: #007bff;
+      }
+
+      .custom-file-upload:hover {
+        background-color: #e2e6ea;
       }
     </style>
   </head>
@@ -125,15 +264,11 @@
     <div class="main">
       <h3 class="h3_table">Danh sách sản phẩm</h3>
       <div class="addbook_category">
-        <a
-          class="nav-link"
-          href="javascript:void(0)"
-          onclick="openCreateDialog()"
-        >
-          Thêm sách
-        </a>
         <a class="nav-link" href="/admin/Author">Tác giả</a>
         <a class="nav-link" href="/admin/Category">Thể loại</a>
+        <button class="add-book-btn" onclick="openCreateDialog()">
+          Thêm sách
+        </button>
       </div>
       <table id="book-table">
         <thead>
@@ -154,17 +289,23 @@
         <tbody></tbody>
       </table>
       <div class="pagination">
-        <button onclick="previousPage()">Trang trước</button>
+        <button onclick="previousPage()" id="prevPageBtn">
+          <img src="/uploads/left.png" alt="Trang trước" id="prevPageIcon" />
+        </button>
         <span id="page-indicator">Trang 1</span>
-        <button onclick="nextPage()">Trang sau</button>
+        <button onclick="nextPage()" id="prevPageBtn">
+          <img src="/uploads/right.png" alt="Trang sau" id="prevPageIcon" />
+        </button>
       </div>
 
       <div class="addbook">
         <div class="dialog-overlay" id="dialogOverlay"></div>
-        <div class="dialog" id="dialog">
-          <h3 id="dialog-title">Thêm sách</h3>
+        <div class="dialog" id="dialog" style="width: 50%">
+          <h3 id="dialog-title" style="font-size: 25px; color: #ff7622">
+            Thêm sách
+          </h3>
           <div class="form-group">
-            <label for="bookTitle">Tiêu đề</label>
+            <label for="bookTitle">Tên sách</label>
             <input type="text" id="bookTitle" name="title" />
           </div>
           <div class="form-group">
@@ -191,13 +332,28 @@
             <label for="newPrice">Giá mới</label>
             <input type="number" id="newPrice" name="new_price" />
           </div>
-          <div class="form-group">
+          <!-- <div class="form-group">
             <label for="bookAvatar">Ảnh bìa sách</label>
             <input type="file" id="bookAvatar" name="book_avatar" />
+          </div> -->
+          <div class="form-group">
+            <label for="bookAvatar" class="custom-file-upload">
+              Chọn ảnh bìa
+            </label>
+            <input type="file" id="bookAvatar" name="book_avatar" />
           </div>
+
           <div class="form-actions">
-            <button type="button" onclick="saveBook()">Lưu</button>
-            <button type="button" class="cancel" onclick="closeDialog()">
+            <button
+              onclick="saveBook()"
+              style="background-color: #4caf50; color: #fff"
+            >
+              Lưu
+            </button>
+            <button
+              onclick="closeDialog()"
+              style="background-color: #f44336; color: #fff"
+            >
               Hủy
             </button>
           </div>
@@ -212,14 +368,19 @@
       const itemsPerPage = 10;
       let currentPage = 1;
 
-      function fetchBooks(page = currentPage) {
+      function fetchBooks(page = 1) {
         const offset = (page - 1) * itemsPerPage;
-        fetch(`/api/book/get?page=${page}`, {
+        fetch(`/api/book/get`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            page,
+            limit: itemsPerPage,
+            query: { search: "", category_id: null },
+          }),
         })
           .then((response) => {
             if (!response.ok) {
@@ -234,10 +395,13 @@
 
               data.data.data.forEach((book, index) => {
                 const row = document.createElement("tr");
+
+                console.log("data", book);
+                console.log("====================================");
                 row.innerHTML = `
                 <td>${index + 1}</td>
                 <td>${book.book_id}</td>
-                <td>${book.title}</td>
+                <td class="csstitle">${book.title}</td>
                 <td>${book.author_name}</td>
                 <td>${book.category_name}</td>
                 <td class="ellipsis">${book.description}</td>
@@ -248,28 +412,31 @@
                 <td>${book.old_price}</td>
                 <td>${book.new_price}</td>
                 <td>
-                  <button onclick="openEditDialog(
-                      ${book.book_id}, 
-                      '${book.title}', 
-                      '${book.author_id}', 
-                      '${book.category_id}', 
-                      '${book.description}', 
-                      '${book.publication_year}', 
-                      '${book.old_price}', 
-                      '${book.new_price}', 
-                      '${book.book_avatar}'
+                  <button class="edit-button" onclick="openEditDialog(
+                      ${book.book_id},                      
+                      ${book.title}, 
+                      ${book.author_id}, 
+                      ${book.category_id}, 
+                      ${book.description}, 
+                      ${book.publication_year}, 
+                      ${book.old_price}, 
+                      ${book.new_price}, 
+                      ${book.book_avatar}
                     )">Sửa</button>
-                  <button onclick="deleteBook(${book.book_id})">Xóa</button>
+                  <button class="delete-button" onclick="deleteBook(${
+                    book.book_id
+                  })">Xóa</button>
                 
                 </td>
               `;
                 tableBody.appendChild(row);
               });
-
-              const pageIndicator = document.getElementById("page-indicator");
-              pageIndicator.textContent = `Trang ${page}`;
-
+              document.getElementById(
+                "page-indicator"
+              ).textContent = `Trang ${page}`;
+              totalItems = data.data.totalAll; // Cập nhật tổng số mục
               currentPage = page;
+              updatePaginationButtons(page);
             } else {
               alert(`Lấy danh sách sách thất bại: ${data.message}`);
             }
@@ -278,6 +445,32 @@
             console.error("Error fetching books:", error);
             alert(`Có lỗi xảy ra khi lấy danh sách sách: ${error.message}`);
           });
+      }
+
+      function updatePaginationButtons(page) {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const previousButton = document.querySelector(
+          ".pagination button:first-child"
+        );
+        const nextButton = document.querySelector(
+          ".pagination button:last-child"
+        );
+        previousButton.disabled = page <= 1;
+        nextButton.disabled = page >= totalPages;
+      }
+
+      function nextPage() {
+        if (currentPage < Math.ceil(totalItems / itemsPerPage)) {
+          currentPage++;
+          fetchBooks(currentPage);
+        }
+      }
+
+      function previousPage() {
+        if (currentPage > 1) {
+          currentPage--;
+          fetchBooks(currentPage);
+        }
       }
 
       function fetchAuthors() {
@@ -335,22 +528,24 @@
       function openDialog() {
         fetchAuthors();
         fetchCategories();
+
         document.getElementById("dialog").classList.add("active");
         document.getElementById("dialogOverlay").classList.add("active");
       }
 
       function openEditDialog(
         bookId,
-        title,
+        title = "",
         authorId,
         categoryId,
-        description,
+        description = "",
         publicationYear,
         oldPrice,
         newPrice,
         bookAvatar
       ) {
-        console.log("openEditDialog called with", bookId, title); // Thêm log để kiểm tra
+        title = JSON.parse(title);
+        description = JSON.parse(description);
         isEditMode = true;
         editBookId = bookId;
         openDialog();
@@ -388,7 +583,6 @@
 
       function saveBook() {
         const formData = new FormData();
-
         formData.append("title", document.getElementById("bookTitle").value);
         formData.append(
           "author_id",

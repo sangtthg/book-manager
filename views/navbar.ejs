@@ -73,7 +73,7 @@
           <a class="nav-link" href="/admin/User">Danh sách khách hàng</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/admin/User">Danh sách đơn hàng</a>
+          <a class="nav-link" href="/admin/orders">Danh sách đơn hàng</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="/admin/thongbao">Danh sách bình luận</a>
@@ -93,12 +93,32 @@
         <li class="nav-item">
           <a class="nav-link" href="/admin/Account">Tài khoản</a>
         </li>
+
         <li class="nav-item">
-          <a class="nav-link" href="/admin/orders">Danh sách order</a>
-        </li><li class="nav-item">
           <a class="nav-link" href="/admin/reviews">Reviews</a>
         </li>
       </ul>
     </nav>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const userGreeting = document.getElementById("user-greeting");
+        const statsLink = document.getElementById("stats-link");
+
+        // Lấy thông tin người dùng từ localStorage
+        const user = JSON.parse(localStorage.getItem("user"));
+        const role = localStorage.getItem("role");
+        console.log("User Info:", user);
+        console.log("User Role:", role);
+        // Hiển thị tên người dùng
+        if (user) {
+          userGreeting.textContent = `Chào ${user.name}`;
+        }
+
+        // Ẩn phần thống kê nếu là member
+        if (role === "member") {
+          statsLink.classList.add("hidden");
+        }
+      });
+    </script>
   </body>
 </html>
