@@ -1,6 +1,7 @@
 const db = require("../helpers/db_helpers");
 const { CartDetail, Order, PaymentTransaction, User } = require("../models");
 const Book = require("../models/book_model");
+const { createNotification } = require("./notificationController");
 const VnpayTransactionController = require("./VnpayTransactionController");
 
 exports.createOrder = async (req, res) => {
@@ -30,8 +31,8 @@ exports.createOrder = async (req, res) => {
       const book = await Book.findByPk(cart.book_id);
       if (!book) {
         return res
-            .status(404)
-            .json({ message: "Không tìm thấy sách", status: "-1" });
+          .status(404)
+          .json({ message: "Không tìm thấy sách", status: "-1" });
       }
       totalPrice += book.new_price * cart.quantity;
       totalQuantity += cart.quantity;
@@ -57,6 +58,14 @@ exports.createOrder = async (req, res) => {
       items: JSON.stringify(items),
     });
 
+    const notificationResult = await createNotification({
+      body: { type: "createOrder", orderId: newOrder.id },
+      auth: { user_id },
+    });
+
+    if (notificationResult.code === -1) {
+      return res.status(500).json(notificationResult);
+    }
     return res.json({
       status: "0",
       message: " Tạo đơn hàng thành công, tiến hành thanh toán!",
@@ -93,10 +102,10 @@ exports.listOrders = async (req, res) => {
       });
     }
 
-    const parsedOrders = orders.map(order => {
+    const parsedOrders = orders.map((order) => {
       return {
         ...order.dataValues,
-        items: JSON.parse(order.dataValues.items)
+        items: JSON.parse(order.dataValues.items),
       };
     });
 
@@ -194,7 +203,7 @@ exports.payOrder = async (req, res) => {
       totalAmount: orderItem.totalPrice,
       ip: req.ip,
       merchantReturnUrl:
-          "https://book-manager-phi.vercel.app/payment/payment-callback",
+        "https://book-manager-phi.vercel.app/payment/payment-callback",
     });
     return res.json({
       status: "0",

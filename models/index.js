@@ -1,12 +1,13 @@
 // models/index.js
-const sequelize = require('../helpers/sequelize_helpers');
-const Order = require('./order_model');
-const CartDetail = require('./cart_detail_model');
-const VnpayTransaction = require('./VnpayTransaction');
-const PaymentTransaction = require('./PaymentTransaction');
-const User = require('./user_model');
-const Review = require('./reviews.model');
-const Book = require('./book_model');
+const sequelize = require("../helpers/sequelize_helpers");
+const Order = require("./order_model");
+const CartDetail = require("./cart_detail_model");
+const VnpayTransaction = require("./VnpayTransaction");
+const PaymentTransaction = require("./PaymentTransaction");
+const User = require("./user_model");
+const Review = require("./reviews.model");
+const Book = require("./book_model");
+const Notification = require("./NotificationModel");
 const db = {
   sequelize,
   Order,
@@ -15,7 +16,8 @@ const db = {
   PaymentTransaction,
   User,
   Review,
-  Book
+  Book,
+  Notification,
 };
 
 module.exports = db;
