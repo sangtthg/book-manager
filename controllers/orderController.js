@@ -142,6 +142,7 @@ exports.listAllOrders = async (req, res) => {
     });
   }
 };
+
 exports.updateStatus = async (req, res) => {
   try {
     const { orderId, status } = req.body;
@@ -158,14 +159,23 @@ exports.updateStatus = async (req, res) => {
         code: -1,
       });
     }
-
-    order.orderStatus = status;
+    if (status === "cancelled" && order.paymentStatus !== "pending") {
+      return res.status(400).json({
+        message:
+          "Không thể hủy đơn hàng!",
+        code: -1,
+      });
+    }
+    order.statusShip = status;
     await order.save();
 
-    res.redirect("admin/orders");
+    return res.json({
+      message: "Cập nhật trạng thái thành công",
+      code: 0,
+    });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Hệ thống bận!",
       code: -1,
     });

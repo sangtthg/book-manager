@@ -15,7 +15,7 @@
           <tr>
             <th>Mã đơn hàng</th>
             <th>Người dùng</th>
-            <th>Trạng thái</th>
+            <th>Trạng thái đơn hàng</th>
             <th>Ngày tạo</th>
             <th>Tổng giá trị</th>
             <th>Hành động</th>
@@ -30,14 +30,14 @@
               <td><%= order.createdAt %></td>
               <td><%= order.totalPrice %></td>
               <td>
-                <form action="/update-status" method="post" class="form-inline">
+                <form action="/admin/update-status" method="post" class="form-inline status-form">
                   <input type="hidden" name="orderId" value="<%= order.id %>">
                   <select name="status" class="form-control mr-2">
-                    <option value="pending" <%= order.statusShip === 'pending' ? 'selected' : '' %>>Pending</option>
-                    <option value="confirmed" <%= order.statusShip === 'confirmed' ? 'selected' : '' %>>Confirmed</option>
-                    <option value="shipped" <%= order.statusShip === 'shipped' ? 'selected' : '' %>>Shipped</option>
-                    <option value="delivered" <%= order.statusShip === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                    <option value="cancelled" <%= order.statusShip === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                    <option value="pending" <%= order.statusShip === 'pending' ? 'selected' : '' %>>Chờ thanh toán</option>
+                    <!-- <option value="confirmed" <%= order.statusShip === 'confirmed' ? 'selected' : '' %>>Confirmed</option> -->
+                    <option value="wait_for_delivery" <%= order.statusShip === 'wait_for_delivery' ? 'selected' : '' %>>Chờ giao hàng</option>
+                    <option value="delivered" <%= order.statusShip === 'delivered' ? 'selected' : '' %>>Đã giao hàng</option>
+                    <!-- <option value="cancelled" <%= order.statusShip === 'cancelled' ? 'selected' : '' %>>Cancelled</option> -->
                   </select>
                   <button type="submit" class="btn btn-primary">Cập nhật</button>
                 </form>
@@ -50,8 +50,27 @@
       <p>Không có đơn hàng nào!</p>
     <% } %>
   </div>
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('.status-form').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        $.ajax({
+          url: form.attr('action'),
+          method: form.attr('method'),
+          data: form.serialize(),
+          success: function(response) {
+            alert('Cập nhật thành công!');
+          },
+          error: function() {
+            alert('Cập nhật thất bại!');
+          }
+        });
+      });
+    });
+  </script>
 </body>
 </html>
