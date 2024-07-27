@@ -88,7 +88,7 @@ exports.listOrders = async (req, res) => {
     const { status } = req.query;
     let searchConditions = { userId };
     if (status) {
-      searchConditions.orderStatus = status;
+      searchConditions.statusShip = status;
     }
 
     const orders = await Order.findAll({
@@ -124,7 +124,7 @@ exports.listAllOrders = async (req, res) => {
     const { status } = req.query;
     let searchConditions = {};
     if (status) {
-      searchConditions.orderStatus = status;
+      searchConditions.statusShip = status;
     }
 
     const orders = await Order.findAll({
