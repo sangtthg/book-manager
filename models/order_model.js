@@ -61,6 +61,10 @@ const Order = sequelize.define(
       allowNull: false,
       defaultValue: "pending",
     },
+    listCartId: {
+      type: DataTypes.JSON,
+      allowNull: false,
+    },
   },
   {
     tableName: "Orders",

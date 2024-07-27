@@ -57,6 +57,7 @@ exports.createOrder = async (req, res) => {
       orderStatus: "pending",
       address: req.body.address || "Địa chỉ mặc định",
       items: JSON.stringify(items),
+      listCartId: listCart,
     });
 
     const notificationResult = await createNotification(

@@ -1,4 +1,9 @@
-const { VnpayTransaction, PaymentTransaction, Order } = require("../models");
+const {
+  VnpayTransaction,
+  PaymentTransaction,
+  Order,
+  CartDetail,
+} = require("../models");
 
 const paymentCallback = async (req, res) => {
   const { vnp_TransactionStatus, vnp_Amount, vnp_TxnRef } = req.query;
@@ -44,6 +49,16 @@ const paymentCallback = async (req, res) => {
           },
         }
       );
+      const order = await Order.findOne({ where: { id: trans.orderId } });
+      if (order) {
+        await CartDetail.destroy({
+          where: {
+            user_id: trans.customerId,
+            status: 1,
+            cart_id: order.listCartId,
+          },
+        });
+      }
     }
 
     if (vnp_TransactionStatus === "02") {
