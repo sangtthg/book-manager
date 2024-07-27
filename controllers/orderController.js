@@ -161,13 +161,13 @@ exports.updateStatus = async (req, res) => {
     }
     if (status === "cancelled" && order.paymentStatus !== "pending") {
       return res.status(400).json({
-        message:
-          "Không thể hủy đơn hàng!",
+        message: "Không thể hủy đơn hàng!",
         code: -1,
       });
     }
     order.statusShip = status;
     await order.save();
+    await createNotification(order.userId, status, order);
 
     return res.json({
       message: "Cập nhật trạng thái thành công",
