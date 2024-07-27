@@ -8,6 +8,7 @@ const User = require("./user_model");
 const Review = require("./reviews.model");
 const Book = require("./book_model");
 const Notification = require("./NotificationModel");
+const Author = require("./author_model");
 const db = {
   sequelize,
   Order,
@@ -18,6 +19,7 @@ const db = {
   Review,
   Book,
   Notification,
+  Author
 };
 
 module.exports = db;

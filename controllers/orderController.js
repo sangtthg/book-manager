@@ -1,5 +1,5 @@
 const db = require("../helpers/db_helpers");
-const { CartDetail, Order, PaymentTransaction, User } = require("../models");
+const { CartDetail, Order, PaymentTransaction, User, Author } = require("../models");
 const Book = require("../models/book_model");
 const { createNotification } = require("./notificationController");
 const VnpayTransactionController = require("./VnpayTransactionController");
@@ -113,12 +113,24 @@ exports.listOrders = async (req, res) => {
       });
     }
 
-    const parsedOrders = orders.map((order) => {
-      return {
-        ...order.dataValues,
-        items: JSON.parse(order.dataValues.items),
-      };
-    });
+    const parsedOrders = await Promise.all(
+      orders.map(async (order) => {
+        const items = JSON.parse(order.dataValues.items);
+        const itemsWithAuthorName = await Promise.all(
+          items.map(async (item) => {
+            const author = await Author.findByPk(item.author_id);
+            return {
+              ...item,
+              author_name: author ? author.author_name : "Unknown",
+            };
+          })
+        );
+        return {
+          ...order.dataValues,
+          items: itemsWithAuthorName,
+        };
+      })
+    );
 
     res.json({ orders: parsedOrders, code: 0, message: "Thành công!" });
   } catch (error) {
