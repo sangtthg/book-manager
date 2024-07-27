@@ -18,7 +18,7 @@ const createNotification = async (userId, type, orderId) => {
       case "createOrder":
         title = "Hoàn tất thanh toán";
         const paymentDeadline = new Date(
-          Date.now() + 15 * 60000
+            Date.now() + 15 * 60000
         ).toLocaleString();
         message = `Xin chào ${user.username}, đơn hàng giá trị ${order.totalPrice} vui lòng thanh toán trước ${paymentDeadline}. Vui lòng bỏ qua tin nhắn này nếu bạn đã thanh toán.`;
         break;
@@ -82,8 +82,8 @@ const markAllAsRead = async (req, res) => {
 
   try {
     await Notification.update(
-      { isRead: true },
-      { where: { userId: userId, isRead: false } }
+        { isRead: true },
+        { where: { userId: userId, isRead: false } }
     );
 
     res.status(200).json({ message: "All notifications marked as read" });

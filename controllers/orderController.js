@@ -32,8 +32,8 @@ exports.createOrder = async (req, res) => {
       const book = await Book.findByPk(cart.book_id);
       if (!book) {
         return res
-          .status(404)
-          .json({ message: "Không tìm thấy sách", status: "-1" });
+            .status(404)
+            .json({ message: "Không tìm thấy sách", status: "-1" });
       }
       totalPrice += book.new_price * cart.quantity;
       totalQuantity += cart.quantity;
@@ -60,9 +60,9 @@ exports.createOrder = async (req, res) => {
     });
 
     const notificationResult = await createNotification(
-      user_id,
-      "createOrder",
-      newOrder.id
+        user_id,
+        "createOrder",
+        newOrder.id
     );
 
     if (notificationResult.code === -1) {
@@ -71,8 +71,8 @@ exports.createOrder = async (req, res) => {
 
     const currentDate = moment();
     const deliveryStartDate = currentDate
-      .add(4, "days")
-      .format("DD [tháng] MM");
+        .add(4, "days")
+        .format("DD [tháng] MM");
     const deliveryEndDate = currentDate.add(2, "days").format("DD [tháng] MM");
     const deliveryDateText = `Nhận hàng vào ${deliveryStartDate} - ${deliveryEndDate}`;
 
@@ -223,7 +223,7 @@ exports.payOrder = async (req, res) => {
       totalAmount: orderItem.totalPrice,
       ip: req.ip,
       merchantReturnUrl:
-        "https://book-manager-phi.vercel.app/payment/payment-callback",
+          "https://book-manager-phi.vercel.app/payment/payment-callback",
     });
     return res.json({
       status: "0",
