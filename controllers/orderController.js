@@ -167,7 +167,7 @@ exports.updateStatus = async (req, res) => {
     }
     order.statusShip = status;
     await order.save();
-    await createNotification(order.userId, status, order);
+    await createNotification(order.userId, status, order.id);
 
     return res.json({
       message: "Cập nhật trạng thái thành công",

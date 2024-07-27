@@ -1,8 +1,8 @@
 const { Notification, User, Order } = require("../models");
 
-const createNotification = async (req, res) => {
-  const { type, orderId } = req.body;
-  const userId = req.auth.user_id;
+const createNotification = async (userId, type, orderId) => {
+  // const { type, orderId } = req.body;
+  // const userId = req.auth.user_id;
 
   try {
     const user = await User.findByPk(userId);
