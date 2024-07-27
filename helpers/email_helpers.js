@@ -19,7 +19,7 @@ const saveOTPToDB = async (email, otp, type) => {
         if (selectErr) {
           reject(new Error(`Lỗi khi lấy OTP từ DB: ${selectErr}`));
         }
-        resolve(selectResult);
+        resolve(selectResult[0]);
       });
     });
   });
