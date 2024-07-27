@@ -3,6 +3,7 @@ const { CartDetail, Order, PaymentTransaction, User } = require("../models");
 const Book = require("../models/book_model");
 const { createNotification } = require("./notificationController");
 const VnpayTransactionController = require("./VnpayTransactionController");
+const moment = require("moment");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -58,23 +59,32 @@ exports.createOrder = async (req, res) => {
       items: JSON.stringify(items),
     });
 
-    const notificationResult = await createNotification({
-      body: { type: "createOrder", orderId: newOrder.id },
-      auth: { user_id },
-    });
+    const notificationResult = await createNotification(
+      user_id,
+      "createOrder",
+      newOrder.id
+    );
 
     if (notificationResult.code === -1) {
       return res.status(500).json(notificationResult);
     }
+
+    const currentDate = moment();
+    const deliveryStartDate = currentDate
+      .add(4, "days")
+      .format("DD [tháng] MM");
+    const deliveryEndDate = currentDate.add(2, "days").format("DD [tháng] MM");
+    const deliveryDateText = `Nhận hàng vào ${deliveryStartDate} - ${deliveryEndDate}`;
+
     return res.json({
       status: "0",
-      message: " Tạo đơn hàng thành công, tiến hành thanh toán!",
+      message: "Tạo đơn hàng thành công, tiến hành thanh toán!",
       orderId: newOrder.id,
       totalPrice: totalPrice,
       totalQuantity: totalQuantity,
       shippingFee: shippingFee,
-      // payUrl: payUrl,
       items,
+      deliveryDateText,
     });
   } catch (error) {
     console.log(error);
@@ -88,7 +98,7 @@ exports.listOrders = async (req, res) => {
     const { status } = req.query;
     let searchConditions = { userId };
     if (status) {
-      searchConditions.orderStatus = status;
+      searchConditions.statusShip = status;
     }
 
     const orders = await Order.findAll({
@@ -124,7 +134,7 @@ exports.listAllOrders = async (req, res) => {
     const { status } = req.query;
     let searchConditions = {};
     if (status) {
-      searchConditions.orderStatus = status;
+      searchConditions.statusShip = status;
     }
 
     const orders = await Order.findAll({
@@ -161,13 +171,13 @@ exports.updateStatus = async (req, res) => {
     }
     if (status === "cancelled" && order.paymentStatus !== "pending") {
       return res.status(400).json({
-        message:
-          "Không thể hủy đơn hàng!",
+        message: "Không thể hủy đơn hàng!",
         code: -1,
       });
     }
     order.statusShip = status;
     await order.save();
+    await createNotification(order.userId, status, order.id);
 
     return res.json({
       message: "Cập nhật trạng thái thành công",

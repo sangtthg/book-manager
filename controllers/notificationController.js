@@ -1,8 +1,8 @@
 const { Notification, User, Order } = require("../models");
 
-const createNotification = async (req, res) => {
-  const { type, orderId } = req.body;
-  const userId = req.auth.user_id;
+const createNotification = async (userId, type, orderId) => {
+  // const { type, orderId } = req.body;
+  // const userId = req.auth.user_id;
 
   try {
     const user = await User.findByPk(userId);
@@ -22,15 +22,15 @@ const createNotification = async (req, res) => {
         ).toLocaleString();
         message = `Xin chào ${user.username}, đơn hàng giá trị ${order.totalPrice} vui lòng thanh toán trước ${paymentDeadline}. Vui lòng bỏ qua tin nhắn này nếu bạn đã thanh toán.`;
         break;
-      case "cancel":
+      case "cancelled":
         title = "Huỷ đơn hàng";
         message = `Huỷ đơn hàng ${order.id} thành công.`;
         break;
-      case "shipping":
+      case "wait_for_delivery":
         title = "Bạn có đơn hàng đang trên đường giao";
         message = `Shipper bảo rằng: Đơn hàng ${order.id} đang trên đường giao đến bạn.`;
         break;
-      case "done":
+      case "delivered":
         title = "Giao kiện hàng thành công";
         message = `Kiện hàng ${order.id} đã giao thành công đến bạn.`;
         break;
