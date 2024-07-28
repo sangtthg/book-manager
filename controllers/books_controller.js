@@ -420,30 +420,24 @@ module.exports.controller = (app, io, socket_list) => {
         );
 
         randomBooksData = await Promise.all(
-          randomBooks.map(async (book) => {
-            const author = await Author.findOne({
-              where: { author_id: book.author_id },
-            });
-
-            if (author)
+            randomBooks.map(async(book) => {
               return {
                 book_id: book.book_id,
                 title: book.title,
-                author_name: author.author_name,
+                author_name: book.author_name,
                 description: book.description,
                 publication_year: book.publication_year,
                 book_avatar: book.book_avatar,
-
                 old_price: book.old_price,
                 new_price: book.new_price,
                 discount_percentage: Math.round(
-                  ((book.old_price - book.new_price) / book.old_price) * 100
+                    ((book.old_price - book.new_price) / book.old_price) * 100
                 ),
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
               };
-          })
+            })
         );
 
         if (newBooks && bestSellerBooks) {
