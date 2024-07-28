@@ -139,27 +139,25 @@ module.exports.controller = (app, io, socket_list) => {
     });
   });
 
-  //total number of cart items
-  app.get("/api/cart/total-items", helpers.authorization, async (req, res) => {
-    const user_id = req.auth.user_id;
+    app.get("/api/cart/total-items", helpers.authorization, async(req, res) => {
+        const user_id = req.auth.user_id;
 
-    try {
-      const totalItems = await CartDetail.sum('quantity', {
-        where: { user_id },
-      });
+        try {
+            const totalItems = await CartDetail.count({
+                where: {user_id},
+            });
 
-      res.json({
-        status: "200",
-        message: msg_success,
-        totalItems: totalItems || 0,
-      });
-    } catch (err) {
-      console.log("/api/cart/total-items error:", err);
-      res.json({ status: "0", message: msg_fail });
-    }
-  });
+            res.json({
+                status: "200",
+                message: msg_success,
+                totalItems: totalItems || 0,
+            });
+        } catch(err) {
+            console.log("/api/cart/total-items error:", err);
+            res.json({status: "0", message: msg_fail});
+        }
+    });
 
-  //delete all item in cart
   app.post("/api/cart/delete-all", helpers.authorization, async (req, res) => {
     const user_id = req.auth.user_id;
 
@@ -174,6 +172,34 @@ module.exports.controller = (app, io, socket_list) => {
       });
     } catch (err) {
       console.log("/api/cart/delete-all error:", err);
+      res.json({ status: "0", message: msg_fail });
+    }
+  });
+
+  app.post("/api/cart/update-quantity", helpers.authorization, async (req, res) => {
+    const { cart_id, quantity } = req.body;
+    const user_id = req.auth.user_id;
+
+    if (!cart_id || quantity === undefined || quantity < 1) {
+      return res.json({ status: "0", message: "Invalid data" });
+    }
+
+    try {
+      const cartItem = await CartDetail.findOne({
+        where: { cart_id, user_id },
+      });
+
+      if (!cartItem) {
+        return res.json({ status: "0", message: "Cart item not found" });
+      }
+
+      cartItem.quantity = quantity;
+      cartItem.modify_date = new Date();
+      await cartItem.save();
+
+      res.json({ status: "1", message: "Quantity updated successfully", data: cartItem });
+    } catch (err) {
+      console.log("/api/cart/update-quantity error:", err);
       res.json({ status: "0", message: msg_fail });
     }
   });
