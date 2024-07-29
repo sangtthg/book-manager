@@ -14,8 +14,8 @@ const paymentCallback = async (req, res) => {
 
     if (!vnpay) {
       return res
-          .status(404)
-          .json({ code: 3, message: "Transaction not found" });
+        .status(404)
+        .json({ code: 3, message: "Transaction not found" });
     }
 
     const trans = await PaymentTransaction.findOne({
@@ -29,25 +29,25 @@ const paymentCallback = async (req, res) => {
 
     if (vnp_TransactionStatus === "00") {
       await VnpayTransaction.update(
-          { status: 1 },
-          { where: { id: vnp_TxnRef } }
+        { status: 1 },
+        { where: { id: vnp_TxnRef } }
       );
 
       await PaymentTransaction.update(
-          { status: "success" },
-          { where: { orderId: vnpay.order } }
+        { status: "success" },
+        { where: { orderId: vnpay.order } }
       );
       await Order.update(
-          {
-            orderStatus: "success",
-            paymentStatus: "success",
-            statusShip: "wait_for_delivery",
+        {
+          orderStatus: "success",
+          paymentStatus: "success",
+          statusShip: "wait_for_delivery",
+        },
+        {
+          where: {
+            id: trans.orderId,
           },
-          {
-            where: {
-              id: trans.orderId,
-            },
-          }
+        }
       );
       const order = await Order.findOne({ where: { id: trans.orderId } });
       if (order) {
@@ -63,22 +63,22 @@ const paymentCallback = async (req, res) => {
 
     if (vnp_TransactionStatus === "02") {
       await VnpayTransaction.update(
-          { status: 2 },
-          { where: { id: vnp_TxnRef } }
+        { status: 2 },
+        { where: { id: vnp_TxnRef } }
       );
 
       await PaymentTransaction.update(
-          { status: "fail" },
-          { where: { orderId: vnpay.order } }
+        { status: "fail" },
+        { where: { orderId: vnpay.order } }
       );
 
       await Order.update(
-          {
-            orderStatus: "fail",
-            paymentStatus: "fail",
-            statusShip: "cancel_payment_error",
-          },
-          { where: { userId: trans.customerId, id: trans.orderId } }
+        {
+          orderStatus: "fail",
+          paymentStatus: "fail",
+          statusShip: "fail",
+        },
+        { where: { userId: trans.customerId, id: trans.orderId } }
       );
     }
 

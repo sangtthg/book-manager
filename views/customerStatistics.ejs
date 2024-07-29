@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .customer-item {
+            border: 1px solid #ddd;
+            border-radius: .25rem;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Thống kê khách hàng</h1>
+
+        <div class="form-group">
+            <label for="startDate">Ngày bắt đầu:</label>
+            <input type="date" class="form-control" id="startDate">
+        </div>
+        <div class="form-group">
+            <label for="endDate">Ngày kết thúc:</label>
+            <input type="date" class="form-control" id="endDate">
+        </div>
+        <button class="btn btn-primary" onclick="getCustomerStatistics()">Xem thống kê</button>
+
+        <div class="mt-4">
+            <h2>Thông tin chi tiết</h2>
+            <p>Số khách hàng mới: <span id="customerCount"></span></p>
+            <p>Tổng số khách hàng: <span id="totalCount"></span></p>
+            <h3>Danh sách khách hàng:</h3>
+            <ul id="customerList" class="list-group">
+                <!-- Danh sách khách hàng sẽ được thêm vào đây -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function getCustomerStatistics() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            try {
+                const response = await fetch(`/statistics/customers/data?startDate=${startDate}&endDate=${endDate}`);
+                const data = await response.json();
+
+                document.getElementById('customerCount').textContent = data.customerCount;
+                document.getElementById('totalCount').textContent = data.totalCount;
+                
+                const customerList = document.getElementById('customerList');
+                customerList.innerHTML = '';
+                
+                data.customers.forEach(customer => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'list-group-item customer-item';
+                    
+                    listItem.innerHTML = `
+                        <h5 class="card-title">Username: ${customer.username}</h5>
+                        <p class="card-text">Email: ${customer.email}</p>
+                        <p class="card-text">Ngày tạo: ${new Date(customer.created_at).toLocaleDateString()}</p>
+                    `;
+
+                    customerList.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error('Lỗi khi lấy thống kê:', error);
+            }
+        }
+    </script>
+</body>
+</html>

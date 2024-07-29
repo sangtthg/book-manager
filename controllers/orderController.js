@@ -1,5 +1,11 @@
 const db = require("../helpers/db_helpers");
-const { CartDetail, Order, PaymentTransaction, User, Author } = require("../models");
+const {
+  CartDetail,
+  Order,
+  PaymentTransaction,
+  User,
+  Author,
+} = require("../models");
 const Book = require("../models/book_model");
 const { createNotification } = require("./notificationController");
 const VnpayTransactionController = require("./VnpayTransactionController");
@@ -32,8 +38,8 @@ exports.createOrder = async (req, res) => {
       const book = await Book.findByPk(cart.book_id);
       if (!book) {
         return res
-            .status(404)
-            .json({ message: "Không tìm thấy sách", status: "-1" });
+          .status(404)
+          .json({ message: "Không tìm thấy sách", status: "-1" });
       }
       totalPrice += book.new_price * cart.quantity;
       totalQuantity += cart.quantity;
@@ -61,9 +67,9 @@ exports.createOrder = async (req, res) => {
     });
 
     const notificationResult = await createNotification(
-        user_id,
-        "createOrder",
-        newOrder.id
+      user_id,
+      "createOrder",
+      newOrder.id
     );
 
     if (notificationResult.code === -1) {
@@ -72,8 +78,8 @@ exports.createOrder = async (req, res) => {
 
     const currentDate = moment();
     const deliveryStartDate = currentDate
-        .add(4, "days")
-        .format("DD [tháng] MM");
+      .add(4, "days")
+      .format("DD [tháng] MM");
     const deliveryEndDate = currentDate.add(2, "days").format("DD [tháng] MM");
     const deliveryDateText = `Nhận hàng vào ${deliveryStartDate} - ${deliveryEndDate}`;
 
@@ -114,22 +120,22 @@ exports.listOrders = async (req, res) => {
     }
 
     const parsedOrders = await Promise.all(
-        orders.map(async (order) => {
-          const items = JSON.parse(order.dataValues.items);
-          const itemsWithAuthorName = await Promise.all(
-              items.map(async (item) => {
-                const author = await Author.findByPk(item.author_id);
-                return {
-                  ...item,
-                  author_name: author ? author.author_name : "Unknown",
-                };
-              })
-          );
-          return {
-            ...order.dataValues,
-            items: itemsWithAuthorName,
-          };
-        })
+      orders.map(async (order) => {
+        const items = JSON.parse(order.dataValues.items);
+        const itemsWithAuthorName = await Promise.all(
+          items.map(async (item) => {
+            const author = await Author.findByPk(item.author_id);
+            return {
+              ...item,
+              author_name: author ? author.author_name : "Unknown",
+            };
+          })
+        );
+        return {
+          ...order.dataValues,
+          items: itemsWithAuthorName,
+        };
+      })
     );
 
     res.json({ orders: parsedOrders, code: 0, message: "Thành công!" });
@@ -141,6 +147,12 @@ exports.listOrders = async (req, res) => {
     });
   }
 };
+function formatNumber(number) {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(number);
+}
 
 exports.listAllOrders = async (req, res) => {
   try {
@@ -154,8 +166,35 @@ exports.listAllOrders = async (req, res) => {
       where: searchConditions,
     });
 
+    const userIds = orders.map((order) => order.userId);
+
+    const users = await User.findAll({
+      where: {
+        user_id: userIds,
+      },
+    });
+
+    const userMap = users.reduce((map, user) => {
+      map[user.user_id] = user.username;
+      return map;
+    }, {});
+    const statusMap = {
+      wait_for_delivery: "Chờ giao hàng",
+      pending: "Đang xử lý",
+      delivered: "Đã giao hàng",
+      cancelled: "Đã hủy",
+      fail: "Lỗi",
+    };
+
+    const ordersWithUsernames = orders.map((order) => ({
+      ...order.toJSON(),
+      username: userMap[order.userId] || "Không xác định",
+      totalPrice: formatNumber(order.totalPrice),
+      statusShip: statusMap[order.statusShip] || "Không xác định",
+    }));
+
     res.render("orders", {
-      orders,
+      orders: ordersWithUsernames,
     });
   } catch (error) {
     console.log(error);
@@ -236,7 +275,7 @@ exports.payOrder = async (req, res) => {
       totalAmount: orderItem.totalPrice,
       ip: req.ip,
       merchantReturnUrl:
-          "https://book-manager-phi.vercel.app/payment/payment-callback",
+        "https://book-manager-phi.vercel.app/payment/payment-callback",
     });
     return res.json({
       status: "0",
@@ -246,6 +285,48 @@ exports.payOrder = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({
+      message: "Hệ thống bận!",
+      code: -1,
+    });
+  }
+};
+
+exports.cancelled = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    const order = await Order.findOne({
+      where: {
+        id: orderId,
+        userId: req.auth.user_id,
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Không tìm thấy đơn hàng",
+        code: -1,
+      });
+    }
+
+    if (order.paymentStatus !== "pending") {
+      return res.status(400).json({
+        message: "Không thể hủy đơn hàng!",
+        code: -1,
+      });
+    }
+
+    order.statusShip = "cancelled";
+    await order.save();
+    await createNotification(order.userId, "cancelled", order.id);
+
+    return res.json({
+      message: "Hủy đơn hàng thành công",
+      code: 0,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
       message: "Hệ thống bận!",
       code: -1,
     });
