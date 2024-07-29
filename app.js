@@ -18,6 +18,7 @@ const VnpayTransactionRoutes = require("./routes/VnpayTransactionRoutes");
 const PaymentRoutes = require("./routes/PaymentRoutes");
 const reviewRouter = require('./routes/reviewRoutes');
 const notification = require('./routes/notificationRoutes');
+const statisticsRouter = require('./routes/statisticsRoutes');
 
 
 const serverPort = process.env.PORT || 3002;
@@ -68,6 +69,8 @@ app.use("/payment", PaymentRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use('/reviews', reviewRouter);
 app.use('/notification', notification);
+app.use('/statistics', statisticsRouter);
+
 
 
 const corsOptions = {

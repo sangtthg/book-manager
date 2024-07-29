@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4"><%= title %></h1>
+
+        <table class="table table-bordered mt-4">
+            <thead>
+                <tr>
+                    <th>Book ID</th>
+                    <th>Title</th>
+                    <th>Author ID</th>
+                    <!-- <th>Description</th> -->
+                    <th>Category ID</th>
+                    <th>Publication Year</th>
+                    <th>Book Avatar</th>
+                    <th>Views Count</th>
+                    <th>Purchase Count</th>
+                    <th>Old Price</th>
+                    <th>New Price</th>
+                    <th>Used Books</th>
+                    <th>Total Price</th>
+                    <th>Quantity</th>
+                    <th>Shipping Fee</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% items.forEach(item => { %>
+                    <tr>
+                        <td><%= item.book_id %></td>
+                        <td><%= item.title %></td>
+                        <td><%= item.author_id %></td>
+                        <!-- <td><%= item.description %></td> -->
+                        <td><%= item.category_id %></td>
+                        <td><%= item.publication_year %></td>
+                        <td><img src="<%= item.book_avatar %>" alt="<%= item.title %>" style="width: 100px;"></td>
+                        <td><%= item.views_count %></td>
+                        <td><%= item.purchase_count %></td>
+                        <td><%= item.old_price %></td>
+                        <td><%= item.new_price %></td>
+                        <td><%= item.used_books %></td>
+                        <td><%= item.totalPrice %></td>
+                        <td><%= item.quantity %></td>
+                        <td><%= item.shippingFee %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

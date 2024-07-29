@@ -19,6 +19,7 @@
             <th>Ngày tạo</th>
             <th>Tổng giá trị</th>
             <th>Hành động</th>
+            <th>Chi tiết</th>
           </tr>
         </thead>
         <tbody>
@@ -34,13 +35,14 @@
                   <input type="hidden" name="orderId" value="<%= order.id %>">
                   <select name="status" class="form-control mr-2">
                     <option value="pending" <%= order.statusShip === 'pending' ? 'selected' : '' %>>Chờ thanh toán</option>
-                    <!-- <option value="confirmed" <%= order.statusShip === 'confirmed' ? 'selected' : '' %>>Confirmed</option> -->
                     <option value="wait_for_delivery" <%= order.statusShip === 'wait_for_delivery' ? 'selected' : '' %>>Chờ giao hàng</option>
                     <option value="delivered" <%= order.statusShip === 'delivered' ? 'selected' : '' %>>Đã giao hàng</option>
-                    <!-- <option value="cancelled" <%= order.statusShip === 'cancelled' ? 'selected' : '' %>>Cancelled</option> -->
                   </select>
                   <button type="submit" class="btn btn-primary">Cập nhật</button>
                 </form>
+              </td>
+              <td>
+                <a href="/statistics/items/<%= order.id %>" class="btn btn-info">Chi tiết</a>
               </td>
             </tr>
           <% }) %>
