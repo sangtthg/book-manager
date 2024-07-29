@@ -1,5 +1,11 @@
 const db = require("../helpers/db_helpers");
-const { CartDetail, Order, PaymentTransaction, User, Author } = require("../models");
+const {
+  CartDetail,
+  Order,
+  PaymentTransaction,
+  User,
+  Author,
+} = require("../models");
 const Book = require("../models/book_model");
 const { createNotification } = require("./notificationController");
 const VnpayTransactionController = require("./VnpayTransactionController");
@@ -141,6 +147,12 @@ exports.listOrders = async (req, res) => {
     });
   }
 };
+function formatNumber(number) {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(number);
+}
 
 exports.listAllOrders = async (req, res) => {
   try {
@@ -154,8 +166,31 @@ exports.listAllOrders = async (req, res) => {
       where: searchConditions,
     });
 
+    // Tạo một danh sách các userId từ các đơn hàng
+    const userIds = orders.map((order) => order.userId);
+
+    // Lấy thông tin người dùng từ bảng users
+    const users = await User.findAll({
+      where: {
+        user_id: userIds,
+      },
+    });
+
+    // Tạo một đối tượng để ánh xạ userId thành username
+    const userMap = users.reduce((map, user) => {
+      map[user.user_id] = user.username;
+      return map;
+    }, {});
+
+    // Thêm tên người dùng vào từng đơn hàng
+    const ordersWithUsernames = orders.map((order) => ({
+      ...order.toJSON(),
+      username: userMap[order.userId] || "Không xác định",
+      totalPrice: formatNumber(order.totalPrice),
+    }));
+
     res.render("orders", {
-      orders,
+      orders: ordersWithUsernames,
     });
   } catch (error) {
     console.log(error);

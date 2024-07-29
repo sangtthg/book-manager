@@ -138,6 +138,15 @@ exports.getCustomerStatistics = async (req, res) => {
     res.status(500).json({ error: "Lỗi server nội bộ" });
   }
 };
+const formatNumber = (number) => {
+  return number.toLocaleString('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+};
+
 
 exports.getItemDetails = async (req, res) => {
   try {
@@ -156,8 +165,13 @@ exports.getItemDetails = async (req, res) => {
       return res.status(404).json({ error: "Mặt hàng không tìm thấy" });
     }
 
-    // Giả sử bạn muốn phân tích dữ liệu items từ chuỗi JSON
     const items = JSON.parse(item.items);
+    items.forEach(i => {
+      i.totalPrice = formatNumber(i.totalPrice);
+      i.old_price = formatNumber(parseFloat(i.old_price));
+      i.new_price = formatNumber(parseFloat(i.new_price));
+      i.shippingFee = formatNumber(i.shippingFee);
+    });
 
     res.render("itemDetails", {
       title: "Chi tiết mặt hàng",
