@@ -166,27 +166,31 @@ exports.listAllOrders = async (req, res) => {
       where: searchConditions,
     });
 
-    // Tạo một danh sách các userId từ các đơn hàng
     const userIds = orders.map((order) => order.userId);
 
-    // Lấy thông tin người dùng từ bảng users
     const users = await User.findAll({
       where: {
         user_id: userIds,
       },
     });
 
-    // Tạo một đối tượng để ánh xạ userId thành username
     const userMap = users.reduce((map, user) => {
       map[user.user_id] = user.username;
       return map;
     }, {});
+    const statusMap = {
+      wait_for_delivery: "Chờ giao hàng",
+      pending: "Đang xử lý",
+      delivered: "Đã giao hàng",
+      cancelled: "Đã hủy",
+      fail: "Lỗi",
+    };
 
-    // Thêm tên người dùng vào từng đơn hàng
     const ordersWithUsernames = orders.map((order) => ({
       ...order.toJSON(),
       username: userMap[order.userId] || "Không xác định",
       totalPrice: formatNumber(order.totalPrice),
+      statusShip: statusMap[order.statusShip] || "Không xác định",
     }));
 
     res.render("orders", {
@@ -281,6 +285,48 @@ exports.payOrder = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({
+      message: "Hệ thống bận!",
+      code: -1,
+    });
+  }
+};
+
+exports.cancelled = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    const order = await Order.findOne({
+      where: {
+        id: orderId,
+        userId: req.auth.user_id,
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Không tìm thấy đơn hàng",
+        code: -1,
+      });
+    }
+
+    if (order.paymentStatus !== "pending") {
+      return res.status(400).json({
+        message: "Không thể hủy đơn hàng!",
+        code: -1,
+      });
+    }
+
+    order.statusShip = "cancelled";
+    await order.save();
+    await createNotification(order.userId, "cancelled", order.id);
+
+    return res.json({
+      message: "Hủy đơn hàng thành công",
+      code: 0,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
       message: "Hệ thống bận!",
       code: -1,
     });
