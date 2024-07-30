@@ -65,6 +65,10 @@ const Order = sequelize.define(
             type: DataTypes.JSON,
             allowNull: false,
         },
+        payDescription: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
     },
     {
         tableName: "Orders",

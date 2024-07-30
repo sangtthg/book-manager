@@ -38,8 +38,8 @@ exports.createOrder = async (req, res) => {
       const book = await Book.findByPk(cart.book_id);
       if (!book) {
         return res
-          .status(404)
-          .json({ message: "Không tìm thấy sách", status: "-1" });
+            .status(404)
+            .json({ message: "Không tìm thấy sách", status: "-1" });
       }
       totalPrice += book.new_price * cart.quantity;
       totalQuantity += cart.quantity;
@@ -48,6 +48,7 @@ exports.createOrder = async (req, res) => {
         totalPrice,
         quantity: cart.quantity,
         shippingFee,
+        isReview: false,
       });
     }
 
@@ -67,9 +68,9 @@ exports.createOrder = async (req, res) => {
     });
 
     const notificationResult = await createNotification(
-      user_id,
-      "createOrder",
-      newOrder.id
+        user_id,
+        "createOrder",
+        newOrder.id
     );
 
     if (notificationResult.code === -1) {
@@ -78,8 +79,8 @@ exports.createOrder = async (req, res) => {
 
     const currentDate = moment();
     const deliveryStartDate = currentDate
-      .add(4, "days")
-      .format("DD [tháng] MM");
+        .add(4, "days")
+        .format("DD [tháng] MM");
     const deliveryEndDate = currentDate.add(2, "days").format("DD [tháng] MM");
     const deliveryDateText = `Nhận hàng vào ${deliveryStartDate} - ${deliveryEndDate}`;
 
@@ -120,22 +121,22 @@ exports.listOrders = async (req, res) => {
     }
 
     const parsedOrders = await Promise.all(
-      orders.map(async (order) => {
-        const items = JSON.parse(order.dataValues.items);
-        const itemsWithAuthorName = await Promise.all(
-          items.map(async (item) => {
-            const author = await Author.findByPk(item.author_id);
-            return {
-              ...item,
-              author_name: author ? author.author_name : "Unknown",
-            };
-          })
-        );
-        return {
-          ...order.dataValues,
-          items: itemsWithAuthorName,
-        };
-      })
+        orders.map(async (order) => {
+          const items = JSON.parse(order.dataValues.items);
+          const itemsWithAuthorName = await Promise.all(
+              items.map(async (item) => {
+                const author = await Author.findByPk(item.author_id);
+                return {
+                  ...item,
+                  author_name: author ? author.author_name : "Unknown",
+                };
+              })
+          );
+          return {
+            ...order.dataValues,
+            items: itemsWithAuthorName,
+          };
+        })
     );
 
     res.json({ orders: parsedOrders, code: 0, message: "Thành công!" });
@@ -256,8 +257,12 @@ exports.payOrder = async (req, res) => {
     const orderItem = await Order.findOne({
       where: {
         id: orderId,
+        paymentStatus:"pending"
       },
     });
+    if (!orderItem) {
+      return res.status(400).json({ message: "Không tìm thấy đơn hàng nào cần thanh toán!", status: -1 });
+    }
 
     await PaymentTransaction.create({
       customerId: user_id,
@@ -275,7 +280,7 @@ exports.payOrder = async (req, res) => {
       totalAmount: orderItem.totalPrice,
       ip: req.ip,
       merchantReturnUrl:
-        "https://book-manager-phi.vercel.app/payment/payment-callback",
+          "https://book-manager-phi.vercel.app/payment/payment-callback",
     });
     return res.json({
       status: "0",

@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { Review, User, Book } = require("../models");
+const { Review, User, Book, Order } = require("../models");
 
 const reviewController = {
     create: async (req, res) => {
@@ -15,6 +15,29 @@ const reviewController = {
                 reviewerName: user.username,
                 reviewerAvatar: user.avatar,
             });
+            const order = await Order.findOne({
+                where: { id: req.body.orderId },
+                attributes: ["items"],
+            });
+
+            if (!order) {
+                return res.status(404).json({ message: "Order not found" });
+            }
+
+            const items = JSON.parse(order.items);
+            const itemIndex = items.findIndex(
+                (item) => item.book_id === req.body.bookId
+            );
+
+            if (itemIndex !== -1) {
+                items[itemIndex].isReview = true;
+
+                await Order.update(
+                    { items: JSON.stringify(items) },
+                    { where: { id: req.body.orderId } }
+                );
+            }
+
             res.status(201).json(review);
         } catch (error) {
             res.status(500).json({ error: error.message });
