@@ -48,6 +48,7 @@ exports.createOrder = async (req, res) => {
         totalPrice,
         quantity: cart.quantity,
         shippingFee,
+        isReview: false,
       });
     }
 
