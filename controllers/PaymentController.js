@@ -6,7 +6,8 @@ const {
 } = require("../models");
 
 const paymentCallback = async (req, res) => {
-  const { vnp_TransactionStatus, vnp_Amount, vnp_TxnRef } = req.query;
+  const { vnp_TransactionStatus, vnp_Amount, vnp_TxnRef, vnp_ResponseCode } =
+    req.query;
   console.log(req.query, "lih");
 
   try {
@@ -42,6 +43,7 @@ const paymentCallback = async (req, res) => {
           orderStatus: "success",
           paymentStatus: "success",
           statusShip: "wait_for_delivery",
+          payDescription:"Thành công!"
         },
         {
           where: {
@@ -77,8 +79,32 @@ const paymentCallback = async (req, res) => {
           orderStatus: "fail",
           paymentStatus: "fail",
           statusShip: "fail",
+          payDescription:"Thanh toán lỗi!"
         },
         { where: { userId: trans.customerId, id: trans.orderId } }
+      );
+    }
+    if (vnp_ResponseCode === "11") {
+      await VnpayTransaction.update(
+        { status: 2 },
+        { where: { id: vnp_TxnRef } }
+      );
+
+      await PaymentTransaction.update(
+        { status: "fail" },
+        { where: { orderId: vnpay.order } }
+      );
+      await Order.update(
+        {
+          orderStatus: "fail",
+          paymentStatus: "fail",
+          statusShip: "fail",
+          payDescription:"Hết thời hạn chờ thanh toán!"
+        },
+        { where: { userId: trans.customerId, id: trans.orderId } }
+      );
+      console.log(
+        "Giao dịch không thành công do: Đã hết hạn chờ thanh toán. Xin quý khách vui lòng thực hiện lại giao dịch."
       );
     }
 

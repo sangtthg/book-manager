@@ -18,6 +18,7 @@
             <th>Trạng thái đơn hàng</th>
             <th>Ngày tạo</th>
             <th>Tổng giá trị</th>
+            <th>Mô tả trạng thái thanh toán</th>
             <th>Hành động</th>
             <th>Chi tiết</th>
           </tr>
@@ -30,6 +31,7 @@
               <td><%= order.statusShip %></td>
               <td><%= order.createdAt %></td>
               <td><%= order.totalPrice %></td>
+              <td><%= order.payDescription %></td>
               <td>
                 <form action="/admin/update-status" method="post" class="form-inline status-form">
                   <input type="hidden" name="orderId" value="<%= order.id %>">

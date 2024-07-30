@@ -257,8 +257,12 @@ exports.payOrder = async (req, res) => {
     const orderItem = await Order.findOne({
       where: {
         id: orderId,
+        paymentStatus:"pending"
       },
     });
+    if (!orderItem) {
+      return res.status(400).json({ message: "Không tìm thấy đơn hàng nào cần thanh toán!", status: -1 });
+    }
 
     await PaymentTransaction.create({
       customerId: user_id,
