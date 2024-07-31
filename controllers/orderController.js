@@ -8,8 +8,8 @@ const {
 } = require("../models");
 const Book = require("../models/book_model");
 const { createNotification } = require("./notificationController");
-const VnpayTransactionController = require("./VnpayTransactionController");
 const moment = require("moment");
+const VnpayTransactionController = require("./VnpayTransactionController");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -65,6 +65,7 @@ exports.createOrder = async (req, res) => {
       address: req.body.address || "Địa chỉ mặc định",
       items: JSON.stringify(items),
       listCartId: listCart,
+      phone: req.body.phone || "0123456789",
     });
 
     const notificationResult = await createNotification(
@@ -157,10 +158,15 @@ function formatNumber(number) {
 
 exports.listAllOrders = async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, orderId, username } = req.query;
     let searchConditions = {};
+    
     if (status) {
       searchConditions.statusShip = status;
+    }
+    
+    if (orderId) {
+      searchConditions.id = orderId;
     }
 
     const orders = await Order.findAll({
@@ -179,6 +185,7 @@ exports.listAllOrders = async (req, res) => {
       map[user.user_id] = user.username;
       return map;
     }, {});
+    
     const statusMap = {
       wait_for_delivery: "Chờ giao hàng",
       pending: "Đang xử lý",
@@ -187,15 +194,25 @@ exports.listAllOrders = async (req, res) => {
       fail: "Lỗi",
     };
 
-    const ordersWithUsernames = orders.map((order) => ({
+    let ordersWithUsernames = orders.map((order) => ({
       ...order.toJSON(),
       username: userMap[order.userId] || "Không xác định",
       totalPrice: formatNumber(order.totalPrice),
       statusShip: statusMap[order.statusShip] || "Không xác định",
     }));
 
+    // Lọc theo tên người dùng nếu có
+    if (username) {
+      ordersWithUsernames = ordersWithUsernames.filter(order => 
+        order.username.toLowerCase().includes(username.toLowerCase())
+      );
+    }
+
     res.render("orders", {
       orders: ordersWithUsernames,
+      currentStatus: status || '',
+      currentOrderId: orderId || '',
+      currentUsername: username || '',
     });
   } catch (error) {
     console.log(error);
@@ -257,11 +274,16 @@ exports.payOrder = async (req, res) => {
     const orderItem = await Order.findOne({
       where: {
         id: orderId,
-        paymentStatus:"pending"
+        paymentStatus: "pending",
       },
     });
     if (!orderItem) {
-      return res.status(400).json({ message: "Không tìm thấy đơn hàng nào cần thanh toán!", status: -1 });
+      return res
+        .status(400)
+        .json({
+          message: "Không tìm thấy đơn hàng nào cần thanh toán!",
+          status: -1,
+        });
     }
 
     await PaymentTransaction.create({
