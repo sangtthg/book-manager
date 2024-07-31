@@ -6,6 +6,7 @@ const {
   User,
   Author,
   Voucher,
+  UserVoucher,
 } = require("../models");
 const Book = require("../models/book_model");
 const { createNotification } = require("./notificationController");
@@ -32,15 +33,15 @@ exports.createOrder = async (req, res) => {
 
     let totalPrice = 0;
     let totalQuantity = 0;
+    let discount = 0;
+    let voucherId = null;
 
     const items = [];
 
     for (const cart of carts) {
       const book = await Book.findByPk(cart.book_id);
       if (!book) {
-        return res
-          .status(404)
-          .json({ message: "Không tìm thấy sách", status: "-1" });
+        return res.status(404).json({ message: "Không tìm thấy sách", status: "-1" });
       }
       totalPrice += book.new_price * cart.quantity;
       totalQuantity += cart.quantity;
@@ -52,9 +53,9 @@ exports.createOrder = async (req, res) => {
         isReview: false,
       });
     }
-    let voucher;
+
     if (req.body.code) {
-      voucher = await Voucher.findOne({
+      const voucher = await Voucher.findOne({
         where: {
           code: req.body.code,
         },
@@ -64,30 +65,40 @@ exports.createOrder = async (req, res) => {
         return res.json({ code: 5, message: "Không tìm thấy mã voucher" });
       }
 
+      const userVoucher = await UserVoucher.findOne({
+        where: {
+          userId: user_id,
+          voucherId: voucher.id,
+        },
+      });
+
+      if (userVoucher) {
+        return res.json({ code: 6, message: "Bạn đã sử dụng voucher này rồi" });
+      }
+
       const now = moment();
       const validFrom = moment(voucher.validFrom);
       const validTo = moment(voucher.validTo);
 
-      if (
-        now.isBefore(validFrom) ||
-        now.isAfter(validTo) ||
-        voucher.isExpired == true
-      ) {
-        return res.json({
-          code: 6,
-          message: "Voucher đã hết hạn hoặc chưa bắt đầu",
-        });
+      if (now.isBefore(validFrom) || now.isAfter(validTo)) {
+        return res.json({ code: 7, message: "Voucher đã hết hạn hoặc chưa bắt đầu" });
       }
 
       if (voucher.quantity <= 0) {
-        return res.json({
-          code: 7,
-          message: "Voucher đã hết số lượng sử dụng",
-        });
+        return res.json({ code: 8, message: "Voucher đã hết số lượng sử dụng" });
       }
 
       discount = voucher.discountAmount || 0;
       totalPrice -= discount;
+
+      await voucher.update({ quantity: voucher.quantity - 1 });
+
+      await UserVoucher.create({
+        userId: user_id,
+        voucherId: voucher.id,
+      });
+
+      voucherId = voucher.id;
     }
 
     totalPrice += shippingFee;
@@ -104,24 +115,16 @@ exports.createOrder = async (req, res) => {
       items: JSON.stringify(items),
       listCartId: listCart,
       phone: req.body.phone || "0123456789",
-      voucherId: voucher.id,
-      discountPrice: voucher.discountAmount,
     });
 
-    const notificationResult = await createNotification(
-      user_id,
-      "createOrder",
-      newOrder.id
-    );
+    const notificationResult = await createNotification(user_id, "createOrder", newOrder.id);
 
     if (notificationResult.code === -1) {
       return res.status(500).json(notificationResult);
     }
 
     const currentDate = moment();
-    const deliveryStartDate = currentDate
-      .add(4, "days")
-      .format("DD [tháng] MM");
+    const deliveryStartDate = currentDate.add(4, "days").format("DD [tháng] MM");
     const deliveryEndDate = currentDate.add(2, "days").format("DD [tháng] MM");
     const deliveryDateText = `Nhận hàng vào ${deliveryStartDate} - ${deliveryEndDate}`;
 
@@ -132,9 +135,9 @@ exports.createOrder = async (req, res) => {
       totalPrice: totalPrice,
       totalQuantity: totalQuantity,
       shippingFee: shippingFee,
+      discount: discount,
       items,
       deliveryDateText,
-      discountPrice: newOrder.discountPrice,
     });
   } catch (error) {
     console.log(error);

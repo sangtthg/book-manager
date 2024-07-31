@@ -10,6 +10,7 @@ const Book = require("./book_model");
 const Notification = require("./NotificationModel");
 const Author = require("./author_model");
 const Voucher = require("./voucher");
+const UserVoucher = require("./userVoucher");
 const db = {
   sequelize,
   Order,
@@ -21,7 +22,8 @@ const db = {
   Book,
   Notification,
   Author,
-  Voucher
+  Voucher,
+  UserVoucher
 };
 
 module.exports = db;
