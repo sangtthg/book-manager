@@ -1,4 +1,6 @@
+const { Op } = require("sequelize");
 const { Notification, User, Order } = require("../models");
+const { uploadFileToCloud } = require("../helpers/upload_helpers");
 
 const createNotification = async (userId, type, orderId) => {
   // const { type, orderId } = req.body;
@@ -97,7 +99,55 @@ const getNotificationsByUser = async (req, res) => {
   try {
     const notifications = await Notification.findAll({
       where: {
-        userId: userId,
+        [Op.or]: [{ userId: userId }, { type: "system" }],
+      },
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json(notifications);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+const createNotificationByadmin = async (req, res) => {
+  const { title, message, image } = req.body;
+
+  if (!title || !message) {
+    return res
+      .status(400)
+      .json({ code: -1, error: "Tiêu đề và nội dung không được bỏ trống" });
+  }
+
+  try {
+    let imageUrl = null;
+    if (image) {
+      imageUrl = await uploadFileToCloud(image);
+    }
+
+    const notification = await Notification.create({
+      type: "system",
+      title,
+      message,
+      isRead: false,
+      imageUrl,
+    });
+
+    res.status(201).json({
+      code: 0,
+      message: "Thông báo đã được tạo thành công",
+      notification,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ code: -1, error: "Lỗi khi tạo thông báo" });
+  }
+};
+
+const getSystemNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.findAll({
+      where: {
+        type: "system",
       },
       order: [["createdAt", "DESC"]],
     });
@@ -108,9 +158,29 @@ const getNotificationsByUser = async (req, res) => {
   }
 };
 
+const deleteNotification = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const notification = await Notification.findByPk(id);
+
+    if (!notification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    await notification.destroy();
+    res.status(200).json({ message: "Notification deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   markAsRead,
   markAllAsRead,
   createNotification,
   getNotificationsByUser,
+  createNotificationByadmin,
+  getSystemNotifications,
+  deleteNotification,
 };
