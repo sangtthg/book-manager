@@ -110,8 +110,9 @@ const getNotificationsByUser = async (req, res) => {
   }
 };
 const createNotificationByadmin = async (req, res) => {
-  const { title, message, image } = req.body;
-
+  const { title, message } = req.body;
+  const image = req.file;
+  console.log(image, req)
   if (!title || !message) {
     return res
       .status(400)
