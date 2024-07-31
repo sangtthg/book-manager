@@ -5,6 +5,7 @@ const {
   PaymentTransaction,
   User,
   Author,
+  Voucher,
 } = require("../models");
 const Book = require("../models/book_model");
 const { createNotification } = require("./notificationController");
@@ -51,6 +52,43 @@ exports.createOrder = async (req, res) => {
         isReview: false,
       });
     }
+    let voucher;
+    if (req.body.code) {
+      voucher = await Voucher.findOne({
+        where: {
+          code: req.body.code,
+        },
+      });
+
+      if (!voucher) {
+        return res.json({ code: 5, message: "Không tìm thấy mã voucher" });
+      }
+
+      const now = moment();
+      const validFrom = moment(voucher.validFrom);
+      const validTo = moment(voucher.validTo);
+
+      if (
+        now.isBefore(validFrom) ||
+        now.isAfter(validTo) ||
+        voucher.isExpired == true
+      ) {
+        return res.json({
+          code: 6,
+          message: "Voucher đã hết hạn hoặc chưa bắt đầu",
+        });
+      }
+
+      if (voucher.quantity <= 0) {
+        return res.json({
+          code: 7,
+          message: "Voucher đã hết số lượng sử dụng",
+        });
+      }
+
+      discount = voucher.discountAmount || 0;
+      totalPrice -= discount;
+    }
 
     totalPrice += shippingFee;
 
@@ -66,6 +104,8 @@ exports.createOrder = async (req, res) => {
       items: JSON.stringify(items),
       listCartId: listCart,
       phone: req.body.phone || "0123456789",
+      voucherId: voucher.id,
+      discountPrice: voucher.discountAmount,
     });
 
     const notificationResult = await createNotification(
@@ -94,6 +134,7 @@ exports.createOrder = async (req, res) => {
       shippingFee: shippingFee,
       items,
       deliveryDateText,
+      discountPrice: newOrder.discountPrice,
     });
   } catch (error) {
     console.log(error);
@@ -160,11 +201,11 @@ exports.listAllOrders = async (req, res) => {
   try {
     const { status, orderId, username } = req.query;
     let searchConditions = {};
-    
+
     if (status) {
       searchConditions.statusShip = status;
     }
-    
+
     if (orderId) {
       searchConditions.id = orderId;
     }
@@ -185,7 +226,7 @@ exports.listAllOrders = async (req, res) => {
       map[user.user_id] = user.username;
       return map;
     }, {});
-    
+
     const statusMap = {
       wait_for_delivery: "Chờ giao hàng",
       pending: "Đang xử lý",
@@ -203,16 +244,16 @@ exports.listAllOrders = async (req, res) => {
 
     // Lọc theo tên người dùng nếu có
     if (username) {
-      ordersWithUsernames = ordersWithUsernames.filter(order => 
+      ordersWithUsernames = ordersWithUsernames.filter((order) =>
         order.username.toLowerCase().includes(username.toLowerCase())
       );
     }
 
     res.render("orders", {
       orders: ordersWithUsernames,
-      currentStatus: status || '',
-      currentOrderId: orderId || '',
-      currentUsername: username || '',
+      currentStatus: status || "",
+      currentOrderId: orderId || "",
+      currentUsername: username || "",
     });
   } catch (error) {
     console.log(error);
@@ -278,12 +319,10 @@ exports.payOrder = async (req, res) => {
       },
     });
     if (!orderItem) {
-      return res
-        .status(400)
-        .json({
-          message: "Không tìm thấy đơn hàng nào cần thanh toán!",
-          status: -1,
-        });
+      return res.status(400).json({
+        message: "Không tìm thấy đơn hàng nào cần thanh toán!",
+        status: -1,
+      });
     }
 
     await PaymentTransaction.create({
