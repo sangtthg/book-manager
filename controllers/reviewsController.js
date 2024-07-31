@@ -79,7 +79,11 @@ const reviewController = {
           }, {});
         }
       } else {
-        reviews = await Review.findAll();
+        reviews = await Review.findAll({
+          where: {
+            hide: false,
+          },
+        });
 
         const bookIds = [...new Set(reviews.map((review) => review.bookId))];
 
@@ -154,16 +158,53 @@ const reviewController = {
 
   delete: async (req, res) => {
     try {
-      const review = await Review.findByPk(req.params.id);
-      if (review) {
-        if (review.userId !== req.auth.user_id) {
-          return res.status(403).json({ message: "Unauthorized" });
-        }
-        await review.destroy();
-        res.status(200).json({ message: "Review deleted" });
-      } else {
-        res.status(404).json({ message: "Review not found" });
+      const { id } = req.params;
+
+      const review = await Review.findByPk(id);
+      if (!review) {
+        return res.status(404).json({ message: "Review not found" });
       }
+
+      if (review.userId !== req.auth.user_id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      await review.destroy();
+
+      res.status(200).json({ message: "Review deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+  deletebyadmin: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const review = await Review.findByPk(id);
+      if (!review) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+
+      await review.destroy();
+
+      res.status(200).json({ message: "Review deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+  hide: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const review = await Review.findByPk(id);
+      if (!review) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+
+      review.hide = true;
+      await review.save();
+
+      res.status(200).json({ message: "Review hidden successfully" });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
