@@ -29,6 +29,7 @@ const Book = sequelizeHelpers.define(
     new_price: { type: DataTypes.DECIMAL(15, 0), defaultValue: 0 },
     used_books: { type: DataTypes.DECIMAL(15, 0), defaultValue: 0 },
     quantity: { type: DataTypes.INTEGER, defaultValue: 0 },
+    avatar_reviews: { type: DataTypes.STRING(500), allowNull: true },
   },
   { tableName: "books", timestamps: false }
 );

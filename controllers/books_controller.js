@@ -5,9 +5,13 @@ const Book = require("../models/book_model");
 const Category = require("../models/category_model");
 const { selectUser } = require("../Service/user");
 const { uppercase } = require("../utilities/string/uppercase");
-const { uploadFileToCloud } = require("../helpers/upload_helpers");
+const {
+  uploadFileToCloud,
+  uploadMultipleFilesToCloud,
+} = require("../helpers/upload_helpers");
 const { Sequelize } = require("sequelize");
 const sequelizeHelpers = require("../helpers/sequelize_helpers");
+const { arrayToString } = require("../utilities/string/string");
 const msg_success = "successfully";
 const msg_fail = "fail";
 const upload = multer();
@@ -198,13 +202,18 @@ module.exports.controller = (app, io, socket_list) => {
   //Update book
   app.post(
     "/api/book/update",
-    helpers.authorization,
-    upload.single("book_avatar"),
+    // helpers.authorization,
+    upload.fields([
+      { name: "book_avatar", maxCount: 1 },
+      { name: "avatar_reviews", maxCount: 3 },
+    ]),
     async (req, res) => {
       helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
         helpers.CheckParameterNull(res, req.body, ["book_id"], async () => {
           try {
-            const file = req.file;
+            const fileBookAvatar = req.files["book_avatar"][0];
+            const fileAvatarReviews = req.files["avatar_reviews"];
+
             const book = await Book.findOne({
               where: { book_id: req.body.book_id },
             });
@@ -215,8 +224,37 @@ module.exports.controller = (app, io, socket_list) => {
                 message: "Book not found",
               });
             }
+            if (!book) {
+              return res.json({
+                status: "0",
+                message: "Book not found",
+              });
+            }
 
-            const url = file ? await uploadFileToCloud(file) : book.book_avatar;
+            const url = fileBookAvatar
+              ? await uploadFileToCloud(fileBookAvatar)
+              : book.book_avatar;
+
+            if (fileAvatarReviews) {
+              if (fileAvatarReviews.length > 1) {
+                return res.json({
+                  status: "0",
+                  message: "Only 3 images are allowed",
+                });
+              }
+            }
+            if (fileAvatarReviews) {
+              if (fileAvatarReviews.length > 3) {
+                return res.json({
+                  status: "0",
+                  message: "Only 3 images are allowed",
+                });
+              }
+            }
+
+            const urlAvatarReviews = fileAvatarReviews
+              ? await uploadMultipleFilesToCloud(fileAvatarReviews)
+              : book.avatar_reviews;
 
             const {
               title,
@@ -229,7 +267,7 @@ module.exports.controller = (app, io, socket_list) => {
               quantity,
             } = req.body;
 
-            if (author_id !== null) {
+            if (author_id) {
               const author = await Author.findOne({ where: { author_id } });
               if (!author) {
                 return res.json({
@@ -239,7 +277,7 @@ module.exports.controller = (app, io, socket_list) => {
               }
             }
 
-            if (category_id !== null) {
+            if (category_id) {
               const category = await Category.findOne({
                 where: { category_id },
               });
@@ -250,24 +288,19 @@ module.exports.controller = (app, io, socket_list) => {
                 });
               }
             }
-
             const updateData = {
-              title: title !== null ? uppercase(title) : book.title,
-              author_id: author_id !== null ? author_id : book.author_id,
-              category_id:
-                category_id !== null ? category_id : book.category_id,
-              description:
-                description !== null
-                  ? uppercase(description)
-                  : book.description,
-              publication_year:
-                publication_year !== null
-                  ? publication_year
-                  : book.publication_year,
+              title: title ? uppercase(title) : book.title,
+              author_id: author_id || book.author_id,
+              category_id: category_id || book.category_id,
+              description: description
+                ? uppercase(description)
+                : book.description,
+              publication_year: publication_year || book.publication_year,
               book_avatar: url,
               quantity: quantity !== null ? quantity : book.quantity,
-              old_price: old_price !== null ? old_price : book.old_price,
-              new_price: new_price !== null ? new_price : book.new_price,
+              old_price: old_price || book.old_price,
+              new_price: new_price || book.new_price,
+              avatar_reviews: arrayToString(urlAvatarReviews),
             };
 
             const updatedBook = await Book.update(updateData, {
