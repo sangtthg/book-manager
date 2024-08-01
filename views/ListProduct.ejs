@@ -1,306 +1,329 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Danh sách sản phẩm</title>
+    <style>
+      .main {
+        margin-left: 275px;
+      }
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Danh sách sản phẩm</title>
-  <style>
-    .main {
-      margin-left: 275px;
-    }
+      .h3_table {
+        text-align: left;
+        margin-left: 25px;
+        margin-right: 10px;
+        color: #ff7622;
+        font-size: 25px;
+      }
 
-    .h3_table {
-      text-align: left;
-      margin-left: 25px;
-      margin-right: 10px;
-      color: #ff7622;
-      font-size: 25px;
-    }
+      table {
+        width: 95%;
+        margin: 20px auto;
+        border-collapse: collapse;
+      }
 
-    table {
-      width: 95%;
-      margin: 20px auto;
-      border-collapse: collapse;
-    }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+      }
 
-    th,
-    td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
+      th {
+        background-color: #ff7622;
+        color: #fff;
+      }
 
-    th {
-      background-color: #ff7622;
-      color: #fff;
-    }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
 
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
+      tr:hover {
+        background-color: #ddd;
+      }
 
-    tr:hover {
-      background-color: #ddd;
-    }
+      .addbook_category {
+        display: flex;
+        margin-left: 10px;
+        width: 300px;
+      }
 
-    .addbook_category {
-      display: flex;
-      margin-left: 10px;
-      width: 300px;
-    }
+      .dialog {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        display: none;
+        max-height: 90%;
+        overflow-y: auto;
+      }
 
-    .dialog {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 300px;
-      padding: 20px;
-      background-color: white;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-      display: none;
-      max-height: 90%;
-      overflow-y: auto;
-    }
+      .dialog.active {
+        display: block;
+      }
 
-    .dialog.active {
-      display: block;
-    }
+      .dialog-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 500;
+        display: none;
+      }
 
-    .dialog-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 500;
-      display: none;
-    }
+      .dialog-overlay.active {
+        display: block;
+      }
 
-    .dialog-overlay.active {
-      display: block;
-    }
+      .dialog .form-group {
+        margin-bottom: 15px;
+      }
 
-    .dialog .form-group {
-      margin-bottom: 15px;
-    }
+      .dialog .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
 
-    .dialog .form-group label {
-      display: block;
-      margin-bottom: 5px;
-    }
+      .dialog .form-group input,
+      .dialog .form-group textarea,
+      .dialog .form-group select {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
 
-    .dialog .form-group input,
-    .dialog .form-group textarea,
-    .dialog .form-group select {
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-    }
+      .dialog .form-actions {
+        text-align: right;
+      }
 
-    .dialog .form-actions {
-      text-align: right;
-    }
+      .dialog .form-actions button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
 
-    .dialog .form-actions button {
-      padding: 10px 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+      .dialog .form-actions button.cancel {
+        background-color: #6c757d;
+      }
 
-    .dialog .form-actions button.cancel {
-      background-color: #6c757d;
-    }
+      .pagination {
+        margin: 20px auto;
+        text-align: center;
+      }
 
-    .pagination {
-      margin: 20px auto;
-      text-align: center;
-    }
+      .pagination button {
+        padding: 10px 20px;
+        margin: 0 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
 
-    .pagination button {
-      padding: 10px 20px;
-      margin: 0 5px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+      .pagination span {
+        margin: 0 10px;
+      }
 
-    .pagination span {
-      margin: 0 10px;
-    }
+      .ellipsis {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        -webkit-line-clamp: 4;
+        line-height: 1.5;
+        max-height: 5.5em;
+        max-width: 210px;
+        text-overflow: ellipsis;
+      }
 
-    .ellipsis {
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      -webkit-line-clamp: 4;
-      line-height: 1.5;
-      max-height: 5.5em;
-      max-width: 210px;
-      text-overflow: ellipsis;
-    }
+      .csstitle {
+        max-width: 200px;
+      }
 
-    .csstitle {
-      max-width: 200px;
-    }
+      .dialog.active,
+      .dialog-overlay.active {
+        display: block;
+      }
 
-    .dialog.active,
-    .dialog-overlay.active {
-      display: block;
-    }
+      #authorSelect,
+      #categorySelect {
+        width: 100%;
+        max-height: 100px;
+        overflow-y: auto;
+      }
 
-    #authorSelect,
-    #categorySelect {
-      width: 100%;
-      max-height: 100px;
-      overflow-y: auto;
-    }
+      .add-book-btn {
+        width: 150px;
+        height: 40px;
+        position: absolute;
+        top: 70px;
+        right: 50px;
+        padding: 5px 10px;
+        background-color: #ff7622;
+        color: white;
+        font-weight: bold;
+        font-family: "Times New Roman", Times, serif;
+        border: none;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 17px;
+      }
 
-    .add-book-btn {
-      width: 150px;
-      height: 40px;
-      position: absolute;
-      top: 70px;
-      right: 50px;
-      padding: 5px 10px;
-      background-color: #ff7622;
-      color: white;
-      font-weight: bold;
-      font-family: "Times New Roman", Times, serif;
-      border: none;
-      border-radius: 15px;
-      cursor: pointer;
-      font-size: 17px;
-    }
+      .add-book-btn:hover {
+        background-color: #0056b3;
+      }
 
-    .add-book-btn:hover {
-      background-color: #0056b3;
-    }
+      button.edit-button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
 
-    button.edit-button {
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 14px;
-      margin: 4px 2px;
-      cursor: pointer;
-      border-radius: 5px;
-    }
+      button.delete-button {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
 
-    button.delete-button {
-      background-color: #f44336;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 14px;
-      margin: 4px 2px;
-      cursor: pointer;
-      border-radius: 5px;
-    }
+      button.edit-button:hover {
+        background-color: #ff7622;
+      }
 
-    button.edit-button:hover {
-      background-color: #ff7622;
-    }
+      button.delete-button:hover {
+        background-color: #e53935;
+      }
 
-    button.delete-button:hover {
-      background-color: #e53935;
-    }
+      td button {
+        margin-right: 5px;
+      }
 
-    td button {
-      margin-right: 5px;
-    }
+      .imgPage {
+        width: 20px;
+        height: 20px;
+      }
 
-    .imgPage {
-      width: 20px;
-      height: 20px;
-    }
+      #prevPageBtn {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        display: inline-flex;
+      }
 
-    #prevPageBtn {
-      background: none;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-      display: inline-flex;
-    }
+      #prevPageIcon {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+      }
 
-    #prevPageIcon {
-      width: 24px;
-      height: 24px;
-      vertical-align: middle;
-    }
+      .pagination {
+        margin-left: 27px;
+        margin-right: 27px;
+        display: flex;
+        align-items: center;
+        background-color: #fff;
+        padding: 5px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
 
-    .pagination {
-      margin-left: 27px;
-      margin-right: 27px;
-      display: flex;
-      align-items: center;
-      background-color: #fff;
-      padding: 5px;
-      border-radius: 5px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
+      #page-indicator {
+        position: relative;
+      }
 
-    #page-indicator {
-      position: relative;
-    }
+      .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-    .form-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+      .form-actions button:hover {
+        opacity: 0.9;
+      }
 
-    .form-actions button:hover {
-      opacity: 0.9;
-    }
+      input[type="file"] {
+        display: none;
+      }
 
-    input[type="file"] {
-      display: none;
-    }
+      .custom-file-upload {
+        display: inline-block;
+        padding: 10px 20px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+        color: #007bff;
+      }
 
-    .custom-file-upload {
-      display: inline-block;
-      padding: 10px 20px;
-      cursor: pointer;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background-color: #f8f9fa;
-      color: #007bff;
-    }
+      .custom-file-upload:hover {
+        background-color: #e2e6ea;
+      }
+      .nav-link {
+        color: #010101;
+        text-decoration: none;
+        padding: 10px;
+      }
 
-    .custom-file-upload:hover {
-      background-color: #e2e6ea;
-    }
-  </style>
-</head>
+      .nav-link.active {
+        background-color: orange;
+        color: white;
+      }
+      .nav-link:target {
+        background-color: orange;
+        color: white;
+      }
+    </style>
+  </head>
 
-<body>
-  <%- include('navbar.ejs') %>
+  <body>
+    <%- include('navbar.ejs') %>
     <div class="main">
       <h3 class="h3_table">Danh sách sản phẩm</h3>
       <div class="addbook_category">
-        <a class="nav-link" href="/admin/Author">Tác giả</a>
-        <a class="nav-link" href="/admin/Category">Thể loại</a>
+        <a class="nav-link" href="/admin/ListProduct" style="color: #010101">
+          Sách</a
+        >
+        <a class="nav-link" href="/admin/Author" style="color: #010101"
+          >Tác giả</a
+        >
+        <a class="nav-link" href="/admin/Category" style="color: #010101"
+          >Thể loại</a
+        >
         <button class="add-book-btn" onclick="openCreateDialog()">
           Thêm sách
         </button>
+        <!-- <button class="add-book-btn" onclick="redirectToAddBook()">
+          Thêm sách
+        </button> -->
       </div>
       <table id="book-table">
         <thead>
@@ -353,6 +376,10 @@
             <textarea id="description" name="description"></textarea>
           </div>
           <div class="form-group">
+            <label for="quantity">Số lượng</label>
+            <textarea type="number" id="quantity" name="quantity"></textarea>
+          </div>
+          <div class="form-group">
             <label for="publicationYear">Năm xuất bản</label>
             <input type="number" id="publicationYear" name="publication_year" />
           </div>
@@ -364,10 +391,6 @@
             <label for="newPrice">Giá mới</label>
             <input type="number" id="newPrice" name="new_price" />
           </div>
-          <!-- <div class="form-group">
-            <label for="bookAvatar">Ảnh bìa sách</label>
-            <input type="file" id="bookAvatar" name="book_avatar" />
-          </div> -->
           <div class="form-group">
             <label for="bookAvatar" class="custom-file-upload">
               Chọn ảnh bìa
@@ -376,10 +399,16 @@
           </div>
 
           <div class="form-actions">
-            <button onclick="saveBook()" style="background-color: #4caf50; color: #fff">
+            <button
+              onclick="saveBook()"
+              style="background-color: #4caf50; color: #fff"
+            >
               Lưu
             </button>
-            <button onclick="closeDialog()" style="background-color: #f44336; color: #fff">
+            <button
+              onclick="closeDialog()"
+              style="background-color: #f44336; color: #fff"
+            >
               Hủy
             </button>
           </div>
@@ -388,6 +417,10 @@
     </div>
 
     <script>
+      function redirectToAddBook() {
+        window.location.href = "/add-book";
+      }
+
       let isEditMode = false;
       let editBookId = null;
       const token = localStorage.getItem("token");
@@ -430,35 +463,39 @@
                 <td>${book.category_name}</td>
                 <td class="ellipsis">${book.description}</td>
                 <td>${book.publication_year}</td>
-                <td><img src="${book.book_avatar}" alt="${book.title
-                  }" width="50"></td>
+                <td><img src="${book.book_avatar}" alt="${
+                  book.title
+                }" width="50"></td>
                 <td>${book.old_price}</td>
                 <td>${book.new_price}</td>
                 <td>
                   <button class="edit-button" id="edit-button-${index}">Sửa</button>
-                  <button class="delete-button" onclick="deleteBook(${book.book_id
+                  <button class="delete-button" onclick="deleteBook(${
+                    book.book_id
                   })">Xóa</button>
                 
                 </td>`;
                 tableBody.appendChild(row);
-                document.getElementById(`edit-button-${index}`).addEventListener("click", () => {
-                  openEditDialog(
-                    book.book_id,
-                    book.title,
-                    book.author_id,
-                    book.category_id,
-                    book.description,
-                    book.publication_year,
-                    book.old_price,
-                    book.new_price,
-                    book.book_avatar
-                  );
-                });
+                document
+                  .getElementById(`edit-button-${index}`)
+                  .addEventListener("click", () => {
+                    openEditDialog(
+                      book.book_id,
+                      book.title,
+                      book.author_id,
+                      book.category_id,
+                      book.description,
+                      book.publication_year,
+                      book.old_price,
+                      book.new_price,
+                      book.book_avatar
+                    );
+                  });
               });
               document.getElementById(
                 "page-indicator"
               ).textContent = `Trang ${page}`;
-              totalItems = data.data.totalAll; // Cập nhật tổng số mục
+              totalItems = data.data.totalAll;
               currentPage = page;
               updatePaginationButtons(page);
             } else {
@@ -566,12 +603,13 @@
         publicationYear,
         oldPrice,
         newPrice,
-        bookAvatar
+        bookAvatar,
+        quantity
       ) {
         isEditMode = true;
         editBookId = bookId;
         openDialog();
-
+        console.log("Quantity:", quantity);
         document.getElementById("dialog-title").textContent = "Sửa sách";
         document.getElementById("bookTitle").value = title;
         document.getElementById("authorSelect").value = authorId;
@@ -580,6 +618,7 @@
         document.getElementById("publicationYear").value = publicationYear;
         document.getElementById("oldPrice").value = oldPrice;
         document.getElementById("newPrice").value = newPrice;
+        document.getElementById("quantity").value = quantity;
       }
       function resetDialog() {
         document.getElementById("dialog-title").textContent = "Thêm sách";
@@ -590,6 +629,7 @@
         document.getElementById("publicationYear").value = "";
         document.getElementById("oldPrice").value = "";
         document.getElementById("newPrice").value = "";
+        document.getElementById("quantity").value = "";
       }
       function openCreateDialog() {
         resetDialog();
@@ -622,6 +662,7 @@
           "publication_year",
           document.getElementById("publicationYear").value
         );
+        formData.append("quantity", document.getElementById("quantity").value);
         formData.append("old_price", document.getElementById("oldPrice").value);
         formData.append("new_price", document.getElementById("newPrice").value);
         formData.append("book_id", editBookId);
@@ -647,7 +688,8 @@
               closeDialog();
             } else {
               alert(
-                `${isEditMode ? "Cập nhật" : "Thêm"} sách thất bại: ${data.message
+                `${isEditMode ? "Cập nhật" : "Thêm"} sách thất bại: ${
+                  data.message
                 }`
               );
             }
@@ -655,7 +697,8 @@
           .catch((error) => {
             console.log("Error saving book:", error);
             alert(
-              `Có lỗi xảy ra khi ${isEditMode ? "cập nhật" : "thêm"} sách: ${error.message
+              `Có lỗi xảy ra khi ${isEditMode ? "cập nhật" : "thêm"} sách: ${
+                error.message
               }`
             );
           });
@@ -696,6 +739,5 @@
         fetchBooks(currentPage)
       );
     </script>
-</body>
-
+  </body>
 </html>

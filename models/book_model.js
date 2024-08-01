@@ -19,6 +19,7 @@ const Book = sequelizeHelpers.define(
       allowNull: true,
       references: { model: Category, key: "category_id" },
     },
+
     publication_year: { type: DataTypes.INTEGER, allowNull: true },
     book_avatar: { type: DataTypes.STRING(255), allowNull: false },
     created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
@@ -27,6 +28,7 @@ const Book = sequelizeHelpers.define(
     old_price: { type: DataTypes.DECIMAL(15, 0), defaultValue: 0 },
     new_price: { type: DataTypes.DECIMAL(15, 0), defaultValue: 0 },
     used_books: { type: DataTypes.DECIMAL(15, 0), defaultValue: 0 },
+    quantity: { type: DataTypes.INTEGER, defaultValue: 0 },
   },
   { tableName: "books", timestamps: false }
 );

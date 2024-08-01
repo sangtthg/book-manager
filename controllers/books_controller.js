@@ -29,6 +29,7 @@ module.exports.controller = (app, io, socket_list) => {
           "publication_year",
           "old_price",
           "new_price",
+          "quantity",
         ],
         async () => {
           helpers.CheckParameterNull(
@@ -42,6 +43,7 @@ module.exports.controller = (app, io, socket_list) => {
               "publication_year",
               "old_price",
               "new_price",
+              "quantity",
             ],
             async () => {
               try {
@@ -93,6 +95,7 @@ module.exports.controller = (app, io, socket_list) => {
                   publication_year,
                   old_price,
                   new_price,
+                  quantity,
                 } = req.body;
 
                 const book = await Book.create({
@@ -104,6 +107,7 @@ module.exports.controller = (app, io, socket_list) => {
                   book_avatar: url,
                   old_price,
                   new_price,
+                  quantity,
                 });
 
                 if (book) {
@@ -149,6 +153,7 @@ module.exports.controller = (app, io, socket_list) => {
           books.new_price,
           books.views_count,
           books.purchase_count,
+          books.quantity,
           books.used_books
         FROM 
           books
@@ -221,6 +226,7 @@ module.exports.controller = (app, io, socket_list) => {
               publication_year,
               old_price,
               new_price,
+              quantity,
             } = req.body;
 
             if (author_id !== null) {
@@ -259,6 +265,7 @@ module.exports.controller = (app, io, socket_list) => {
                   ? publication_year
                   : book.publication_year,
               book_avatar: url,
+              quantity: quantity !== null ? quantity : book.quantity,
               old_price: old_price !== null ? old_price : book.old_price,
               new_price: new_price !== null ? new_price : book.new_price,
             };
@@ -420,24 +427,24 @@ module.exports.controller = (app, io, socket_list) => {
         );
 
         randomBooksData = await Promise.all(
-            randomBooks.map(async(book) => {
-              return {
-                book_id: book.book_id,
-                title: book.title,
-                author_name: book.author_name,
-                description: book.description,
-                publication_year: book.publication_year,
-                book_avatar: book.book_avatar,
-                old_price: book.old_price,
-                new_price: book.new_price,
-                discount_percentage: Math.round(
-                    ((book.old_price - book.new_price) / book.old_price) * 100
-                ),
-                views_count: book.views_count,
-                purchase_count: book.purchase_count,
-                used_books: book.used_books,
-              };
-            })
+          randomBooks.map(async (book) => {
+            return {
+              book_id: book.book_id,
+              title: book.title,
+              author_name: book.author_name,
+              description: book.description,
+              publication_year: book.publication_year,
+              book_avatar: book.book_avatar,
+              old_price: book.old_price,
+              new_price: book.new_price,
+              discount_percentage: Math.round(
+                ((book.old_price - book.new_price) / book.old_price) * 100
+              ),
+              views_count: book.views_count,
+              purchase_count: book.purchase_count,
+              used_books: book.used_books,
+            };
+          })
         );
 
         if (newBooks && bestSellerBooks) {
