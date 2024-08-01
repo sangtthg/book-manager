@@ -5,12 +5,15 @@ const router = express.Router();
 
 router.post("/", helpers.authorization, reviewController.create);
 
-router.get("/", reviewController.getAll);
+router.get("/",  reviewController.getAll);
 
 router.get("/:bookId", helpers.authorization, reviewController.getById);
 
 router.put("/:id", helpers.authorization, reviewController.update);
 
-router.delete("/:id", helpers.authorization, reviewController.delete);
+router.delete("/:id", reviewController.delete);
+router.delete("/byadmin/:id", reviewController.deletebyadmin);
+
+router.patch("/:id/hide", reviewController.hide);
 
 module.exports = router;

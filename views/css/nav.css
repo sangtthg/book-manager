@@ -1,0 +1,30 @@
+.sidebar {
+    background-color: #343a40;
+    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    width: 280px;
+}
+.sidebar-brand {
+    color: #ff7622;
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 30px;
+}
+.nav-link {
+    color: #f8f9fa;
+    transition: all 0.3s;
+}
+.nav-link:hover {
+    background-color: #495057;
+    color: #fff;
+}
+.nav-link i {
+    margin-right: 10px;
+}
+.main-content {
+    margin-left: 280px;
+    padding: 20px;
+}

@@ -19,6 +19,7 @@ const PaymentRoutes = require("./routes/PaymentRoutes");
 const reviewRouter = require('./routes/reviewRoutes');
 const notification = require('./routes/notificationRoutes');
 const statisticsRouter = require('./routes/statisticsRoutes');
+const voucherRoutes = require('./routes/voucherRoutes');
 
 
 const serverPort = process.env.PORT || 3002;
@@ -70,6 +71,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use('/reviews', reviewRouter);
 app.use('/notification', notification);
 app.use('/statistics', statisticsRouter);
+app.use('/admin/vouchers', voucherRoutes);
 
 
 
@@ -107,29 +109,29 @@ app.use(function (err, req, res, next) {
 const { sequelize } = require("./models");
 
 sequelize
-    .authenticate()
-    .then(() => {
-      console.log("Database connection has been established successfully.");
-      return sequelize.sync({ force: false, alter: false });
-    })
-    .then(() => {
-      const server = app.listen(serverPort, () => {
-        console.log("Server Start : " + serverPort);
-      });
-      console.log("Database synchronized");
-      process.on("SIGTERM", () => {
-        console.info("SIGTERM signal received.");
-        console.log("Closing http server.");
-        server.close(() => {
-          console.log("Http server closed.");
-          process.exit(0);
-        });
-      });
-    })
-    .catch((err) => {
-      console.error("Unable to connect to the database:", err);
-      process.exit(1);
+  .authenticate()
+  .then(() => {
+    console.log("Database connection has been established successfully.");
+    return sequelize.sync({ force: false, alter: true });
+  })
+  .then(() => {
+    const server = app.listen(serverPort, () => {
+      console.log("Server Start : " + serverPort);
     });
+    console.log("Database synchronized");
+    process.on("SIGTERM", () => {
+      console.info("SIGTERM signal received.");
+      console.log("Closing http server.");
+      server.close(() => {
+        console.log("Http server closed.");
+        process.exit(0);
+      });
+    });
+  })
+  .catch((err) => {
+    console.error("Unable to connect to the database:", err);
+    process.exit(1);
+  });
 
 module.exports = app;
 
