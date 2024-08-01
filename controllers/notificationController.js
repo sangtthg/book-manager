@@ -11,6 +11,7 @@ const createNotification = async (userId, type, orderId) => {
     const order = await Order.findByPk(orderId);
     let title = "";
     let message = "";
+    const img = JSON.parse(order.items);
 
     if (!user || !order) {
       return res.status(404).json({ error: "User or Order not found" });
@@ -46,6 +47,7 @@ const createNotification = async (userId, type, orderId) => {
       title,
       message,
       isRead: false,
+      imageUrl: img[0].book_avatar,
     });
 
     return { code: 0, message: "Tạo thông báo thành công", notification };
@@ -112,7 +114,7 @@ const getNotificationsByUser = async (req, res) => {
 const createNotificationByadmin = async (req, res) => {
   const { title, message } = req.body;
   const image = req.file;
-  console.log(image, req)
+  console.log(image, req);
   if (!title || !message) {
     return res
       .status(400)

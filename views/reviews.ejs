@@ -36,7 +36,7 @@
       const searchInput = document.getElementById('search-input');
 
       const fetchReviews = (query = '') => {
-        fetch(`/reviews?bookTitle=${query}`)
+        fetch(`/reviews/all?bookTitle=${query}`)
           .then(response => response.json())
           .then(data => {
             const reviewsContainer = document.getElementById('reviews-container');

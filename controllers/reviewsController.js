@@ -106,6 +106,64 @@ const reviewController = {
       res.status(500).json({ error: error.message });
     }
   },
+  getAllV2: async (req, res) => {
+    try {
+      const { bookTitle } = req.query;
+
+      let reviews = [];
+      let booksMap = {};
+
+      if (bookTitle) {
+        const books = await Book.findAll({
+          where: {
+            title: {
+              [Op.like]: `%${bookTitle}%`,
+            },
+          },
+        });
+
+        console.log("books:", books);
+
+        if (books.length > 0) {
+          const bookIds = books.map((book) => book.book_id);
+
+          console.log("bookIds:", bookIds);
+
+          reviews = await Review.findAll({
+            where: {
+              bookId: bookIds,
+            },
+          });
+
+          booksMap = books.reduce((map, book) => {
+            map[book.book_id] = book;
+            return map;
+          }, {});
+        }
+      } else {
+        reviews = await Review.findAll();
+
+        const bookIds = [...new Set(reviews.map((review) => review.bookId))];
+
+        console.log("bookIds (from all reviews):", bookIds);
+
+        const books = await Book.findAll({
+          where: {
+            book_id: bookIds,
+          },
+        });
+
+        booksMap = books.reduce((map, book) => {
+          map[book.book_id] = book;
+          return map;
+        }, {});
+      }
+
+      res.json({ reviews, booksMap });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
 
   getById: async (req, res) => {
     try {
