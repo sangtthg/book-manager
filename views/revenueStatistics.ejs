@@ -62,7 +62,7 @@
                 const orderDetails = data.orders.map(order => 
                     `<tr>
                         <td>${order.id}</td>
-                        <td>${order.orderStatus}</td>
+                        <td>${order.statusShip}</td>
                         <td>${order.totalPrice}</td>
                         <td>${order.quantity}</td>
                         <td><a href="/statistics/items/${order.id}" class="btn btn-info">Chi tiết</a></td>
