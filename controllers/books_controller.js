@@ -2,6 +2,7 @@ const multer = require("multer");
 const helpers = require("../helpers/helpers");
 const Author = require("../models/author_model");
 const Book = require("../models/book_model");
+const AvatarReview = require("../models/avatarReview");
 const Category = require("../models/category_model");
 const { selectUser } = require("../Service/user");
 const { uppercase } = require("../utilities/string/uppercase");
@@ -20,7 +21,10 @@ module.exports.controller = (app, io, socket_list) => {
   app.post(
     "/api/book/add",
     helpers.authorization,
-    upload.single("book_avatar"),
+    upload.fields([
+      { name: "book_avatar", maxCount: 1 },
+      { name: "avatar_reviews", maxCount: 3 },
+    ]),
     (req, res) => {
       helpers.CheckParameterValid(
         res,
@@ -51,19 +55,43 @@ module.exports.controller = (app, io, socket_list) => {
             ],
             async () => {
               try {
-                const file = req.file;
+                const fileBookAvatar = req.files["book_avatar"]
+                  ? req.files["book_avatar"][0]
+                  : null;
+                const fileAvatarReviews = req.files["avatar_reviews"];
 
-                if (!file) {
+                if (!fileBookAvatar) {
                   return res.json({
                     status: "0",
-                    message: "File not found",
+                    message: "Book avatar file not found",
                   });
                 }
-                if (!file.mimetype.startsWith("image/")) {
+                if (!fileBookAvatar.mimetype.startsWith("image/")) {
                   return res.json({
                     status: "0",
-                    message: "File type not supported",
+                    message: "Book avatar file type not supported",
                   });
+                }
+
+                if (fileAvatarReviews) {
+                  if (
+                    fileAvatarReviews.length > 3 ||
+                    fileAvatarReviews.length < 1
+                  ) {
+                    return res.json({
+                      status: "0",
+                      message: "Only 1 to 3 avatar review images are allowed",
+                    });
+                  }
+                  for (let file of fileAvatarReviews) {
+                    if (!file.mimetype.startsWith("image/")) {
+                      return res.json({
+                        status: "0",
+                        message:
+                          "One or more avatar review file types not supported",
+                      });
+                    }
+                  }
                 }
 
                 const [user, author, category] = await Promise.all([
@@ -90,7 +118,11 @@ module.exports.controller = (app, io, socket_list) => {
                   });
                 }
 
-                const url = await uploadFileToCloud(file);
+                const urlBookAvatar = await uploadFileToCloud(fileBookAvatar);
+                const urlAvatarReviews = fileAvatarReviews
+                  ? await uploadMultipleFilesToCloud(fileAvatarReviews)
+                  : [];
+
                 const {
                   title,
                   author_id,
@@ -108,11 +140,22 @@ module.exports.controller = (app, io, socket_list) => {
                   category_id,
                   description: uppercase(description),
                   publication_year,
-                  book_avatar: url,
+                  book_avatar: urlBookAvatar,
                   old_price,
                   new_price,
                   quantity,
                 });
+
+                // Lưu avatar_reviews vào bảng avatar_reviews
+                if (book && urlAvatarReviews.length > 0) {
+                  const avatarReviewPromises = urlAvatarReviews.map((url) =>
+                    AvatarReview.create({
+                      book_id: book.book_id,
+                      url,
+                    })
+                  );
+                  await Promise.all(avatarReviewPromises);
+                }
 
                 if (book) {
                   return res.json({
@@ -143,8 +186,7 @@ module.exports.controller = (app, io, socket_list) => {
       };
       const offset = (page - 1) * limit;
 
-      const [results, metadata] = await sequelizeHelpers.query(
-        `
+      const query = `
         SELECT 
           books.book_id,
           books.title,
@@ -158,20 +200,30 @@ module.exports.controller = (app, io, socket_list) => {
           books.views_count,
           books.purchase_count,
           books.quantity,
-          books.used_books
+          books.used_books,
+          JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'avatar_review_id', avatar_reviews.avatar_review_id,
+              'url', avatar_reviews.url
+            )
+          ) AS avatar_reviews
         FROM 
           books
         INNER JOIN 
           authors ON books.author_id = authors.author_id
         INNER JOIN 
           categories ON books.category_id = categories.category_id
+        LEFT JOIN 
+          avatar_reviews ON books.book_id = avatar_reviews.book_id
         WHERE books.title LIKE '%${search}%' ${
-          category_id ? `AND books.category_id = ${category_id}` : ""
-        }
+        category_id ? `AND books.category_id = ${category_id}` : ""
+      }
+        GROUP BY books.book_id
         ORDER BY books.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
-        `
-      );
+      `;
+
+      const [results, metadata] = await sequelizeHelpers.query(query);
 
       const [totalAll] = await sequelizeHelpers.query(
         `SELECT COUNT(*) as totalAll FROM books`
@@ -181,7 +233,6 @@ module.exports.controller = (app, io, socket_list) => {
         return res.json({
           status: "1",
           message: msg_success,
-
           data: {
             page: page,
             limit: limit,
@@ -234,20 +285,14 @@ module.exports.controller = (app, io, socket_list) => {
             const url = fileBookAvatar
               ? await uploadFileToCloud(fileBookAvatar)
               : book.book_avatar;
-
             if (fileAvatarReviews) {
-              if (fileAvatarReviews.length > 1) {
+              if (
+                fileAvatarReviews.length > 3 ||
+                fileAvatarReviews.length < 1
+              ) {
                 return res.json({
                   status: "0",
-                  message: "Only 3 images are allowed",
-                });
-              }
-            }
-            if (fileAvatarReviews) {
-              if (fileAvatarReviews.length > 3) {
-                return res.json({
-                  status: "0",
-                  message: "Only 3 images are allowed",
+                  message: "Only 1 to 3 images are allowed",
                 });
               }
             }
@@ -338,7 +383,7 @@ module.exports.controller = (app, io, socket_list) => {
               message: "Book not found",
             });
           }
-
+          await AvatarReview.destroy({ where: { book_id } });
           await Book.destroy({ where: { book_id } });
 
           return res.json({
@@ -555,5 +600,49 @@ module.exports.controller = (app, io, socket_list) => {
         }
       });
     });
+  });
+
+  app.post("/api/avatar_reviews/get", async (req, res) => {
+    const { page = 1, limit = 10, query = {} } = req.body;
+    const { book_id } = query;
+
+    if (!book_id) {
+      return res.status(400).json({
+        status: "0",
+        message: "book_id is required",
+      });
+    }
+
+    const offset = (page - 1) * limit;
+
+    try {
+      const avatarReviews = await AvatarReview.findAndCountAll({
+        where: { book_id },
+        limit,
+        offset,
+      });
+
+      if (avatarReviews.rows.length === 0) {
+        return res.status(404).json({
+          status: "0",
+          message: "No avatar reviews found for this book_id",
+        });
+      }
+
+      return res.json({
+        status: "1",
+        message: "Success",
+        data: avatarReviews.rows,
+        total: avatarReviews.count,
+        page,
+        totalPages: Math.ceil(avatarReviews.count / limit),
+      });
+    } catch (error) {
+      console.log("/api/avatar_reviews/get error: ", error);
+      return res.status(500).json({
+        status: "0",
+        message: "Server error",
+      });
+    }
   });
 };
