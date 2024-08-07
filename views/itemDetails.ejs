@@ -4,54 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .table th {
+            background-color: #007bff;
+            color: white;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f1f8ff;
+        }
+        .book-avatar {
+            width: 80px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .price {
+            font-weight: bold;
+        }
+        .old-price {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+        .new-price {
+            color: #28a745;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="mt-4"><%= title %></h1>
+        <h1><i class="fas fa-book-open mr-3"></i><%= title %></h1>
 
-        <table class="table table-bordered mt-4">
-            <thead>
-                <tr>
-                    <th>Book ID</th>
-                    <th>Title</th>
-                    <th>Author ID</th>
-                    <!-- <th>Description</th> -->
-                    <th>Category ID</th>
-                    <th>Publication Year</th>
-                    <th>Book Avatar</th>
-                    <th>Views Count</th>
-                    <th>Purchase Count</th>
-                    <th>Old Price</th>
-                    <th>New Price</th>
-                    <th>Used Books</th>
-                    <th>Total Price</th>
-                    <th>Quantity</th>
-                    <th>Shipping Fee</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% items.forEach(item => { %>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-dark">
                     <tr>
-                        <td><%= item.book_id %></td>
-                        <td><%= item.title %></td>
-                        <td><%= item.author_id %></td>
-                        <!-- <td><%= item.description %></td> -->
-                        <td><%= item.category_id %></td>
-                        <td><%= item.publication_year %></td>
-                        <td><img src="<%= item.book_avatar %>" alt="<%= item.title %>" style="width: 100px;"></td>
-                        <td><%= item.views_count %></td>
-                        <td><%= item.purchase_count %></td>
-                        <td><%= item.old_price %></td>
-                        <td><%= item.new_price %></td>
-                        <td><%= item.used_books %></td>
-                        <td><%= item.totalPrice %></td>
-                        <td><%= item.quantity %></td>
-                        <td><%= item.shippingFee %></td>
+                        <th>Sách</th>
+                        <th>Thông tin chi tiết</th>
+                        <th>Giá</th>
+                        <th>Số lượng & Phí vận chuyển</th>
                     </tr>
-                <% }) %>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <% items.forEach(item => { %>
+                        <tr>
+                            <td>
+                                <img src="<%= item.book_avatar %>" alt="<%= item.title %>" class="book-avatar">
+                            </td>
+                            <td>
+                                <h5><%= item.title %></h5>
+                                <p><strong>ID:</strong> <%= item.book_id %></p>
+                                <p><strong>Tác giả ID:</strong> <%= item.author_id %></p>
+                                <p><strong>Thể loại ID:</strong> <%= item.category_id %></p>
+                                <p><strong>Năm xuất bản:</strong> <%= item.publication_year %></p>
+                                <p><strong>Lượt xem:</strong> <%= item.views_count %></p>
+                                <p><strong>Lượt mua:</strong> <%= item.purchase_count %></p>
+                            </td>
+                            <td>
+                                <p class="price old-price"><%= item.old_price.toLocaleString('vi-VN') %> ₫</p>
+                                <p class="price new-price"><%= item.new_price.toLocaleString('vi-VN') %> ₫</p>
+                                <p><strong>Tổng giá:</strong> <%= item.totalPrice.toLocaleString('vi-VN') %> ₫</p>
+                                <p><strong>Sách cũ:</strong> <%= item.used_books ? 'Có' : 'Không' %></p>
+                            </td>
+                            <td>
+                                <p><strong>Số lượng:</strong> <%= item.quantity %></p>
+                                <p><strong>Phí vận chuyển:</strong> <%= item.shippingFee.toLocaleString('vi-VN') %> ₫</p>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

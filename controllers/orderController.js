@@ -327,7 +327,18 @@ exports.payOrder = async (req, res) => {
         status: -1,
       });
     }
+    const items = JSON.parse(orderItem.items);
+    for (const item of items) {
+      const book = await Book.findOne({
+        where: { book_id: item.book_id },
+      });
 
+      if (book) {
+        await book.update({
+          purchase_count: book.purchase_count - item.quantity,
+        });
+      }
+    }
     await PaymentTransaction.create({
       customerId: user_id,
       fullName: user.username,

@@ -75,12 +75,12 @@ exports.getRevenueStatistics = async (req, res) => {
       attributes: [
         "quantity",
         "id",
-        "orderStatus",
+        "statusShip",
         "totalPrice",
         "items",
-        [sequelize.fn("COUNT", sequelize.col("orderStatus")), "count"],
+        [sequelize.fn("COUNT", sequelize.col("statusShip")), "count"],
       ],
-      group: ["quantity", "id", "orderStatus", "totalPrice", "items"],
+      group: ["quantity", "id", "statusShip", "totalPrice", "items"],
     });
     console.log(orders, "orrrr");
 
