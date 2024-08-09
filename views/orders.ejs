@@ -78,5 +78,31 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
+
+    <script>
+        function updateStatus(orderId, status) {
+            fetch('/admin/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ orderId, status }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 0) {
+                    alert('Cập nhật trạng thái thành công');
+                    location.reload();
+                } else {
+                    alert('Có lỗi xảy ra: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi cập nhật trạng thái');
+            });
+        }
+    </script>
+
 </body>
 </html>

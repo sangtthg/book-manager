@@ -38,7 +38,22 @@ exports.createOrder = async (req, res) => {
 
     const items = [];
 
- 
+
+    for (const cart of carts) {
+      const book = await Book.findByPk(cart.book_id);
+      if (!book) {
+        return res.status(404).json({ message: "Không tìm thấy sách", status: "-1" });
+      }
+      totalPrice += book.new_price * cart.quantity;
+      totalQuantity += cart.quantity;
+      items.push({
+        ...book.dataValues,
+        totalPrice,
+        quantity: cart.quantity,
+        shippingFee,
+        isReview: false,
+      });
+    }
 
     if (req.body.code) {
       const voucher = await Voucher.findOne({
@@ -131,7 +146,25 @@ exports.createOrder = async (req, res) => {
   }
 };
 
+exports.listOrders = async (req, res) => {
+  try {
+    const userId = req.auth.user_id;
+    const { status } = req.query;
+    let searchConditions = { userId };
+    if (status) {
+      searchConditions.statusShip = status;
+    }
 
+    const orders = await Order.findAll({
+      where: searchConditions,
+    });
+
+    if (orders.length <= 0) {
+      return res.json({
+        code: 1,
+        message: "Bạn chưa có đơn hàng nào!",
+      });
+    }
 
     const parsedOrders = await Promise.all(
       orders.map(async (order) => {
