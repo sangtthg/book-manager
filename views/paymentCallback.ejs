@@ -12,16 +12,37 @@
 />
 <style type="text/css">
   .logo {
-    width: 200px;
+    max-width: 100%;
+    height: auto;
     margin-top: 15px;
   }
 
   .content {
-    max-width:'100%';
-    max-height: fit-content;
+    width: 100%;
+    max-width: 600px;
     margin: auto;
-    padding: 31px;
+    padding: 15px;
     background-color: #ffffff47;
+  }
+
+  .card {
+    margin-bottom: 15px;
+  }
+
+  .card-body {
+    padding: 15px;
+  }
+
+  @media (max-width: 576px) {
+    .content {
+      padding: 10px;
+    }
+    .card-body {
+      padding: 10px;
+    }
+    .logo {
+      margin-top: 10px;
+    }
   }
 </style>
 
@@ -33,19 +54,19 @@
     <div class="card-body">
       <% if(status==='00' ){ %>
       <h5 class="card-title text-success"><b>Thanh toán thành công!</b></h5>
-      <p class="card-text text-left">Bạn đã thực hiện thanh toán thành công.</p>
-      <p class="text-left"><b>Số tiền:</b> <%=amount||''%> <b> VND</b></p>
-      <p class="text-left">
+      <p class="card-text">Bạn đã thực hiện thanh toán thành công.</p>
+      <p><b>Số tiền:</b> <%=amount||''%> <b>VND</b></p>
+      <p>
         <b>Mã hóa đơn:</b>
         <%=order||''%>
       </p>
       <% } else{ %>
       <h5 class="card-title text-danger"><b>Thanh toán thất bại!</b></h5>
-      <p class="card-text text-left">
+      <p class="card-text">
         Giao dịch thanh toán của bạn không thành công.
       </p>
-      <p class="text-left"><b>Số tiền:</b> <%=amount||''%><b> VND</b></p>
-      <p class="text-left">
+      <p><b>Số tiền:</b> <%=amount||''%> <b>VND</b></p>
+      <p>
         <b>Mã hóa đơn:</b>
         <%=order||''%>
       </p>
@@ -53,6 +74,7 @@
       <img
         class="logo"
         src="https://i.ibb.co/jg3XvZ2/minions.jpg"
+        alt="Logo"
       />
     </div>
     <div class="card-footer text-muted">
@@ -61,10 +83,4 @@
       </h6>
     </div>
   </div>
-  <!-- <p class="title"><i class="fas fa-check-circle"></i> Thành công.</p>
-  <div class="detail">
-    <p>Order: <%=order||''%></p>
-      <p>Amount: <%=amount||''%></p>
-      <p>Status: <%=status||''%></p>
-    </div> -->
 </div>
