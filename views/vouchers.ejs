@@ -3,100 +3,238 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vouchers</title>
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <title>Quản lý Vouchers</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f4f7f6;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      padding: 30px;
+      margin-top: 50px;
+    }
+    h1 {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+    .btn-primary {
+      background-color: #3498db;
+      border-color: #3498db;
+    }
+    .btn-primary:hover {
+      background-color: #2980b9;
+      border-color: #2980b9;
+    }
+    .table {
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .table thead {
+      background-color: #34495e;
+      color: #ffffff;
+    }
+    .table-hover tbody tr:hover {
+      background-color: #ecf0f1;
+    }
+    .form-control:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+  </style>
 </head>
 <body>
-  <div class="container mt-4">
-    <h1 class="mb-4">Vouchers</h1>
-    <form action="/admin/vouchers/search" method="get" class="mb-4">
-        <div class="form-group">
-          <label for="search">Search Vouchers</label>
-          <input type="text" id="search" name="search" class="form-control" placeholder="Enter voucher code or description">
-        </div>
-        <button type="submit" class="btn btn-primary">Search</button>
-      </form>
-    <!-- Create Voucher Form -->
-    <form action="/admin/vouchers/create" method="post" class="mb-4">
-      <div class="form-group">
-        <label for="code">Voucher Code</label>
-        <input type="text" id="code" name="code" class="form-control" required>
+  <div class="container">
+    <h1 class="mb-4 text-center">Quản lý Vouchers</h1>
+    
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <form action="/admin/vouchers/search" method="get">
+          <div class="input-group">
+            <input type="text" id="search" name="search" class="form-control" placeholder="Tìm kiếm voucher...">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+          </div>
+        </form>
       </div>
-      <div class="form-group">
-        <label for="description">Description</label>
-        <input type="text" id="description" name="description" class="form-control">
+      <div class="col-md-6 text-end">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createVoucherModal">
+          <i class="fas fa-plus"></i> Tạo Voucher Mới
+        </button>
       </div>
-      <div class="form-group">
-        <label for="quantity">Quantity</label>
-        <input type="number" id="quantity" name="quantity" class="form-control" required>
-      </div>
-      <div class="form-group">
-        <label for="validFrom">Valid From</label>
-        <input type="date" id="validFrom" name="validFrom" class="form-control" required>
-      </div>
-      <div class="form-group">
-        <label for="validTo">Valid To</label>
-        <input type="date" id="validTo" name="validTo" class="form-control" required>
-      </div>
-      <div class="form-group">
-        <label for="discountAmount">Discount Amount</label>
-        <input type="number" step="0.01" id="discountAmount" name="discountAmount" class="form-control" required>
-      </div>
-      <div class="form-group">
-        <label for="status">Status</label>
-        <select id="status" name="status" class="form-control" required>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </div>
-      <button type="submit" class="btn btn-primary">Create Voucher</button>
-    </form>
+    </div>
 
     <!-- Voucher List -->
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Ngày tạo</th>
-          <th>Code</th>
-          <th>Description</th>
-          <th>Quantity</th>
-          <th>Valid From</th>
-          <th>Valid To</th>
-          <th>Discount Amount</th>
-          <th>Status</th>
-          <th>Is Expired</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% vouchers.forEach(voucher => { %>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
           <tr>
-            <td><%= voucher.id %></td>
-            <td><%= voucher.createdAt %></td>
-            <td><%= voucher.code %></td>
-            <td><%= voucher.description %></td>
-            <td><%= voucher.quantity %></td>
-            <td><%= voucher.validFrom %></td>
-            <td><%= voucher.validTo %></td>
-            <td><%= voucher.discountAmount %></td>
-            <td><%= voucher.status %></td>
-            <td><%= voucher.isExpired %></td>
-            <td>
-                <a href="/admin/vouchers/edit/<%= voucher.id %>" class="btn btn-warning btn-sm">Edit</a>
-                <form action="/admin/vouchers/delete/<%= voucher.id %>" method="post" style="display:inline;">
-                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-              </form>
-              
-            </td>
+            <th>ID</th>
+            <th>Mã</th>
+            <th>Mô tả</th>
+            <th>Số lượng</th>
+            <th>Ngày bắt đầu</th>
+            <th>Ngày kết thúc</th>
+            <th>Giảm giá</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
           </tr>
-        <% }); %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% vouchers.forEach(voucher => { %>
+            <tr>
+              <td><%= voucher.id %></td>
+              <td><%= voucher.code %></td>
+              <td><%= voucher.description %></td>
+              <td><%= voucher.quantity %></td>
+              <td><%= voucher.validFrom %></td>
+              <td><%= voucher.validTo %></td>
+              <td><%= voucher.discountAmount %></td>
+              <td><span class="badge bg-<%= voucher.status === 'active' ? 'success' : 'danger' %>"><%= voucher.status %></span></td>
+              <td>
+                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editVoucherModal<%= voucher.id %>"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteVoucherModal<%= voucher.id %>"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
   </div>
+
+  <!-- Create Voucher Modal -->
+  <div class="modal fade" id="createVoucherModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Tạo Voucher Mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="/admin/vouchers/create" method="post">
+            <div class="mb-3">
+              <label for="code" class="form-label">Mã Voucher</label>
+              <input type="text" class="form-control" id="code" name="code" required>
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label">Mô tả</label>
+              <input type="text" class="form-control" id="description" name="description">
+            </div>
+            <div class="mb-3">
+              <label for="quantity" class="form-label">Số lượng</label>
+              <input type="number" class="form-control" id="quantity" name="quantity" required>
+            </div>
+            <div class="mb-3">
+              <label for="validFrom" class="form-label">Ngày bắt đầu</label>
+              <input type="date" class="form-control" id="validFrom" name="validFrom" required>
+            </div>
+            <div class="mb-3">
+              <label for="validTo" class="form-label">Ngày kết thúc</label>
+              <input type="date" class="form-control" id="validTo" name="validTo" required>
+            </div>
+            <div class="mb-3">
+              <label for="discountAmount" class="form-label">Giá trị giảm giá</label>
+              <input type="number" step="0.01" class="form-control" id="discountAmount" name="discountAmount" required>
+            </div>
+            <div class="mb-3">
+              <label for="status" class="form-label">Trạng thái</label>
+              <select class="form-select" id="status" name="status" required>
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Không hoạt động</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Tạo Voucher</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% vouchers.forEach(voucher => { %>
+    <!-- Edit Voucher Modal -->
+  <div class="modal fade" id="editVoucherModal<%= voucher.id %>" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Chỉnh sửa Voucher</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="/admin/vouchers/update/<%= voucher.id %>" method="post">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="code" class="form-label"><i class="fas fa-barcode"></i> Mã Voucher</label>
+                  <input type="text" id="code" name="code" class="form-control" value="<%= voucher.code %>" required>
+                </div>
+                <div class="mb-3">
+                  <label for="description" class="form-label"><i class="fas fa-info-circle"></i> Mô tả</label>
+                  <textarea id="description" name="description" class="form-control" rows="3"><%= voucher.description %></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="quantity" class="form-label"><i class="fas fa-list-ol"></i> Số lượng</label>
+                  <input type="number" id="quantity" name="quantity" class="form-control" value="<%= voucher.quantity %>" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="status" class="form-label"><i class="fas fa-toggle-on"></i> Trạng thái</label>
+                  <select id="status" name="status" class="form-select" required>
+                    <option value="active" <%= voucher.status === 'active' ? 'selected' : '' %>>Hoạt động</option>
+                    <option value="inactive" <%= voucher.status === 'inactive' ? 'selected' : '' %>>Không hoạt động</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="validFrom" class="form-label"><i class="fas fa-calendar-plus"></i> Ngày bắt đầu</label>
+                  <input type="date" id="validFrom" name="validFrom" class="form-control" value="<%= voucher.validFrom %>" required>
+                </div>
+                <div class="mb-3">
+                  <label for="validTo" class="form-label"><i class="fas fa-calendar-minus"></i> Ngày kết thúc</label>
+                  <input type="date" id="validTo" name="validTo" class="form-control" value="<%= voucher.validTo %>" required>
+                </div>
+                <div class="mb-3">
+                  <label for="discountAmount" class="form-label"><i class="fas fa-percent"></i> Giá trị giảm giá</label>
+                  <input type="number" step="0.01" id="discountAmount" name="discountAmount" class="form-control" value="<%= voucher.discountAmount %>" required>
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Delete Voucher Modal -->
+  <div class="modal fade" id="deleteVoucherModal<%= voucher.id %>" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Xác nhận xóa</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Bạn có chắc chắn muốn xóa voucher "<%= voucher.code %>" không?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <form action="/admin/vouchers/delete/<%= voucher.id %>" method="post" style="display:inline;">
+            <button type="submit" class="btn btn-danger">Xóa</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+<% }); %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('validFrom').setAttribute('min', today);
+    document.getElementById('validTo').setAttribute('min', today);
   </script>
+  
 </body>
 </html>
