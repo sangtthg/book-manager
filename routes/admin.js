@@ -2,7 +2,11 @@ var express = require("express");
 var router = express.Router();
 
 var path = require("path");
-const { listOrders, listAllOrders, updateStatus } = require("../controllers/orderController");
+const {
+  listOrders,
+  listAllOrders,
+  updateStatus,
+} = require("../controllers/orderController");
 const reviewController = require("../controllers/reviewsController");
 const login = path.join(__dirname, "../views/login.ejs");
 const home = path.join(__dirname, "../views/home.ejs");
@@ -15,6 +19,8 @@ const Member = path.join(__dirname, "../views/Member.ejs");
 const Cart = path.join(__dirname, "../views/Cart.ejs");
 const order = path.join(__dirname, "../views/orders.ejs");
 const reviews = path.join(__dirname, "../views/reviews.ejs");
+const addBook = path.join(__dirname, "../views/addBook.ejs");
+const updateBook = path.join(__dirname, "../views/updateBook.ejs");
 
 router.get("/home", function (req, res, next) {
   res.render(home);
@@ -50,8 +56,15 @@ router.get("/Member", function (req, res, next) {
 router.get("/Cart", function (req, res, next) {
   res.render(Cart);
 });
-router.get('/reviews', (req, res) => {
-  res.render(reviews); // Render view reviews.ejs
+router.get("/reviews", (req, res) => {
+  res.render(reviews);
+});
+router.get("/addbook", (req, res) => {
+  res.render(addBook);
+});
+router.get("/updatebook/:id", (req, res) => {
+  const bookId = req.params.id;
+  res.render("updateBook", { bookId });
 });
 
 module.exports = router;

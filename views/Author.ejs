@@ -7,7 +7,7 @@
     <style>
       table {
         width: 95%;
-        margin: 20px auto;
+        margin: 50px auto;
         border-collapse: collapse;
       }
       th,
@@ -92,7 +92,7 @@
         width: 150px;
         height: 40px;
         position: absolute;
-        top: 70px;
+
         right: 50px;
         padding: 5px 10px;
         background-color: #ff7622;
@@ -140,6 +140,11 @@
         cursor: pointer;
         border-radius: 5px;
       }
+      #prevPageIcon {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+      }
     </style>
   </head>
   <body>
@@ -149,8 +154,6 @@
         Danh sách tác giả
       </h3>
       <div class="addcategory">
-        <a class="nav-link" href="/admin/ListProduct">Danh sách Sách</a>
-        <a class="nav-link" href="/admin/Category">Thể loại</a>
         <button class="add-book-btn" onclick="openDialog()">
           Thêm tác giả
         </button>
@@ -196,17 +199,50 @@
         </thead>
         <tbody></tbody>
       </table>
+
+      <div class="pagination">
+        <button onclick="previousPage()" id="prevPageBtn">
+          <img src="/uploads/left.png" alt="Trang trước" id="prevPageIcon" />
+        </button>
+        <span id="page-indicator">Trang 1</span>
+        <button onclick="nextPage()" id="nextPageBtn">
+          <img src="/uploads/right.png" alt="Trang sau" id="prevPageIcon" />
+        </button>
+      </div>
     </div>
 
     <script>
       const token = localStorage.getItem("token");
+      let currentPage = 1;
+      let totalItems = 0;
+      function updatePaginationButtons(page) {
+        const totalPages = Math.ceil(totalItems / 10);
+        const previousButton = document.querySelector("#prevPageBtn");
+        const nextButton = document.querySelector("#nextPageBtn");
 
-      function fetchAuthors() {
+        previousButton.disabled = page <= 1;
+        nextButton.disabled = page >= totalPages;
+      }
+
+      function previousPage() {
+        if (currentPage > 1) {
+          fetchAuthors(currentPage - 1);
+        }
+      }
+
+      function nextPage() {
+        const totalPages = Math.ceil(totalItems / 10);
+        if (currentPage < totalPages) {
+          fetchAuthors(currentPage + 1);
+        }
+      }
+      function fetchAuthors(page = 1) {
         fetch("/api/author/get", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify({ page, limit: 10 }),
         })
           .then((response) => response.json())
           .then((data) => {
@@ -232,6 +268,12 @@
               `;
                 tableBody.appendChild(row);
               });
+              document.getElementById(
+                "page-indicator"
+              ).textContent = `Trang ${page}`;
+              totalItems = data.totalItems; // Cập nhật tổng số mục
+              currentPage = page; // Cập nhật trang hiện tại
+              updatePaginationButtons(page);
             } else {
               alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
             }
@@ -335,25 +377,37 @@
       }
 
       function deleteAuthor(authorId) {
-        fetch(`/api/author/delete/${authorId}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "1") {
-              alert("Xóa tác giả thành công!");
-              fetchAuthors();
-            } else {
-              alert(`Xóa tác giả thất bại: ${data.message}`);
-            }
+        const confirmation = confirm(
+          "Bạn có chắc chắn muốn xóa thể loại này không?"
+        );
+
+        if (confirmation) {
+          // Nếu người dùng xác nhận xóa
+          fetch(`/api/author/delete`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ author_id: authorId }),
           })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Có lỗi xảy ra.");
-          });
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "1") {
+                alert("Xóa thể loại thành công!");
+                fetchCategories();
+              } else {
+                alert(`Xóa thể loại thất bại: ${data.message}`);
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("Có lỗi xảy ra.");
+            });
+        } else {
+          // Nếu người dùng hủy bỏ thao tác
+          alert("Thao tác xóa đã bị hủy.");
+        }
       }
 
       document.addEventListener("DOMContentLoaded", fetchAuthors);

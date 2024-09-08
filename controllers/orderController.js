@@ -41,7 +41,9 @@ exports.createOrder = async (req, res) => {
     for (const cart of carts) {
       const book = await Book.findByPk(cart.book_id);
       if (!book) {
-        return res.status(404).json({ message: "Không tìm thấy sách", status: "-1" });
+        return res
+          .status(404)
+          .json({ message: "Không tìm thấy sách", status: "-1" });
       }
       totalPrice += book.new_price * cart.quantity;
       totalQuantity += cart.quantity;
@@ -81,11 +83,17 @@ exports.createOrder = async (req, res) => {
       const validTo = moment(voucher.validTo);
 
       if (now.isBefore(validFrom) || now.isAfter(validTo)) {
-        return res.json({ code: 7, message: "Voucher đã hết hạn hoặc chưa bắt đầu" });
+        return res.json({
+          code: 7,
+          message: "Voucher đã hết hạn hoặc chưa bắt đầu",
+        });
       }
 
       if (voucher.quantity <= 0) {
-        return res.json({ code: 8, message: "Voucher đã hết số lượng sử dụng" });
+        return res.json({
+          code: 8,
+          message: "Voucher đã hết số lượng sử dụng",
+        });
       }
 
       discount = voucher.discountAmount || 0;
@@ -117,14 +125,20 @@ exports.createOrder = async (req, res) => {
       phone: req.body.phone || "0123456789",
     });
 
-    const notificationResult = await createNotification(user_id, "createOrder", newOrder.id);
+    const notificationResult = await createNotification(
+      user_id,
+      "createOrder",
+      newOrder.id
+    );
 
     if (notificationResult.code === -1) {
       return res.status(500).json(notificationResult);
     }
 
     const currentDate = moment();
-    const deliveryStartDate = currentDate.add(4, "days").format("DD [tháng] MM");
+    const deliveryStartDate = currentDate
+      .add(4, "days")
+      .format("DD [tháng] MM");
     const deliveryEndDate = currentDate.add(2, "days").format("DD [tháng] MM");
     const deliveryDateText = `Nhận hàng vào ${deliveryStartDate} - ${deliveryEndDate}`;
 
@@ -242,7 +256,10 @@ exports.listAllOrders = async (req, res) => {
       ...order.toJSON(),
       username: userMap[order.userId] || "Không xác định",
       totalPrice: formatNumber(order.totalPrice),
-      statusShip: statusMap[order.statusShip] || "Không xác định",
+      statusShip: {
+        status: order.statusShip,
+        description: statusMap[order.statusShip] || "Không xác định",
+      },
     }));
 
     // Lọc theo tên người dùng nếu có

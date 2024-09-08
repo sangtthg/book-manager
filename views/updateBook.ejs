@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cập nhật sách</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 50px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .form-actions button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      .form-actions button:first-child {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .form-actions button:last-child {
+        background-color: #f44336;
+        color: white;
+      }
+
+      .custom-file-upload {
+        display: block;
+        cursor: pointer;
+        color: #007bff;
+        text-decoration: underline;
+      }
+      #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Màu nền mờ */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000; /* Đảm bảo nó nằm trên cùng */
+      }
+
+      .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 4px solid #fff;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Cập nhật thông tin sách</h1>
+      <div class="form-group">
+        <label for="bookTitle">Tên sách</label>
+        <input type="text" id="bookTitle" name="title" />
+      </div>
+      <div class="form-group">
+        <label for="authorSelect">Tác giả</label>
+        <select id="authorSelect" name="author_id"></select>
+      </div>
+      <div class="form-group">
+        <label for="categorySelect">Thể loại</label>
+        <select id="categorySelect" name="category_id"></select>
+      </div>
+      <div class="form-group">
+        <label for="description">Mô tả</label>
+        <textarea id="description" name="description"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="quantity">Số lượng</label>
+        <input type="number" id="quantity" name="quantity" />
+      </div>
+      <div class="form-group">
+        <label for="publicationYear">Năm xuất bản</label>
+        <input type="number" id="publicationYear" name="publication_year" />
+      </div>
+      <div class="form-group">
+        <label for="oldPrice">Giá cũ</label>
+        <input type="number" id="oldPrice" name="old_price" />
+      </div>
+      <div class="form-group">
+        <label for="newPrice">Giá mới</label>
+        <input type="number" id="newPrice" name="new_price" />
+      </div>
+      <div class="form-group">
+        <label for="bookAvatar" class="custom-file-upload">Chọn ảnh bìa</label>
+        <input type="file" id="bookAvatar" name="book_avatar" />
+        <img id="bookAvatarPreview" style="display: none; max-width: 200px" />
+      </div>
+      <div class="form-group">
+        <label for="avatarReviews">Ảnh đánh giá (tối đa 3 ảnh)</label>
+        <div id="avatarReviewsPreviews"></div>
+        <input type="file" id="avatarReviews" name="avatar_reviews" multiple />
+      </div>
+      <div class="form-actions">
+        <button onclick="saveBook()">Lưu</button>
+        <button onclick="closeDialog()">Hủy</button>
+      </div>
+    </div>
+    <div id="loadingOverlay" style="display: none">
+      <div class="spinner"></div>
+    </div>
+    <script>
+      const token = localStorage.getItem("token");
+
+      var existingBookAvatar;
+      var existingBookReview = [];
+
+      var bookId;
+
+      function fetchAuthors() {
+        const authorSelect = document.getElementById("authorSelect");
+        fetch("/api/author/get", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              authorSelect.innerHTML = "";
+              data.data.rows.forEach((author) => {
+                const option = document.createElement("option");
+                option.value = author.author_id;
+                option.textContent = author.author_name;
+                authorSelect.appendChild(option);
+              });
+            } else {
+              alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => console.error("Error fetching authors:", error));
+      }
+
+      function fetchCategories() {
+        fetch("/api/category/get", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "1") {
+              const categorySelect = document.getElementById("categorySelect");
+              categorySelect.innerHTML = "";
+              data.data.forEach((category) => {
+                const option = document.createElement("option");
+                option.value = category.category_id;
+                option.textContent = category.category_name;
+                categorySelect.appendChild(option);
+              });
+            } else {
+              alert(`Lấy danh sách thể loại thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => console.error("Error fetching categories:", error));
+      }
+
+      function saveBook() {
+        document.getElementById("loadingOverlay").style.display = "flex";
+        if (!bookId) {
+          return alert("Sách không tồn tại");
+        }
+        const formData = new FormData();
+        formData.append("book_id", bookId);
+        formData.append("title", document.getElementById("bookTitle").value);
+        formData.append(
+          "author_id",
+          document.getElementById("authorSelect").value
+        );
+        formData.append(
+          "category_id",
+          document.getElementById("categorySelect").value
+        );
+        formData.append(
+          "description",
+          document.getElementById("description").value
+        );
+        formData.append(
+          "publication_year",
+          document.getElementById("publicationYear").value
+        );
+        formData.append("old_price", document.getElementById("oldPrice").value);
+        formData.append("new_price", document.getElementById("newPrice").value);
+        formData.append("quantity", document.getElementById("quantity").value);
+
+        const bookAvatarFile = document.getElementById("bookAvatar").files[0];
+
+        if (bookAvatarFile) {
+          formData.append("book_avatar", bookAvatarFile);
+        }
+
+        if (existingBookAvatar) {
+          formData.append("existing_book_avatar", existingBookAvatar);
+        }
+
+        const avatarReviews = document.getElementById("avatarReviews").files;
+
+        if (avatarReviews.length !== 0) {
+          for (let i = 0; i < avatarReviews.length; i++) {
+            formData.append("avatar_reviews", avatarReviews[i]);
+          }
+        }
+
+        formData.append("existing_avatar_review", existingBookReview);
+
+        fetch("/api/book/update", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("loadingOverlay").style.display = "none";
+
+            if (data.status === "1") {
+              alert("Cập nhật sách thành công");
+              window.location.href = "/admin/ListProduct";
+            } else {
+              alert(`Cập nhật sách thất bại: ${data.message}`);
+            }
+          })
+          .catch((error) => {
+            document.getElementById("loadingOverlay").style.display = "none";
+
+            alert(`Có lỗi xảy ra khi thêm sách: ${error.message}`);
+          });
+      }
+
+      function closeDialog() {
+        window.location.href = "/admin/ListProduct";
+      }
+
+      window.onload = function () {
+        fetchAuthors();
+        fetchCategories();
+
+        const bookData = sessionStorage.getItem("bookData");
+        if (bookData) {
+          const book = JSON.parse(bookData);
+          // console.log("Toàn bộ dữ liệu sách nhận được:", book);
+
+          // Cập nhật giá trị vào các ô nhập
+          bookId = book.book_id;
+          document.getElementById("bookTitle").value = book.title;
+          document.getElementById("authorSelect").value = book.author_id;
+          document.getElementById("categorySelect").value = book.category_id;
+          document.getElementById("description").value = book.description;
+          document.getElementById("quantity").value = book.quantity;
+          document.getElementById("publicationYear").value =
+            book.publication_year;
+          document.getElementById("oldPrice").value = book.old_price;
+          document.getElementById("newPrice").value = book.new_price;
+
+          // Chọn ảnh bìa và ảnh đánh giá nếu có
+          if (book.book_avatar) {
+            const bookAvatarPreview =
+              document.getElementById("bookAvatarPreview");
+            bookAvatarPreview.src = book.book_avatar;
+            existingBookAvatar = book.book_avatar;
+
+            bookAvatarPreview.style.display = "block";
+          }
+
+          if (book.avatar_reviews && book.avatar_reviews.length > 0) {
+            const avatarReviewsPreviews = document.getElementById(
+              "avatarReviewsPreviews"
+            );
+
+            avatarReviewsPreviews.innerHTML = ""; // Xóa nội dung cũ
+            book.avatar_reviews.forEach((review) => {
+              const img = document.createElement("img");
+              img.src = review; // Đặt URL hình ảnh đánh giá
+              img.alt = "Ảnh đánh giá";
+              img.style.maxWidth = "100px";
+              img.style.marginRight = "10px";
+              img.style.display = "inline-block";
+              avatarReviewsPreviews.appendChild(img);
+              existingBookReview.push(review);
+            });
+          }
+        } else {
+          console.log("Không có dữ liệu sách trong sessionStorage.");
+        }
+
+        document
+          .getElementById("bookAvatar")
+          .addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = function (e) {
+                const bookAvatarPreview =
+                  document.getElementById("bookAvatarPreview");
+                bookAvatarPreview.src = e.target.result;
+                bookAvatarPreview.style.display = "block"; // Hiển thị ảnh bìa
+              };
+              reader.readAsDataURL(file);
+            }
+          });
+      };
+      document
+        .getElementById("avatarReviews")
+        .addEventListener("change", function (event) {
+          const files = event.target.files;
+          const avatarReviewsPreviews = document.getElementById(
+            "avatarReviewsPreviews"
+          );
+          avatarReviewsPreviews.innerHTML = ""; // Xóa nội dung cũ
+          Array.from(files).forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              const img = document.createElement("img");
+              img.src = e.target.result;
+              img.alt = "Ảnh đánh giá";
+              img.style.maxWidth = "100px";
+              img.style.marginRight = "10px";
+              img.style.display = "inline-block";
+              avatarReviewsPreviews.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+          });
+        });
+    </script>
+  </body>
+</html>

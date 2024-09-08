@@ -29,6 +29,13 @@ const login = async (req, res, isAdmin = true) => {
       }
       try {
         const user = result[0];
+        // check block user
+        if (user.is_block) {
+          return res.json({
+            status: "0",
+            message: "Tài khoản của bạn đã bị khóa.",
+          });
+        }
         const compare = await comparePassword(reqObj.password, user.password);
         console.log("compare", compare);
         if (!compare) {

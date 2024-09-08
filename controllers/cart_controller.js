@@ -11,7 +11,7 @@ module.exports.controller = (app, io, socket_list) => {
     helpers.CheckParameterValid(res, reqObj, ["listCart"], async () => {
       const listCart = reqObj.listCart || [];
       const user_id = req.auth.user_id;
-      const listBookId = listCart.map(item => item.book_id);
+      const listBookId = listCart.map((item) => item.book_id);
 
       if (listBookId.length === 0) {
         return res.json({ status: "0", message: "Invalid data" });
@@ -30,7 +30,7 @@ module.exports.controller = (app, io, socket_list) => {
       });
 
       const dataToAddOrUpdate = [];
-      const existingBookIds = existingCartItems.map(item => item.book_id);
+      const existingBookIds = existingCartItems.map((item) => item.book_id);
 
       for (let item of listCart) {
         const { book_id, quantity } = item;
@@ -38,10 +38,12 @@ module.exports.controller = (app, io, socket_list) => {
           return res.json({ status: "0", message: "Invalid quantity" });
         }
 
-        const book = books.find(book => book.book_id === book_id);
+        const book = books.find((book) => book.book_id === book_id);
         const book_title_in_cart = book.title;
 
-        const existingCartItem = existingCartItems.find(cartItem => cartItem.book_id === book_id);
+        const existingCartItem = existingCartItems.find(
+          (cartItem) => cartItem.book_id === book_id
+        );
         if (existingCartItem) {
           existingCartItem.quantity += quantity;
           existingCartItem.modify_date = new Date();
@@ -49,12 +51,12 @@ module.exports.controller = (app, io, socket_list) => {
           dataToAddOrUpdate.push(existingCartItem.save());
         } else {
           dataToAddOrUpdate.push(
-              CartDetail.create({
-                user_id,
-                book_id,
-                quantity,
-                book_title_in_cart,
-              })
+            CartDetail.create({
+              user_id,
+              book_id,
+              quantity,
+              book_title_in_cart,
+            })
           );
         }
       }
@@ -63,7 +65,7 @@ module.exports.controller = (app, io, socket_list) => {
         await Promise.all(dataToAddOrUpdate);
         const updatedCartItems = await CartDetail.findAll({
           where: { user_id },
-          order: [['modify_date', 'DESC']],
+          order: [["modify_date", "DESC"]],
         });
         res.json({ status: "1", message: "Success", data: updatedCartItems });
       } catch (err) {
@@ -80,7 +82,7 @@ module.exports.controller = (app, io, socket_list) => {
     const offset = (page - 1) * limit;
 
     CartDetail.findAndCountAll({
-      where: {user_id},
+      where: { user_id },
       limit,
       offset,
       include: [
@@ -91,19 +93,19 @@ module.exports.controller = (app, io, socket_list) => {
       ],
       order: [["created_date", "DESC"]],
     })
-              .then((result) => {
-                res.json({
-                  status: "1",
-                  data: {
-                    totalAll: result.count,
-                    data: result.rows
-                  },
-                });
-              })
-              .catch((err) => {
-                console.log("/api/cart/get", err);
-                res.json({status: "0", message: msg_fail});
-              });
+      .then((result) => {
+        res.json({
+          status: "1",
+          data: {
+            totalAll: result.count,
+            data: result.rows,
+          },
+        });
+      })
+      .catch((err) => {
+        console.log("/api/cart/get", err);
+        res.json({ status: "0", message: msg_fail });
+      });
   });
 
   //delete cart
@@ -128,35 +130,35 @@ module.exports.controller = (app, io, socket_list) => {
       CartDetail.destroy({
         where: { cart_id: data, user_id },
       })
-                .then((result) => {
-                  console.log(result);
-                  res.json({ status: "1", message: msg_success });
-                })
-                .catch((err) => {
-                  console.log("/api/cart/delete", err);
-                  res.json({ status: "0", message: msg_fail });
-                });
+        .then((result) => {
+          console.log(result);
+          res.json({ status: "1", message: msg_success });
+        })
+        .catch((err) => {
+          console.log("/api/cart/delete", err);
+          res.json({ status: "0", message: msg_fail });
+        });
     });
   });
 
-    app.get("/api/cart/total-items", helpers.authorization, async(req, res) => {
-        const user_id = req.auth.user_id;
+  app.get("/api/cart/total-items", helpers.authorization, async (req, res) => {
+    const user_id = req.auth.user_id;
 
-        try {
-            const totalItems = await CartDetail.count({
-                where: {user_id},
-            });
+    try {
+      const totalItems = await CartDetail.count({
+        where: { user_id },
+      });
 
-            res.json({
-                status: "200",
-                message: msg_success,
-                totalItems: totalItems || 0,
-            });
-        } catch(err) {
-            console.log("/api/cart/total-items error:", err);
-            res.json({status: "0", message: msg_fail});
-        }
-    });
+      res.json({
+        status: "200",
+        message: msg_success,
+        totalItems: totalItems || 0,
+      });
+    } catch (err) {
+      console.log("/api/cart/total-items error:", err);
+      res.json({ status: "0", message: msg_fail });
+    }
+  });
 
   app.post("/api/cart/delete-all", helpers.authorization, async (req, res) => {
     const user_id = req.auth.user_id;
@@ -176,31 +178,39 @@ module.exports.controller = (app, io, socket_list) => {
     }
   });
 
-  app.post("/api/cart/update-quantity", helpers.authorization, async (req, res) => {
-    const { cart_id, quantity } = req.body;
-    const user_id = req.auth.user_id;
+  app.post(
+    "/api/cart/update-quantity",
+    helpers.authorization,
+    async (req, res) => {
+      const { cart_id, quantity } = req.body;
+      const user_id = req.auth.user_id;
 
-    if (!cart_id || quantity === undefined || quantity < 1) {
-      return res.json({ status: "0", message: "Invalid data" });
-    }
-
-    try {
-      const cartItem = await CartDetail.findOne({
-        where: { cart_id, user_id },
-      });
-
-      if (!cartItem) {
-        return res.json({ status: "0", message: "Cart item not found" });
+      if (!cart_id || quantity === undefined || quantity < 1) {
+        return res.json({ status: "0", message: "Invalid data" });
       }
 
-      cartItem.quantity = quantity;
-      cartItem.modify_date = new Date();
-      await cartItem.save();
+      try {
+        const cartItem = await CartDetail.findOne({
+          where: { cart_id, user_id },
+        });
 
-      res.json({ status: "1", message: "Quantity updated successfully", data: cartItem });
-    } catch (err) {
-      console.log("/api/cart/update-quantity error:", err);
-      res.json({ status: "0", message: msg_fail });
+        if (!cartItem) {
+          return res.json({ status: "0", message: "Cart item not found" });
+        }
+
+        cartItem.quantity = quantity;
+        cartItem.modify_date = new Date();
+        await cartItem.save();
+
+        res.json({
+          status: "1",
+          message: "Quantity updated successfully",
+          data: cartItem,
+        });
+      } catch (err) {
+        console.log("/api/cart/update-quantity error:", err);
+        res.json({ status: "0", message: msg_fail });
+      }
     }
-  });
+  );
 };

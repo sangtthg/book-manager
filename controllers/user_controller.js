@@ -1,5 +1,9 @@
 const helper = require("../helpers/helpers");
-const { verifyOTP, sendMail } = require("../helpers/email_helpers");
+const {
+  verifyOTP,
+  sendMail,
+  sendOTPEmail,
+} = require("../helpers/email_helpers");
 const { comparePassword, hashPassword } = require("../Service/bcrypt");
 const { selectUser } = require("../Service/user");
 const User = require("../models/user_model");
@@ -14,6 +18,8 @@ const {
   avatarDefault,
 } = require("../constants/common");
 const { checkSex } = require("../utilities/int/check_sex");
+const OtpTypes = require("../constants/otp_type");
+const { where } = require("sequelize/lib/sequelize");
 module.exports.controller = (app, io, socket_list) => {
   app.post(
     //
@@ -34,6 +40,7 @@ module.exports.controller = (app, io, socket_list) => {
           const search = req.body.query.search || "";
 
           const whereRoleObj = roles.length > 0 ? { role: roles } : {};
+
           User.findAll({
             attributes: { exclude: ["password"] },
             where: {
@@ -65,35 +72,6 @@ module.exports.controller = (app, io, socket_list) => {
     }
   );
 
-  app.post(
-    "/api/user/getadmin",
-    helper.authorization,
-    helper.checkRole,
-    (req, res) => {
-      const limit = req.body.limit || 10;
-      const page = req.body.page || 1;
-      const offset = (page - 1) * limit;
-      //lấy ra theo option trên nhưng trừ trường password và trừ chính user đó
-      User.findAll({
-        attributes: { exclude: ["password"] },
-        where: {
-          user_id: {
-            [Op.ne]: req.auth.user_id,
-          },
-          role: "admin",
-        },
-        limit: limit,
-        offset: offset,
-      })
-        .then((result) => {
-          res.json({ status: "1", message: msg_success, data: result });
-        })
-        .catch((err) => {
-          console.log("/api/users/get", err);
-          res.json({ status: "0", message: msg_fail });
-        });
-    }
-  );
   app.post(
     "/api/user/add",
     helper.authorization,
@@ -187,7 +165,7 @@ module.exports.controller = (app, io, socket_list) => {
       helper.CheckParameterValid(
         res,
         req.body,
-        ["user_id", "email", "role", "username", "sex"],
+        ["user_id", "email", "role", "username", "sex", "is_block"], // is block
         async () => {
           helper.CheckParameterNull(
             res,
@@ -243,6 +221,7 @@ module.exports.controller = (app, io, socket_list) => {
                     username: req.body.username,
                     avatar: avatar || checkEmail.avatar || avatarDefault,
                     sex: req.body.sex,
+                    is_block: req.body.is_block, /// is_block
                     updated_at: new Date(),
                   },
                   {
@@ -268,6 +247,44 @@ module.exports.controller = (app, io, socket_list) => {
       );
     }
   );
+  // app.post("/api/otp/change_password", (req, res) => {
+  //   helper.Dlog(req.body);
+  //   const reqObj = req.body;
+
+  //   helper.CheckParameterValid(res, reqObj, ["email"], async () => {
+  //     const { email } = reqObj;
+  //     const user = await User.findOne({ where: { email: email } });
+  //     if (!user) {
+  //       return res.json({ status: "0", message: "Email không tồn tại" });
+  //     }
+
+  //     const otp = await sendOTPEmail(email, OtpTypes.CHANGE_PASSWORD);
+  //     res.json({ status: "1", message: msg_success, data: otp });
+  //   });
+  // });
+
+  // app.post("/api/otp/verify-change-password", (req, res) => {
+  //   helper.Dlog(req.body);
+  //   const reqObj = req.body;
+  //   helper.CheckParameterValid(
+  //     res,
+  //     reqObj,
+  //     ["email", "otp_id", "otp"],
+  //     async () => {
+  //       const { email, otp_id, otp } = reqObj;
+  //       const verify = await verifyOTP(
+  //         otp_id,
+  //         email,
+  //         otp,
+  //         OtpTypes.CHANGE_PASSWORD
+  //       );
+  //       if (!verify) {
+  //         return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
+  //       }
+  //       return res.json({ status: "1", message: msg_success });
+  //     }
+  //   );
+  // });
 
   app.post("/api/user/change-password", helper.authorization, (req, res) => {
     helper.Dlog(req.body);
@@ -275,17 +292,10 @@ module.exports.controller = (app, io, socket_list) => {
     helper.CheckParameterValid(
       res,
       reqObj,
-      [
-        "password",
-        "new_password",
-        "re_password",
-        "verify",
-        "verify.otp_id",
-        "verify.otp",
-      ],
+      ["password", "new_password", "re_password"],
       async () => {
-        const { password, new_password, re_password, verify } = reqObj;
-        const { otp_id, otp } = verify;
+        const { password, new_password, re_password } = reqObj;
+        // const { otp_id, otp } = verify;verify
         if (new_password !== re_password) {
           return res.json({ status: "0", message: "Mật khẩu không khớp" });
         }
@@ -294,11 +304,16 @@ module.exports.controller = (app, io, socket_list) => {
           await User.findOne({ where: { user_id: req.auth.user_id } })
         ).get();
 
-        const _verifyOTP = await verifyOTP(otp_id, user.email, otp);
+        // const _verifyOTP = await verifyOTP(
+        //   otp_id,
+        //   user.email,
+        //   otp,
+        //   OtpTypes.CHANGE_PASSWORD
+        // );
 
-        if (!_verifyOTP) {
-          return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
-        }
+        // if (!_verifyOTP) {
+        //   return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
+        // }
 
         const compare = await comparePassword(password, user.password);
 
@@ -323,4 +338,80 @@ module.exports.controller = (app, io, socket_list) => {
       }
     );
   });
+  // api block  user
+  app.post(
+    "/api/user/block",
+    helper.authorization,
+    helper.checkRole,
+    async (req, res) => {
+      try {
+        const { user_id } = req.body;
+
+        if (req.auth.role === "user") {
+          return res.json({
+            status: "0",
+            message: "Bạn không có quyền thực hiện hành động này",
+          });
+        }
+
+        const user = await User.findOne({ where: { user_id } });
+
+        if (!user) {
+          return res.json({
+            status: "0",
+            message: "Người dùng không tồn tại.",
+          });
+        }
+
+        // Cập nhật trạng thái khóa tài khoản
+        await User.update({ is_block: true }, { where: { user_id } });
+
+        res.json({
+          status: "1",
+          message: "Tài khoản đã được khóa thành công.",
+        });
+      } catch (error) {
+        console.log("/api/user/block", error);
+        res.json({ status: "0", message: "Có lỗi xảy ra." });
+      }
+    }
+  );
+  // mở tài khoản block
+  app.post(
+    "/api/user/unblock",
+    helper.authorization,
+    helper.checkRole,
+    async (req, res) => {
+      try {
+        const { user_id } = req.body;
+
+        if (req.auth.role === "user") {
+          return res.json({
+            status: "0",
+            message: "Bạn không có quyền thực hiện hành động này",
+          });
+        }
+
+        const user = await User.findOne({ where: { user_id } });
+
+        if (!user) {
+          return res.json({
+            status: "0",
+            message: "Người dùng không tồn tại.",
+          });
+        }
+
+        // Cập nhật trạng thái mở khóa tài khoản
+        await User.update({ is_block: false }, { where: { user_id } });
+
+        res.json({
+          status: "1",
+          message: "Tài khoản đã được mở khóa thành công.",
+        });
+      } catch (error) {
+        console.log("/api/user/unblock", error);
+        res.json({ status: "0", message: "Có lỗi xảy ra." });
+      }
+    }
+  );
 };

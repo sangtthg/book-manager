@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Danh sách tác giả</title>
+    <title>Danh sách nhân viên</title>
     <style>
       table {
         width: 80%;
@@ -25,8 +25,8 @@
       tr:hover {
         background-color: #ddd;
       }
-      .addcategory {
-        display: flex;
+      .add_member {
+        margin-bottom: 20px;
       }
       .dialog {
         display: none;
@@ -63,7 +63,8 @@
         display: block;
         margin-bottom: 5px;
       }
-      .dialog .form-group input {
+      .dialog .form-group input,
+      .dialog .form-group select {
         width: 100%;
         padding: 8px;
         box-sizing: border-box;
@@ -82,39 +83,62 @@
       .dialog .form-actions button.cancel {
         background-color: #6c757d;
       }
-      .addbook_category {
+      .pagination {
         display: flex;
+        justify-content: center;
+        margin: 20px;
+      }
+      .pagination button {
+        padding: 10px 15px;
+        margin: 0 5px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .pagination button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+      #page-indicator {
+        font-weight: bold;
+        margin-left: 10px;
       }
     </style>
   </head>
   <body>
     <%- include('navbar.ejs') %>
-    <div style="margin-left: 275px">
-      <h3>Danh sách thành viên</h3>
-      <div class="addbook_category">
-        <a class="nav-link" href="javascript:void(0)" onclick="openDialog()"
-          >Thêm thành viên</a
+    <div style="margin-left: 280px">
+      <h3>Danh sách nhân viên</h3>
+      <div class="add_member">
+        <a
+          class="nav-link"
+          href="javascript:void(0)"
+          onclick="openDialog()"
+          style="color: rgb(255, 255, 255)"
+          >Thêm nhân viên</a
         >
       </div>
-      <table id="author-table">
+      <table id="user-table" style="margin-top: 50px">
         <thead>
           <tr>
-            <th scope="col">STT</th>
-            <th scope="col">Tên khách hàng</th>
-            <th scope="col">Email</th>
-
-            <th scope="col">Ảnh</th>
-            <th scope="col">Trạng thái</th>
-            <th scope="col">Ngày đăng ký</th>
-            <th scope="col">Chức năng</th>
+            <th>Email</th>
+            <th>Tên đăng nhập</th>
+            <th>Quyền</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
+      <div class="pagination">
+        <button id="prev-page">Trang trước</button>
+        <span id="page-indicator"></span>
+        <button id="next-page">Trang tiếp</button>
+      </div>
     </div>
     <div class="dialog-overlay" id="dialog-overlay"></div>
     <div class="dialog" id="add-member-dialog">
-      <form id="add-member-form">
+      <form id="add-member-form" enctype="multipart/form-data">
         <div class="form-group">
           <label for="username">Tên đăng nhập:</label>
           <input type="text" id="username" name="username" required />
@@ -124,18 +148,25 @@
           <input type="email" id="email" name="email" required />
         </div>
         <div class="form-group">
-          <label for="password">Mật khẩu:</label>
-          <input type="password" id="password" name="password" required />
-        </div>
-        <div class="form-group">
           <label for="role">Quyền:</label>
           <select id="role" name="role" required>
             <option value="admin">Quản trị viên</option>
-            <option value="member">Thành viên</option>
+            <option value="member">Nhân viên</option>
           </select>
         </div>
+        <div class="form-group">
+          <label for="sex">Giới tính:</label>
+          <select id="sex" name="sex" required>
+            <option value="1">Nam</option>
+            <option value="0">Nữ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="avatar">Ảnh đại diện:</label>
+          <input type="file" id="avatar" name="avatar" />
+        </div>
         <div class="form-actions">
-          <button type="submit">Thêm thành viên</button>
+          <button type="submit">Thêm nhân viên</button>
           <button type="button" class="cancel" onclick="closeDialog()">
             Hủy
           </button>
@@ -144,106 +175,119 @@
     </div>
     <script>
       const token = localStorage.getItem("token");
+      let currentPage = 1;
+      const itemsPerPage = 10;
+      let totalItems = 0;
 
-      function fetchAuthors() {
-        fetch("/api/user/getadmin", {
+      function fetchUsers(page = 1) {
+        fetch("/api/user/get", {
           method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify({
+            page: page,
+            limit: itemsPerPage,
+            query: {
+              roles: ["admin", "member"],
+              search: "",
+            },
+          }),
         })
           .then((response) => response.json())
           .then((data) => {
             if (data.status === "1") {
-              const tableBody = document.querySelector("#author-table tbody");
+              const tableBody = document.querySelector("#user-table tbody");
               tableBody.innerHTML = "";
 
-              data.data.forEach((user, index) => {
-                const createdAt = new Date(user.created_at);
-                const formattedDate = `${createdAt
-                  .getDate()
-                  .toString()
-                  .padStart(2, "0")}-${(createdAt.getMonth() + 1)
-                  .toString()
-                  .padStart(2, "0")}-${createdAt.getFullYear()}`;
+              if (Array.isArray(data.data)) {
+                data.data.forEach((user) => {
+                  const row = document.createElement("tr");
+                  row.innerHTML = `
+                  <td>${user.email}</td>
+                  <td>${user.username}</td>
+                  <td>${user.role}</td>
+                `;
+                  tableBody.appendChild(row);
+                });
+              } else {
+                console.error("Dữ liệu không phải là mảng:", data.data);
+              }
 
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                <td>${index + 1}</td>
-              <td>${user.username}</td>
-              <td>${user.email}</td>
-            
-              <td><img src="${user.avatar}" alt="${
-                  user.username
-                }" style="width: 50px; height: 50px;"></td>
-              <td>${user.user_status}</td>
-              <td>${formattedDate}</td>
-              <td>
-                <button onclick="openEditDialog(${user.user_id}, '${
-                  user.username
-                }')">Sửa</button>
-                <button onclick="deleteUser(${user.user_id})">Xóa</button>
-              </td>
-            `;
-                tableBody.appendChild(row);
-              });
+              document.getElementById(
+                "page-indicator"
+              ).textContent = `Trang ${page}`;
+              totalItems = data.total;
+              updatePaginationButtons(page);
             } else {
-              alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
+              alert(`Lấy danh sách nhân viên thất bại: ${data.message}`);
             }
           })
-          .catch((error) => console.error("Error fetching authors:", error));
+          .catch((error) => console.error("Error fetching users:", error));
       }
 
       function openDialog() {
-        const dialog = document.getElementById("add-member-dialog");
-        const overlay = document.getElementById("dialog-overlay");
-        dialog.classList.add("active");
-        overlay.classList.add("active");
+        document.getElementById("dialog-overlay").classList.add("active");
+        document.getElementById("add-member-dialog").classList.add("active");
       }
 
       function closeDialog() {
-        const dialog = document.getElementById("add-member-dialog");
-        const overlay = document.getElementById("dialog-overlay");
-        dialog.classList.remove("active");
-        overlay.classList.remove("active");
+        document.getElementById("dialog-overlay").classList.remove("active");
+        document.getElementById("add-member-dialog").classList.remove("active");
       }
-      const addMemberForm = document.getElementById("add-member-form");
 
-      // addMemberForm.addEventListener("submit", function (event) {
-      //   event.preventDefault();
+      document
+        .getElementById("add-member-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
 
-      //   const username = document.getElementById("username").value;
-      //   const email = document.getElementById("email").value;
-      //   const password = document.getElementById("password").value;
-      //   const role = document.getElementById("role").value;
+          const formData = new FormData(this);
 
-      //   fetch("/api/user/add", {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //     body: JSON.stringify({
-      //       username,
-      //       email,
-      //       password,
-      //       role,
-      //     }),
-      //   })
-      //     .then((response) => response.json())
-      //     .then((data) => {
-      //       if (data.status === "1") {
-      //         alert("Thêm thành viên thành công!");
-      //         fetchAuthors(); // Reload the author list after adding a member
-      //         closeDialog();
-      //       } else {
-      //         alert(`Thêm thành viên thất bại: ${data.message}`);
-      //       }
-      //     })
-      //     .catch((error) => console.error("Lỗi khi thêm thành viên:", error));
-      // });
+          fetch("/api/user/add", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "1") {
+                alert("Thêm nhân viên thành công");
+                closeDialog();
+                fetchUsers(currentPage); // Refresh user list
+              } else {
+                alert(`Thêm nhân viên thất bại: ${data.message}`);
+              }
+            })
+            .catch((error) => console.error("Error adding user:", error));
+        });
 
-      document.addEventListener("DOMContentLoaded", fetchAuthors);
+      function updatePaginationButtons(page) {
+        const prevButton = document.getElementById("prev-page");
+        const nextButton = document.getElementById("next-page");
+
+        prevButton.disabled = page === 1;
+        nextButton.disabled = page === Math.ceil(totalItems / itemsPerPage);
+      }
+
+      document.getElementById("prev-page").addEventListener("click", () => {
+        if (currentPage > 1) {
+          fetchUsers(--currentPage);
+        }
+      });
+
+      document.getElementById("next-page").addEventListener("click", () => {
+        if (currentPage < Math.ceil(totalItems / itemsPerPage)) {
+          fetchUsers(++currentPage);
+        }
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchUsers(currentPage);
+      });
     </script>
   </body>
 </html>
+``

@@ -68,6 +68,10 @@ const User = sequelizeHelpers.define(
         key: "address_id",
       },
     },
+    is_block: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
     tableName: "users",

@@ -19,7 +19,7 @@
 
       table {
         width: 95%;
-        margin: 20px auto;
+        margin: 50px auto;
         border-collapse: collapse;
       }
 
@@ -169,7 +169,7 @@
         width: 150px;
         height: 40px;
         position: absolute;
-        top: 70px;
+
         right: 50px;
         padding: 5px 10px;
         background-color: #ff7622;
@@ -301,6 +301,51 @@
         background-color: orange;
         color: white;
       }
+
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-left: 450px;
+        text-align: center;
+        margin-top: 300px;
+        max-width: 50%;
+        max-height: 50%;
+      }
+
+      .modal-buttons {
+        margin-top: 20px;
+      }
+
+      .delete-btn {
+        background-color: red;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+
+      .cancel-btn {
+        background-color: rgb(4, 141, 61);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+      }
     </style>
   </head>
 
@@ -309,21 +354,7 @@
     <div class="main">
       <h3 class="h3_table">Danh sách sản phẩm</h3>
       <div class="addbook_category">
-        <a class="nav-link" href="/admin/ListProduct" style="color: #010101">
-          Sách</a
-        >
-        <a class="nav-link" href="/admin/Author" style="color: #010101"
-          >Tác giả</a
-        >
-        <a class="nav-link" href="/admin/Category" style="color: #010101"
-          >Thể loại</a
-        >
-        <button class="add-book-btn" onclick="openCreateDialog()">
-          Thêm sách
-        </button>
-        <!-- <button class="add-book-btn" onclick="redirectToAddBook()">
-          Thêm sách
-        </button> -->
+        <button class="add-book-btn" id="addBookButton">Thêm sách</button>
       </div>
       <table id="book-table">
         <thead>
@@ -359,6 +390,7 @@
           <h3 id="dialog-title" style="font-size: 25px; color: #ff7622">
             Thêm sách
           </h3>
+
           <div class="form-group">
             <label for="bookTitle">Tên sách</label>
             <input type="text" id="bookTitle" name="title" />
@@ -415,17 +447,30 @@
         </div>
       </div>
     </div>
+    <div id="deleteModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>Bạn có chắc muốn xóa sách này?</h2>
+        <div class="modal-buttons">
+          <button id="confirmDeleteBtn" class="delete-btn">Xóa</button>
+          <button id="cancelDeleteBtn" class="cancel-btn">Hủy</button>
+        </div>
+      </div>
+    </div>
 
     <script>
-      function redirectToAddBook() {
-        window.location.href = "/add-book";
-      }
+      document
+        .getElementById("addBookButton")
+        .addEventListener("click", function () {
+          window.location.href = "/admin/addbook";
+        });
 
       let isEditMode = false;
       let editBookId = null;
       const token = localStorage.getItem("token");
       const itemsPerPage = 10;
       let currentPage = 1;
+
+      let booksData = []; // Biến toàn cục để lưu dữ liệu sách
 
       function fetchBooks(page = 1) {
         const offset = (page - 1) * itemsPerPage;
@@ -449,6 +494,7 @@
           })
           .then((data) => {
             if (data.status == "1") {
+              booksData = data.data.data; // Lưu dữ liệu sách vào biến toàn cục
               const tableBody = document.querySelector("#book-table tbody");
               tableBody.innerHTML = "";
 
@@ -456,42 +502,44 @@
                 const row = document.createElement("tr");
 
                 row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${book.book_id}</td>
-                <td class="csstitle">${book.title}</td>
-                <td>${book.author_name}</td>
-                <td>${book.category_name}</td>
-                <td class="ellipsis">${book.description}</td>
-                <td>${book.publication_year}</td>
-                <td><img src="${book.book_avatar}" alt="${
+                    <td>${index + 1}</td>
+                    <td>${book.book_id}</td>
+                    <td class="csstitle">${book.title}</td>
+                    <td>${book.author_name}</td>
+                    <td>${book.category_name}</td>
+                    <td class="ellipsis">${book.description}</td>
+                    <td>${book.publication_year}</td>
+                    <td><img src="${book.book_avatar}" alt="${
                   book.title
                 }" width="50"></td>
-                <td>${book.old_price}</td>
-                <td>${book.new_price}</td>
-                <td>
-                  <button class="edit-button" id="edit-button-${index}">Sửa</button>
-                  <button class="delete-button" onclick="deleteBook(${
-                    book.book_id
-                  })">Xóa</button>
-                
-                </td>`;
+                    <td>${book.old_price}</td>
+                    <td>${book.new_price}</td>
+                    <td>
+                        <button class="edit-button" data-book-id="${
+                          book.book_id
+                        }">Sửa</button>
+                        <button class="delete-button" onclick="confirmDelete(${
+                          book.book_id
+                        })">Xóa</button>
+                    </td>`;
                 tableBody.appendChild(row);
-                document
-                  .getElementById(`edit-button-${index}`)
-                  .addEventListener("click", () => {
-                    openEditDialog(
-                      book.book_id,
-                      book.title,
-                      book.author_id,
-                      book.category_id,
-                      book.description,
-                      book.publication_year,
-                      book.old_price,
-                      book.new_price,
-                      book.book_avatar
-                    );
-                  });
               });
+
+              document.querySelectorAll(".edit-button").forEach((button) => {
+                button.addEventListener("click", () => {
+                  const bookId = button.getAttribute("data-book-id");
+                  const book = booksData.find((b) => b.book_id == bookId); // Tìm sách theo ID
+                  console.log(
+                    "Toàn bộ dữ liệu sách trước khi lưu vào sessionStorage:",
+                    book
+                  );
+                  sessionStorage.setItem("bookData", JSON.stringify(book));
+
+                  // Chuyển hướng đến trang cập nhật sách
+                  window.location.href = `/admin/updatebook/${bookId}`;
+                });
+              });
+
               document.getElementById(
                 "page-indicator"
               ).textContent = `Trang ${page}`;
@@ -533,176 +581,23 @@
           fetchBooks(currentPage);
         }
       }
-
-      function fetchAuthors() {
-        const authorSelect = document.getElementById("authorSelect");
-        fetch("/api/author/get", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "1") {
-              authorSelect.innerHTML = "";
-              data.data.rows.forEach((author) => {
-                const option = document.createElement("option");
-                option.value = author.author_id;
-                option.textContent = author.author_name;
-                authorSelect.appendChild(option);
-              });
-            } else {
-              alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
-            }
-          })
-          .catch((error) => console.error("Error fetching authors:", error));
+      function confirmDelete(bookId) {
+        selectedBookId = bookId;
+        document.getElementById("deleteModal").style.display = "block";
       }
 
-      function fetchCategories() {
-        fetch("/api/category/get", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "1") {
-              const categorySelect = document.getElementById("categorySelect");
-              categorySelect.innerHTML = "";
-              data.data.forEach((category) => {
-                const option = document.createElement("option");
-                option.value = category.category_id;
-                option.textContent = category.category_name;
-                categorySelect.appendChild(option);
-              });
-            } else {
-              alert(`Lấy danh sách thể loại thất bại: ${data.message}`);
-            }
-          })
-          .catch((error) => console.error("Error fetching categories:", error));
-      }
+      document
+        .getElementById("confirmDeleteBtn")
+        .addEventListener("click", function () {
+          deleteBook(selectedBookId);
+          document.getElementById("deleteModal").style.display = "none";
+        });
 
-      function openDialog() {
-        fetchAuthors();
-        fetchCategories();
-
-        document.getElementById("dialog").classList.add("active");
-        document.getElementById("dialogOverlay").classList.add("active");
-      }
-
-      function openEditDialog(
-        bookId,
-        title = "",
-        authorId,
-        categoryId,
-        description = "",
-        publicationYear,
-        oldPrice,
-        newPrice,
-        bookAvatar,
-        quantity
-      ) {
-        isEditMode = true;
-        editBookId = bookId;
-        openDialog();
-        console.log("Quantity:", quantity);
-        document.getElementById("dialog-title").textContent = "Sửa sách";
-        document.getElementById("bookTitle").value = title;
-        document.getElementById("authorSelect").value = authorId;
-        document.getElementById("categorySelect").value = categoryId;
-        document.getElementById("description").value = description;
-        document.getElementById("publicationYear").value = publicationYear;
-        document.getElementById("oldPrice").value = oldPrice;
-        document.getElementById("newPrice").value = newPrice;
-        document.getElementById("quantity").value = quantity;
-      }
-      function resetDialog() {
-        document.getElementById("dialog-title").textContent = "Thêm sách";
-        document.getElementById("bookTitle").value = "";
-        document.getElementById("authorSelect").value = "";
-        document.getElementById("categorySelect").value = "";
-        document.getElementById("description").value = "";
-        document.getElementById("publicationYear").value = "";
-        document.getElementById("oldPrice").value = "";
-        document.getElementById("newPrice").value = "";
-        document.getElementById("quantity").value = "";
-      }
-      function openCreateDialog() {
-        resetDialog();
-        openDialog();
-      }
-
-      function closeDialog() {
-        document.getElementById("dialog").classList.remove("active");
-        document.getElementById("dialogOverlay").classList.remove("active");
-        isEditMode = false;
-        editBookId = null;
-      }
-
-      function saveBook() {
-        const formData = new FormData();
-        formData.append("title", document.getElementById("bookTitle").value);
-        formData.append(
-          "author_id",
-          document.getElementById("authorSelect").value
-        );
-        formData.append(
-          "category_id",
-          document.getElementById("categorySelect").value
-        );
-        formData.append(
-          "description",
-          document.getElementById("description").value
-        );
-        formData.append(
-          "publication_year",
-          document.getElementById("publicationYear").value
-        );
-        formData.append("quantity", document.getElementById("quantity").value);
-        formData.append("old_price", document.getElementById("oldPrice").value);
-        formData.append("new_price", document.getElementById("newPrice").value);
-        formData.append("book_id", editBookId);
-        const bookAvatarInput = document.getElementById("bookAvatar");
-        if (bookAvatarInput.files[0]) {
-          formData.append("book_avatar", bookAvatarInput.files[0]);
-        }
-
-        const url = isEditMode ? `/api/book/update` : "/api/book/add";
-        const method = "POST";
-        fetch(url, {
-          method: method,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "1") {
-              alert(`${isEditMode ? "Cập nhật" : "Thêm"} sách thành công`);
-              fetchBooks(currentPage);
-              closeDialog();
-            } else {
-              alert(
-                `${isEditMode ? "Cập nhật" : "Thêm"} sách thất bại: ${
-                  data.message
-                }`
-              );
-            }
-          })
-          .catch((error) => {
-            console.log("Error saving book:", error);
-            alert(
-              `Có lỗi xảy ra khi ${isEditMode ? "cập nhật" : "thêm"} sách: ${
-                error.message
-              }`
-            );
-          });
-      }
+      document
+        .getElementById("cancelDeleteBtn")
+        .addEventListener("click", function () {
+          document.getElementById("deleteModal").style.display = "none";
+        });
       async function deleteBook(bookId) {
         try {
           const response = await fetch("/api/book/delete", {

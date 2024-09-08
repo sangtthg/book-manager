@@ -10,10 +10,18 @@
     <%- include('navbar.ejs') %>
     <div style="margin-left: 275px">
       <h3>Danh sách sách</h3>
+      <button id="ccc">cccc</button>
     </div>
 
     <script>
       const token = localStorage.getItem("token");
+      console.log("Hello, World!");
+      const button = document.getElementById("ccc");
+
+      // Gán sự kiện click cho button
+      button.addEventListener("click", function () {
+        console.log("Button was clicked!");
+      });
     </script>
   </body>
 </html>

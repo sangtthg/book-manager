@@ -58,10 +58,10 @@
         vertical-align: middle;
       }
       .status-success {
-        background-color: #dc3545;
+        background-color: #28a745;
       }
       .status-failure {
-        background-color: #28a745;
+        background-color: #dc3545;
       }
       .status-container {
         margin-top: 20px;
@@ -83,7 +83,7 @@
   </head>
   <body>
     <%- include('navbar.ejs') %>
-    <div style="margin-left: 275px">
+    <div style="margin-left: 280px">
       <h3>Danh sách khách hàng</h3>
       <div class="search-container">
         <input
@@ -102,14 +102,14 @@
             <th scope="col">Ảnh</th>
             <th scope="col">Trạng thái</th>
             <th scope="col">Ngày đăng ký</th>
+            <th scope="col">Chức năng</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
       <div class="status-container">
-        <span class="status-circle status-success"></span> Trạng thái thất bại
-        <span class="status-circle status-failure"></span> Trạng thái thất thành
-        công
+        <span class="status-circle status-success"></span> Đang hoạt động
+        <span class="status-circle status-failure"></span> Không hoạt động
       </div>
     </div>
 
@@ -149,31 +149,38 @@
                   .toString()
                   .padStart(2, "0")}-${createdAt.getFullYear()}`;
 
-                const statusClass =
-                  user.user_status === "active"
-                    ? "status-success"
-                    : "status-failure";
+                // Xác định màu sắc của trạng thái dựa trên is_block
+                const statusClass = user.is_block
+                  ? "status-failure"
+                  : "status-success";
 
                 const row = document.createElement("tr");
                 row.innerHTML = `
-                  <td>${index + 1}</td>
-                  <td>${user.username}</td>
-                  <td>${user.email}</td>
-                  <td><img src="${user.avatar}" alt="${
+            <td>${index + 1}</td>
+            <td>${user.username}</td>
+            <td>${user.email}</td>
+            <td><img src="${user.avatar}" alt="${
                   user.username
                 }" style="width: 50px; height: 50px;"></td>
-                  <td><span class="status-circle ${statusClass}"></span></td>
-                  <td>${formattedDate}</td>
-                `;
+            <td><span class="status-circle ${statusClass}"></span></td>
+            <td>${formattedDate}</td>
+            <td>
+                <button class="btn-block-toggle" data-user-id="${
+                  user.user_id
+                }" data-is-block="${user.is_block}">
+                  ${user.is_block ? "Mở khóa" : "Khóa"}
+                </button>
+              </td>
+          `;
                 tableBody.appendChild(row);
               });
+              attachBlockToggleEvents();
             } else {
               alert(`Lấy danh sách người dùng thất bại: ${data.message}`);
             }
           })
           .catch((error) => console.error("Error fetching users:", error));
       }
-
       function searchCustomers() {
         const searchInput = document
           .getElementById("searchInput")
@@ -189,6 +196,46 @@
           } else {
             row.style.display = "none";
           }
+        });
+      }
+
+      function attachBlockToggleEvents() {
+        document.querySelectorAll(".btn-block-toggle").forEach((button) => {
+          button.addEventListener("click", async (event) => {
+            const userId = event.target.getAttribute("data-user-id");
+            const isBlock =
+              event.target.getAttribute("data-is-block") === "true";
+
+            const confirmMessage = isBlock
+              ? "Bạn có chắc chắn muốn mở khóa tài khoản này?"
+              : "Bạn có chắc chắn muốn khóa tài khoản này?";
+            if (confirm(confirmMessage)) {
+              const apiUrl = isBlock ? "/api/user/unblock" : "/api/user/block";
+
+              try {
+                const response = await fetch(apiUrl, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`, // Đảm bảo token được lấy từ localStorage
+                  },
+                  body: JSON.stringify({ user_id: userId }),
+                });
+
+                const result = await response.json();
+                if (result.status === "1") {
+                  alert("Thao tác thành công");
+                  // Reload hoặc cập nhật danh sách người dùng để phản ánh trạng thái mới
+                  location.reload();
+                } else {
+                  alert("Thao tác thất bại: " + result.message);
+                }
+              } catch (error) {
+                console.error("Error:", error);
+                alert("Có lỗi xảy ra, vui lòng thử lại.");
+              }
+            }
+          });
         });
       }
 

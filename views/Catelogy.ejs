@@ -7,7 +7,7 @@
     <style>
       table {
         width: 95%;
-        margin: 20px auto;
+        margin: 50px auto;
         border-collapse: collapse;
       }
       th,
@@ -101,7 +101,6 @@
         width: 150px;
         height: 40px;
         position: absolute;
-        top: 70px;
         right: 50px;
         padding: 5px 10px;
         background-color: #ff7622;
@@ -149,6 +148,64 @@
         cursor: pointer;
         border-radius: 5px;
       }
+
+      #prevPageIcon {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-content {
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 300px;
+        text-align: center;
+      }
+
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .close:hover,
+      .close:focus {
+        color: black;
+      }
+
+      .confirm-btn {
+        background-color: red;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      .cancel-btn {
+        background-color: grey;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        margin-left: 10px;
+      }
     </style>
   </head>
   <body>
@@ -158,8 +215,6 @@
         Danh sách thể loại
       </h3>
       <div class="addcategory">
-        <a class="nav-link" href="/admin/ListProduct">Danh sách Sách</a>
-        <a class="nav-link" href="/admin/Author">Tác giả</a>
         <button class="add-book-btn" onclick="openDialog()">
           Thêm thể loại
         </button>
@@ -205,48 +260,23 @@
         </thead>
         <tbody></tbody>
       </table>
-    </div>
 
+      <div class="pagination">
+        <button onclick="previousPage()" id="prevPageBtn">
+          <img src="/uploads/left.png" alt="Trang trước" id="prevPageIcon" />
+        </button>
+        <span id="page-indicator">Trang 1</span>
+        <button onclick="nextPage()" id="nextPageBtn">
+          <img src="/uploads/right.png" alt="Trang sau" id="prevPageIcon" />
+        </button>
+      </div>
+    </div>
     <script>
       const token = localStorage.getItem("token");
 
-      function fetchCategories() {
-        fetch("/api/category/get", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "1") {
-              const tableBody = document.querySelector("#category-table tbody");
-              tableBody.innerHTML = "";
-
-              data.data.forEach((category, index) => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                <td>${index + 1}</td>
-                  <td>${category.category_id}</td>
-                  <td>${category.category_name}</td>
-                  <td>${category.created_by}</td>
-                  <td>
-                    <button class="edit-button" onclick="openEditDialog(${
-                      category.category_id
-                    }, '${category.category_name}')">Sửa</button>
-                    <button class="delete-button" onclick="deleteCategory(${
-                      category.category_id
-                    })">Xóa</button>
-                  </td>
-                `;
-                tableBody.appendChild(row);
-              });
-            } else {
-              alert(`Lấy danh sách thể loại thất bại: ${data.message}`);
-            }
-          })
-          .catch((error) => console.error("Error fetching categories:", error));
-      }
+      const itemsPerPage = 10;
+      let currentPage = 1;
+      let totalItems = 0;
 
       function openDialog() {
         document.getElementById("dialog").classList.add("active");
@@ -346,29 +376,113 @@
           });
       }
 
-      function deleteCategory(category_id) {
-        fetch(`/api/category/delete/${categoryId}`, {
-          method: "DELETE",
+      function deleteCategory(categoryId) {
+        const confirmation = confirm(
+          "Bạn có chắc chắn muốn xóa thể loại này không?"
+        );
+
+        if (confirmation) {
+          // Nếu người dùng xác nhận xóa
+          fetch(`/api/category/delete`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ category_id: categoryId }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "1") {
+                alert("Xóa thể loại thành công!");
+                fetchCategories();
+              } else {
+                alert(`Xóa thể loại thất bại: ${data.message}`);
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("Có lỗi xảy ra.");
+            });
+        } else {
+          // Nếu người dùng hủy bỏ thao tác
+          alert("Thao tác xóa đã bị hủy.");
+        }
+      }
+
+      function fetchCategories(page = 1) {
+        fetch("/api/category/get", {
+          method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify({ page }),
         })
           .then((response) => response.json())
           .then((data) => {
             if (data.status === "1") {
-              alert("Xóa thể loại thành công!");
-              fetchCategories();
+              const tableBody = document.querySelector("#category-table tbody");
+              tableBody.innerHTML = "";
+
+              data.data.forEach((category, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                <td>${(currentPage - 1) * itemsPerPage + index + 1}</td>
+                <td>${category.category_id}</td>
+                <td>${category.category_name}</td>
+                <td>${category.created_by}</td>
+                <td>
+                  <button class="edit-button" onclick="openEditDialog(${
+                    category.category_id
+                  }, '${category.category_name}')">Sửa</button>
+                  <button class="delete-button" onclick="deleteCategory(${
+                    category.category_id
+                  })">Xóa</button>
+
+                </td>
+              `;
+                tableBody.appendChild(row);
+              });
+
+              document.getElementById(
+                "page-indicator"
+              ).textContent = `Trang ${page}`;
+              totalItems = data.totalItems;
+              currentPage = page;
+              updatePaginationButtons(page);
             } else {
-              alert(`Xóa thể loại thất bại: ${data.message}`);
+              alert(`Lấy danh sách thể loại thất bại: ${data.message}`);
             }
           })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Có lỗi xảy ra.");
-          });
+          .catch((error) => console.error("Error fetching categories:", error));
       }
 
-      document.addEventListener("DOMContentLoaded", fetchCategories);
+      function updatePaginationButtons(page) {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const previousButton = document.querySelector("#prevPageBtn");
+        const nextButton = document.querySelector("#nextPageBtn");
+
+        previousButton.disabled = page <= 1;
+        nextButton.disabled = page >= totalPages;
+      }
+
+      function previousPage() {
+        if (currentPage > 1) {
+          fetchCategories(currentPage - 1);
+        }
+      }
+
+      function nextPage() {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        if (currentPage < totalPages) {
+          fetchCategories(currentPage + 1);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchCategories(currentPage);
+      });
 
       closeDialog();
     </script>
