@@ -9,4 +9,6 @@ router.get("/edit/:id", voucherController.editVoucher);
 router.post("/delete/:id", voucherController.deleteVoucher);
 router.get("/search", voucherController.searchVouchers);
 
+router.get("/json", voucherController.getAllVouchersJson);
+
 module.exports = router;

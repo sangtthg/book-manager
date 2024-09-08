@@ -118,3 +118,12 @@ exports.editVoucher = async (req, res) => {
     res.status(500).send(error.message);
   }
 };
+
+exports.getAllVouchersJson = async (req, res) => {
+  try {
+    const vouchers = await Voucher.findAll();
+    res.json(vouchers);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};

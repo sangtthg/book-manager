@@ -33,9 +33,6 @@ exports.createOrder = async (req, res) => {
 
     let totalPrice = 0;
     let totalQuantity = 0;
-    let discount = 0;
-    let voucherId = null;
-
     const items = [];
 
     for (const cart of carts) {
@@ -149,7 +146,6 @@ exports.createOrder = async (req, res) => {
       totalPrice: totalPrice,
       totalQuantity: totalQuantity,
       shippingFee: shippingFee,
-      discount: discount,
       items,
       deliveryDateText,
     });
@@ -326,7 +322,7 @@ exports.updateStatus = async (req, res) => {
 exports.payOrder = async (req, res) => {
   try {
     const user_id = req.auth.user_id;
-    const { orderId } = req.body;
+    const { orderId, code } = req.body;
     const user = await User.findOne({
       where: {
         user_id,
@@ -344,6 +340,66 @@ exports.payOrder = async (req, res) => {
         status: -1,
       });
     }
+
+    let totalPrice = orderItem.totalPrice;
+    let discount = 0;
+
+    if (code) {
+      const voucher = await Voucher.findOne({
+        where: {
+          code: code,
+        },
+      });
+
+      if (!voucher) {
+        return res.json({ code: 5, message: "Không tìm thấy mã voucher" });
+      }
+
+      const userVoucher = await UserVoucher.findOne({
+        where: {
+          userId: user_id,
+          voucherId: voucher.id,
+        },
+      });
+
+      if (userVoucher) {
+        return res.json({ code: 6, message: "Bạn đã sử dụng voucher này rồi" });
+      }
+
+      const now = moment();
+      const validFrom = moment(voucher.validFrom);
+      const validTo = moment(voucher.validTo);
+
+      if (now.isBefore(validFrom) || now.isAfter(validTo)) {
+        return res.json({
+          code: 7,
+          message: "Voucher đã hết hạn hoặc chưa bắt đầu",
+        });
+      }
+
+      if (voucher.quantity <= 0) {
+        return res.json({
+          code: 8,
+          message: "Voucher đã hết số lượng sử dụng",
+        });
+      }
+
+      discount = voucher.discountAmount || 0;
+      totalPrice -= discount;
+
+      await voucher.update({ quantity: voucher.quantity - 1 });
+
+      await UserVoucher.create({
+        userId: user_id,
+        voucherId: voucher.id,
+      });
+
+      await orderItem.update({
+        totalPrice: totalPrice,
+        voucherId: voucher.id,
+      });
+    }
+
     const items = JSON.parse(orderItem.items);
     for (const item of items) {
       const book = await Book.findOne({
@@ -356,6 +412,7 @@ exports.payOrder = async (req, res) => {
         });
       }
     }
+
     await PaymentTransaction.create({
       customerId: user_id,
       fullName: user.username,
@@ -363,20 +420,21 @@ exports.payOrder = async (req, res) => {
       totalAmount: orderItem.totalPrice,
       paymentMethod: "banking",
       orderId,
-      totalMoneyAfterDiscount: orderItem.totalPrice,
+      totalMoneyAfterDiscount: totalPrice,
     });
 
     const payUrl = await VnpayTransactionController.createPayUrl({
       customer: user_id,
       order: orderId,
-      totalAmount: orderItem.totalPrice,
+      totalAmount: totalPrice,
       ip: req.ip,
       merchantReturnUrl:
         "https://book-manager-phi.vercel.app/payment/payment-callback",
     });
+
     return res.json({
       status: "0",
-      message: " Thành công!",
+      message: "Thành công!",
       payUrl: payUrl,
     });
   } catch (error) {
