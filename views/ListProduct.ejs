@@ -351,6 +351,7 @@
 
   <body>
     <%- include('navbar.ejs') %>
+
     <div class="main">
       <h3 class="h3_table">Danh sách sản phẩm</h3>
       <div class="addbook_category">
@@ -361,12 +362,10 @@
           <tr>
             <th>STT</th>
             <th>Mã Sách</th>
-            <th>Tên Sách</th>
-            <th>Tác giả</th>
-            <th>Thể loại</th>
-            <th>Mô tả</th>
-            <th>Năm xuất bản</th>
             <th>Ảnh bìa</th>
+            <th>Tên Sách</th>
+            <th>Năm xuất bản</th>
+
             <th>Giá cũ</th>
             <th>Giá mới</th>
             <th>Chức năng</th>
@@ -382,69 +381,6 @@
         <button onclick="nextPage()" id="prevPageBtn">
           <img src="/uploads/right.png" alt="Trang sau" id="prevPageIcon" />
         </button>
-      </div>
-
-      <div class="addbook">
-        <div class="dialog-overlay" id="dialogOverlay"></div>
-        <div class="dialog" id="dialog" style="width: 50%">
-          <h3 id="dialog-title" style="font-size: 25px; color: #ff7622">
-            Thêm sách
-          </h3>
-
-          <div class="form-group">
-            <label for="bookTitle">Tên sách</label>
-            <input type="text" id="bookTitle" name="title" />
-          </div>
-          <div class="form-group">
-            <label for="authorSelect">Tác giả</label>
-            <select id="authorSelect" name="author_id"></select>
-          </div>
-          <div class="form-group">
-            <label for="categorySelect">Thể loại</label>
-            <select id="categorySelect" name="category_id"></select>
-          </div>
-          <div class="form-group">
-            <label for="description">Mô tả</label>
-            <textarea id="description" name="description"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="quantity">Số lượng</label>
-            <textarea type="number" id="quantity" name="quantity"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="publicationYear">Năm xuất bản</label>
-            <input type="number" id="publicationYear" name="publication_year" />
-          </div>
-          <div class="form-group">
-            <label for="oldPrice">Giá cũ</label>
-            <input type="number" id="oldPrice" name="old_price" />
-          </div>
-          <div class="form-group">
-            <label for="newPrice">Giá mới</label>
-            <input type="number" id="newPrice" name="new_price" />
-          </div>
-          <div class="form-group">
-            <label for="bookAvatar" class="custom-file-upload">
-              Chọn ảnh bìa
-            </label>
-            <input type="file" id="bookAvatar" name="book_avatar" />
-          </div>
-
-          <div class="form-actions">
-            <button
-              onclick="saveBook()"
-              style="background-color: #4caf50; color: #fff"
-            >
-              Lưu
-            </button>
-            <button
-              onclick="closeDialog()"
-              style="background-color: #f44336; color: #fff"
-            >
-              Hủy
-            </button>
-          </div>
-        </div>
       </div>
     </div>
     <div id="deleteModal" class="modal" style="display: none">
@@ -494,7 +430,7 @@
           })
           .then((data) => {
             if (data.status == "1") {
-              booksData = data.data.data; // Lưu dữ liệu sách vào biến toàn cục
+              booksData = data.data.data;
               const tableBody = document.querySelector("#book-table tbody");
               tableBody.innerHTML = "";
 
@@ -504,14 +440,13 @@
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${book.book_id}</td>
-                    <td class="csstitle">${book.title}</td>
-                    <td>${book.author_name}</td>
-                    <td>${book.category_name}</td>
-                    <td class="ellipsis">${book.description}</td>
-                    <td>${book.publication_year}</td>
                     <td><img src="${book.book_avatar}" alt="${
                   book.title
-                }" width="50"></td>
+                }" width="70"></td>
+                    <td class="csstitle">${book.title}</td>
+                
+                    <td>${book.publication_year}</td>
+              
                     <td>${book.old_price}</td>
                     <td>${book.new_price}</td>
                     <td>
@@ -560,8 +495,6 @@
       }
       function handleRowClick(bookId) {
         console.log("Dòng bảng với mã sách:", bookId, "đã được click");
-
-        // window.location.href = `/admin/DetailBook`;
         window.location.href = `/admin/DetailBook/${bookId}`;
       }
       function updatePaginationButtons(page) {

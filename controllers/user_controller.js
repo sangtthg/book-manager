@@ -78,7 +78,6 @@ module.exports.controller = (app, io, socket_list) => {
     upload.single("avatar"),
     helper.checkRole,
     (req, res) => {
-      console.log("sangsss:", req.body);
       helper.CheckParameterValid(
         res,
         req.body,
@@ -247,44 +246,8 @@ module.exports.controller = (app, io, socket_list) => {
       );
     }
   );
-  // app.post("/api/otp/change_password", (req, res) => {
-  //   helper.Dlog(req.body);
-  //   const reqObj = req.body;
 
-  //   helper.CheckParameterValid(res, reqObj, ["email"], async () => {
-  //     const { email } = reqObj;
-  //     const user = await User.findOne({ where: { email: email } });
-  //     if (!user) {
-  //       return res.json({ status: "0", message: "Email không tồn tại" });
-  //     }
-
-  //     const otp = await sendOTPEmail(email, OtpTypes.CHANGE_PASSWORD);
-  //     res.json({ status: "1", message: msg_success, data: otp });
-  //   });
-  // });
-
-  // app.post("/api/otp/verify-change-password", (req, res) => {
-  //   helper.Dlog(req.body);
-  //   const reqObj = req.body;
-  //   helper.CheckParameterValid(
-  //     res,
-  //     reqObj,
-  //     ["email", "otp_id", "otp"],
-  //     async () => {
-  //       const { email, otp_id, otp } = reqObj;
-  //       const verify = await verifyOTP(
-  //         otp_id,
-  //         email,
-  //         otp,
-  //         OtpTypes.CHANGE_PASSWORD
-  //       );
-  //       if (!verify) {
-  //         return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
-  //       }
-  //       return res.json({ status: "1", message: msg_success });
-  //     }
-  //   );
-  // });
+  // member update
 
   app.post("/api/user/change-password", helper.authorization, (req, res) => {
     helper.Dlog(req.body);
@@ -338,6 +301,45 @@ module.exports.controller = (app, io, socket_list) => {
       }
     );
   });
+  // delete
+  app.post(
+    "/api/user/delete",
+    helper.authorization,
+    helper.checkRole,
+    async (req, res) => {
+      try {
+        const { user_id } = req.body;
+
+        // Kiểm tra quyền của người thực hiện hành động
+        if (req.auth.role === "admin") {
+          return res.json({
+            status: "0",
+            message: "Bạn không có quyền thực hiện hành động này",
+          });
+        }
+        // Kiểm tra người dùng có tồn tại không
+        const user = await User.findOne({ where: { user_id } });
+
+        if (!user) {
+          return res.json({
+            status: "0",
+            message: "Người dùng không tồn tại.",
+          });
+        }
+        // Xóa người dùng
+        await User.destroy({ where: { user_id } });
+
+        res.json({
+          status: "1",
+          message: "Người dùng đã được xóa thành công.",
+        });
+      } catch (error) {
+        console.log("/api/user/delete", error);
+        res.json({ status: "0", message: "Có lỗi xảy ra." });
+      }
+    }
+  );
+
   // api block  user
   app.post(
     "/api/user/block",

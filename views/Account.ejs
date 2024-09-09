@@ -61,26 +61,34 @@
     <div class="account-container">
       <h2>Thông Tin Tài Khoản</h2>
       <div class="account-details">
-        <p><strong>Email:</strong> <span id="email"></span></p>
-        <p><strong>Username:</strong> <span id="username"></span></p>
+        <img
+          id="avatar-account"
+          src=""
+          alt="User Avatar"
+          width="200px"
+          height="200px"
+        />
+        <p><strong>Email:</strong> <span id="email-account"></span></p>
+        <p><strong>Username:</strong> <span id="username-account"></span></p>
         <p><strong>Role:</strong> <span id="role"></span></p>
       </div>
-
-      <button class="logout-btn" id="logoutBtn">Đăng Xuất</button>
+      <div>
+        <button class="update-btn" id="update">Cập nhập tài khoản</button>
+        <button class="logout-btn" id="logoutBtn">Đăng Xuất</button>
+      </div>
     </div>
 
     <script>
-      const user = JSON.parse(localStorage.getItem("user"));
-      const role = localStorage.getItem("role");
+      document.addEventListener("DOMContentLoaded", function () {
+        if (user) {
+          document.getElementById("username-account").innerHTML = user.username;
+          document.getElementById("email-account").textContent = user.email;
+          document.getElementById("role").textContent = user.role;
 
-      if (user) {
-        document.getElementById("email").textContent = user.email;
-        document.getElementById("username").textContent = user.username;
-      }
-
-      if (role) {
-        document.getElementById("role").textContent = role;
-      }
+          const avatarElement = document.getElementById("avatar-account");
+          avatarElement.src = user.avatar;
+        }
+      });
       // Đăng xuất
       document
         .getElementById("logoutBtn")

@@ -13,7 +13,6 @@
       rel="stylesheet"
     />
     <style>
- 
       .sidebar {
         background-color: #343a40;
         min-height: 100vh;
@@ -50,23 +49,31 @@
         color: #007bff;
       }
       .nav-link.active {
-          background-color: #be22b4;
-          color: #fff;
-        }
-        .content {
-        margin-left: 300px; /* Bù trừ không gian cho sidebar */
+        background-color: #be22b4;
+        color: #fff;
+      }
+      .content {
+        margin-left: 300px;
         padding: 20px;
       }
-
     </style>
   </head>
   <body>
     <nav class="sidebar">
-      <h3 class="sidebar-brand">Chào Đạt</h3>
+      <img
+        id="user-avatar"
+        src=""
+        alt="User Avatar"
+        style="
+          width: 150px;
+          height: 150px;
+          border-radius: 50%;
+          margin-left: 46px;
+        "
+      />
+      <h3 class="sidebar-brand" id="username">Chào Đạt</h3>
 
-      
       <ul class="nav flex-column">
-   
         <li class="nav-itemm">
           <a class="nav-link" href="/admin/ListProduct">
             <i class="fas fa-list"></i> Danh sách sản phẩm
@@ -74,58 +81,65 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="/admin/User"
-            ><i class="fas fa-users"></i> Danh sách khách hàng</a
-          >
+          <a class="nav-link" href="/admin/User">
+            <i class="fas fa-users"></i> Danh sách khách hàng
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/admin/vouchers"
-            ><i class="fas fa-tag"></i> Danh sách mã giảm giá</a
-          >
+          <a class="nav-link" href="/admin/vouchers">
+            <i class="fas fa-tag"></i> Danh sách mã giảm giá
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/notification/create"
-            ><i class="fas fa-bell"></i> Thông báo</a
-          >
+          <a class="nav-link" href="/notification/create">
+            <i class="fas fa-bell"></i> Thông báo
+          </a>
         </li>
-        
 
-        </li>
-     
         <li class="nav-item">
-          <a class="nav-link" href="/admin/orders"
-            ><i class="fas fa-clipboard-list"></i> Danh sách order</a
-          >
+          <a class="nav-link" href="/admin/orders">
+            <i class="fas fa-clipboard-list"></i> Danh sách order
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/admin/reviews"
-            ><i class="fas fa-star"></i> Đánh giá</a
-          >
+          <a class="nav-link" href="/admin/reviews">
+            <i class="fas fa-star"></i> Đánh giá
+          </a>
+        </li>
+        <li class="nav-item" id="revenue-stats">
+          <a class="nav-link" href="/statistics/revenue">
+            <i class="fas fa-chart-line"></i> Thống kê doanh thu
+          </a>
+        </li>
+        <li class="nav-item" id="customers-stats">
+          <a class="nav-link" href="/statistics/customers">
+            <i class="fas fa-chart-bar"></i> Thống kê khách hàng
+          </a>
+        </li>
+        <li class="nav-item" id="members">
+          <a class="nav-link" href="/admin/Member">
+            <i class="fas fa-user-friends"></i> Thành viên
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/statistics/revenue"
-            ><i class="fas fa-chart-line"></i> Thống kê doanh thu</a
-          >
+          <a class="nav-link" href="/admin/Account">
+            <i class="fas fa-user-circle"></i> Tài khoản
+          </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/statistics/customers"
-            ><i class="fas fa-chart-bar"></i> Thống kê khách hàng</a
-          >
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/admin/Member"
-            ><i class="fas fa-user-friends"></i> Thành viên</a
-          >
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/admin/Account"
-            ><i class="fas fa-user-circle"></i> Tài khoản</a
-          >
-        </li>
-        
       </ul>
     </nav>
     <script>
+      const user = JSON.parse(localStorage.getItem("user"));
+      const avatarElement = document.getElementById("user-avatar");
+      const role = localStorage.getItem("role");
+
+      document.getElementById("username").innerText = user.username;
+      avatarElement.src = user.avatar;
+
+      if (role === "member") {
+        document.getElementById("revenue-stats").style.display = "none";
+        document.getElementById("members").style.display = "none";
+      }
 
       document
         .querySelector(".nav-itemm")
@@ -134,11 +148,13 @@
           dropdown.className = "dropdown";
 
           const item1 = document.createElement("li");
-          item1.innerHTML = '<a href="/admin/Category">Thể Loại</a>';
+          item1.innerHTML =
+            '<a href="/admin/Category" ><i class="fas fa-tags"></i>   Thể Loại</a>';
           dropdown.appendChild(item1);
 
           const item2 = document.createElement("li");
-          item2.innerHTML = '<a href="/admin/Author">Tác giả</a>';
+          item2.innerHTML =
+            '<a href="/admin/Author"><i class="fas fa-pen"></i>   Tác giả</a>';
           dropdown.appendChild(item2);
 
           this.appendChild(dropdown);

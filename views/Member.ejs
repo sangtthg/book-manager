@@ -105,22 +105,35 @@
         font-weight: bold;
         margin-left: 10px;
       }
+
+      .add-member {
+        width: 150px;
+        height: 40px;
+        position: absolute;
+
+        right: 50px;
+        padding: 5px 10px;
+        background-color: #ff7622;
+        color: white;
+        font-weight: bold;
+        font-family: "Times New Roman", Times, serif;
+        border: none;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 17px;
+      }
+
+      .add-member:hover {
+        background-color: #0056b3;
+      }
     </style>
   </head>
   <body>
     <%- include('navbar.ejs') %>
     <div style="margin-left: 280px">
       <h3>Danh sách nhân viên</h3>
-      <div class="add_member">
-        <a
-          class="nav-link"
-          href="javascript:void(0)"
-          onclick="openDialog()"
-          style="color: rgb(255, 255, 255)"
-          >Thêm nhân viên</a
-        >
-      </div>
-      <table id="user-table" style="margin-top: 50px">
+      <button class="add-member" id="addMemberButton">Thêm nhân viên</button>
+      <table id="user-table" style="margin-top: 70px">
         <thead>
           <tr>
             <th>Email</th>
@@ -178,7 +191,61 @@
       let currentPage = 1;
       const itemsPerPage = 10;
       let totalItems = 0;
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchUsers(currentPage);
+        document
+          .getElementById("addMemberButton")
+          .addEventListener("click", openDialog);
 
+        document
+          .getElementById("add-member-form")
+          .addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const formData = new FormData(this);
+            const token = localStorage.getItem("token");
+
+            fetch("/api/user/add", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              body: formData,
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.status === "1") {
+                  alert("Thêm nhân viên thành công!");
+                  closeDialog();
+                  fetchUsers(currentPage); // Refresh user list
+                } else {
+                  alert(`Thêm nhân viên thất bại: ${data.message}`);
+                }
+              })
+              .catch((error) => console.error("Error adding user:", error));
+          });
+      });
+
+      document.getElementById("prev-page").addEventListener("click", () => {
+        if (currentPage > 1) {
+          fetchUsers(--currentPage);
+        }
+      });
+
+      document.getElementById("next-page").addEventListener("click", () => {
+        if (currentPage < Math.ceil(totalItems / itemsPerPage)) {
+          fetchUsers(++currentPage);
+        }
+      });
+      function openDialog() {
+        document.getElementById("dialog-overlay").classList.add("active");
+        document.getElementById("add-member-dialog").classList.add("active");
+      }
+
+      function closeDialog() {
+        document.getElementById("dialog-overlay").classList.remove("active");
+        document.getElementById("add-member-dialog").classList.remove("active");
+      }
       function fetchUsers(page = 1) {
         fetch("/api/user/get", {
           method: "POST",
@@ -227,43 +294,6 @@
           .catch((error) => console.error("Error fetching users:", error));
       }
 
-      function openDialog() {
-        document.getElementById("dialog-overlay").classList.add("active");
-        document.getElementById("add-member-dialog").classList.add("active");
-      }
-
-      function closeDialog() {
-        document.getElementById("dialog-overlay").classList.remove("active");
-        document.getElementById("add-member-dialog").classList.remove("active");
-      }
-
-      document
-        .getElementById("add-member-form")
-        .addEventListener("submit", function (event) {
-          event.preventDefault();
-
-          const formData = new FormData(this);
-
-          fetch("/api/user/add", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.status === "1") {
-                alert("Thêm nhân viên thành công");
-                closeDialog();
-                fetchUsers(currentPage); // Refresh user list
-              } else {
-                alert(`Thêm nhân viên thất bại: ${data.message}`);
-              }
-            })
-            .catch((error) => console.error("Error adding user:", error));
-        });
-
       function updatePaginationButtons(page) {
         const prevButton = document.getElementById("prev-page");
         const nextButton = document.getElementById("next-page");
@@ -271,22 +301,6 @@
         prevButton.disabled = page === 1;
         nextButton.disabled = page === Math.ceil(totalItems / itemsPerPage);
       }
-
-      document.getElementById("prev-page").addEventListener("click", () => {
-        if (currentPage > 1) {
-          fetchUsers(--currentPage);
-        }
-      });
-
-      document.getElementById("next-page").addEventListener("click", () => {
-        if (currentPage < Math.ceil(totalItems / itemsPerPage)) {
-          fetchUsers(++currentPage);
-        }
-      });
-
-      document.addEventListener("DOMContentLoaded", () => {
-        fetchUsers(currentPage);
-      });
     </script>
   </body>
 </html>
