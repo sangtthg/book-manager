@@ -522,6 +522,9 @@
                           book.book_id
                         })">Xóa</button>
                     </td>`;
+                row.addEventListener("click", () => {
+                  handleRowClick(book.book_id);
+                });
                 tableBody.appendChild(row);
               });
 
@@ -555,7 +558,12 @@
             alert(`Có lỗi xảy ra khi lấy danh sách sách: ${error.message}`);
           });
       }
+      function handleRowClick(bookId) {
+        console.log("Dòng bảng với mã sách:", bookId, "đã được click");
 
+        // window.location.href = `/admin/DetailBook`;
+        window.location.href = `/admin/DetailBook/${bookId}`;
+      }
       function updatePaginationButtons(page) {
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         const previousButton = document.querySelector(

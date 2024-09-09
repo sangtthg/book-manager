@@ -29,65 +29,69 @@
       color: #34495e;
     }
     .btn-primary {
-      background-color: #3498db;
-      border-color: #3498db;
+      background-color: #ff7622;
+      border-color: #ff7622;
     }
     .btn-primary:hover {
-      background-color: #2980b9;
-      border-color: #2980b9;
+      background-color: #ff7622;
+      border-color: #ff7622;
     }
     .form-control:focus, .form-select:focus {
-      border-color: #3498db;
+      border-color: #ff7622;
       box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1 class="mb-4 text-center">Chỉnh sửa Voucher</h1>
-    <form action="/admin/vouchers/update/<%= voucher.id %>" method="post">
-      <div class="row">
-        <div class="col-md-6">
-          <div class="mb-3">
-            <label for="code" class="form-label"><i class="fas fa-barcode"></i> Mã Voucher</label>
-            <input type="text" id="code" name="code" class="form-control" value="<%= voucher.code %>" required>
+  <%- include('navbar.ejs') %>
+  <div style="margin-left: 290px; margin-right: 10px; " >
+    <div class="container">
+      <h1 class="mb-4 text-center" style="color:#ff7622 ;">Chỉnh sửa Voucher</h1>
+      <form action="/admin/vouchers/update/<%= voucher.id %>" method="post">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="code" class="form-label"><i class="fas fa-barcode"></i> Mã Voucher</label>
+              <input type="text" id="code" name="code" class="form-control" value="<%= voucher.code %>" required>
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label"><i class="fas fa-info-circle"></i> Mô tả</label>
+              <textarea id="description" name="description" class="form-control" rows="3"><%= voucher.description %></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="quantity" class="form-label"><i class="fas fa-list-ol"></i> Số lượng</label>
+              <input type="number" id="quantity" name="quantity" class="form-control" value="<%= voucher.quantity %>" required>
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="description" class="form-label"><i class="fas fa-info-circle"></i> Mô tả</label>
-            <textarea id="description" name="description" class="form-control" rows="3"><%= voucher.description %></textarea>
-          </div>
-          <div class="mb-3">
-            <label for="quantity" class="form-label"><i class="fas fa-list-ol"></i> Số lượng</label>
-            <input type="number" id="quantity" name="quantity" class="form-control" value="<%= voucher.quantity %>" required>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="status" class="form-label"><i class="fas fa-toggle-on"></i> Trạng thái</label>
+              <select id="status" name="status" class="form-select" required>
+                <option value="active" <%= voucher.status === 'active' ? 'selected' : '' %>>Hoạt động</option>
+                <option value="inactive" <%= voucher.status === 'inactive' ? 'selected' : '' %>>Không hoạt động</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="validFrom" class="form-label"><i class="fas fa-calendar-plus"></i> Ngày bắt đầu</label>
+              <input type="date" id="validFrom" name="validFrom" class="form-control" value="<%= voucher.validFrom %>" required>
+            </div>
+            <div class="mb-3">
+              <label for="validTo" class="form-label"><i class="fas fa-calendar-minus"></i> Ngày kết thúc</label>
+              <input type="date" id="validTo" name="validTo" class="form-control" value="<%= voucher.validTo %>" required>
+            </div>
+            <div class="mb-3">
+              <label for="discountAmount" class="form-label"><i class="fas fa-percent"></i> Giá trị giảm giá</label>
+              <input type="number" step="0.01" id="discountAmount" name="discountAmount" class="form-control" value="<%= voucher.discountAmount %>" required>
+            </div>
           </div>
         </div>
-        <div class="col-md-6">
-          <div class="mb-3">
-            <label for="status" class="form-label"><i class="fas fa-toggle-on"></i> Trạng thái</label>
-            <select id="status" name="status" class="form-select" required>
-              <option value="active" <%= voucher.status === 'active' ? 'selected' : '' %>>Hoạt động</option>
-              <option value="inactive" <%= voucher.status === 'inactive' ? 'selected' : '' %>>Không hoạt động</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="validFrom" class="form-label"><i class="fas fa-calendar-plus"></i> Ngày bắt đầu</label>
-            <input type="date" id="validFrom" name="validFrom" class="form-control" value="<%= voucher.validFrom %>" required>
-          </div>
-          <div class="mb-3">
-            <label for="validTo" class="form-label"><i class="fas fa-calendar-minus"></i> Ngày kết thúc</label>
-            <input type="date" id="validTo" name="validTo" class="form-control" value="<%= voucher.validTo %>" required>
-          </div>
-          <div class="mb-3">
-            <label for="discountAmount" class="form-label"><i class="fas fa-percent"></i> Giá trị giảm giá</label>
-            <input type="number" step="0.01" id="discountAmount" name="discountAmount" class="form-control" value="<%= voucher.discountAmount %>" required>
-          </div>
+        <div class="text-center mt-4">
+          <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save"></i> Cập nhật Voucher</button>
         </div>
-      </div>
-      <div class="text-center mt-4">
-        <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save"></i> Cập nhật Voucher</button>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>

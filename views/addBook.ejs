@@ -107,6 +107,7 @@
     </style>
   </style>
   <body>
+    <%- include('navbar.ejs') %>
     <div class="container">
       <h1>Thêm sách mới</h1>
       <div class="form-group">
@@ -214,7 +215,7 @@
         })
         .catch((error) => console.error("Error fetching categories:", error));
     }
-    
+
     function saveBook() {
   // Hiển thị overlay loading
   document.getElementById("loadingOverlay").style.display = "flex";

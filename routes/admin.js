@@ -21,10 +21,12 @@ const order = path.join(__dirname, "../views/orders.ejs");
 const reviews = path.join(__dirname, "../views/reviews.ejs");
 const addBook = path.join(__dirname, "../views/addBook.ejs");
 const updateBook = path.join(__dirname, "../views/updateBook.ejs");
+const detailBook = path.join(__dirname, "../views/Detail_Book.ejs");
 
-router.get("/home", function (req, res, next) {
-  res.render(home);
-});
+// router.get("/home/:id", function (req, res, next) {
+//   const bookId = req.params.id;
+//   res.render("detailBook", { bookId });
+// });
 router.get("/order", function (req, res, next) {
   res.render(order);
 });
@@ -65,6 +67,10 @@ router.get("/addbook", (req, res) => {
 router.get("/updatebook/:id", (req, res) => {
   const bookId = req.params.id;
   res.render("updateBook", { bookId });
+});
+router.get("/DetailBook/:id", (req, res) => {
+  const bookId = req.params.id;
+  res.render("Detail_Book", { bookId });
 });
 
 module.exports = router;

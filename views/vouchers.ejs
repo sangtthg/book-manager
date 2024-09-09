@@ -9,102 +9,54 @@
       rel="stylesheet"
     />
   </head>
-  <style></style>
   <body>
     <%- include('navbar.ejs') %>
     <div style="margin-left: 280px">
       <div class="container mt-4">
-        <h1 class="mb-4">Vouchers</h1>
+        <h1 class="mb-4" style="color: #ff7622">Danh sách mã giảm giá</h1>
         <form action="/admin/vouchers/search" method="get" class="mb-4">
           <div class="form-group">
-            <label for="search">Search Vouchers</label>
-            <input
-              type="text"
-              id="search"
-              name="search"
-              class="form-control"
-              placeholder="Enter voucher code or description"
-            />
+            <label for="search">Tìm kiếm Vouchers</label>
+            <div class="input-group">
+              <input
+                type="text"
+                id="search"
+                name="search"
+                class="form-control"
+                placeholder="Enter voucher code or description"
+              />
+              <div class="input-group-append">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  style="
+                    background-color: #ff7622;
+                    border: 2px solid #ff7622;
+                    color: #fff;
+                  "
+                  ;
+                >
+                  Tìm kiếm
+                </button>
+              </div>
+            </div>
           </div>
-          <button type="submit" class="btn btn-primary">Search</button>
         </form>
-        <!-- Create Voucher Form -->
-        <form action="/admin/vouchers/create" method="post" class="mb-4">
-          <div class="form-group">
-            <label for="code">Voucher Code</label>
-            <input
-              type="text"
-              id="code"
-              name="code"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="description">Description</label>
-            <input
-              type="text"
-              id="description"
-              name="description"
-              class="form-control"
-            />
-          </div>
-          <div class="form-group">
-            <label for="quantity">Quantity</label>
-            <input
-              type="number"
-              id="quantity"
-              name="quantity"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="validFrom">Valid From</label>
-            <input
-              type="date"
-              id="validFrom"
-              name="validFrom"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="validTo">Valid To</label>
-            <input
-              type="date"
-              id="validTo"
-              name="validTo"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="discountAmount">Discount Amount</label>
-            <input
-              type="number"
-              step="0.01"
-              id="discountAmount"
-              name="discountAmount"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" name="status" class="form-control" required>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            style="background-color: #ff7622"
-          >
-            Thêm Voucher
-          </button>
-        </form>
+
+        <!-- Button to trigger modal -->
+        <button
+          type="button"
+          class="btn btn-primary mb-4"
+          style="
+            background-color: #ff7622;
+            border: 2px solid #ff7622;
+            color: #fff;
+          "
+          data-toggle="modal"
+          data-target="#createVoucherModal"
+        >
+          Thêm Voucher
+        </button>
 
         <!-- Voucher List -->
         <table class="table table-bordered">
@@ -112,14 +64,14 @@
             <tr style="background-color: #ff7622; color: aliceblue">
               <th style="text-align: center">ID</th>
               <th style="text-align: center">Ngày tạo</th>
-              <th style="text-align: center">Code</th>
-              <th style="text-align: center">Description</th>
-              <th style="text-align: center">Quantity</th>
-              <th style="text-align: center">Valid From</th>
-              <th style="text-align: center">Valid To</th>
-              <th style="text-align: center">Discount Amount</th>
-              <th style="text-align: center">Status</th>
-              <th style="text-align: center">Is Expired</th>
+              <th style="text-align: center">Code mã</th>
+              <th style="text-align: center">Mô tả</th>
+              <th style="text-align: center">Số lượng</th>
+              <th style="text-align: center">Ngày bắt đầu</th>
+              <th style="text-align: center">Ngày hết hạn</th>
+              <th style="text-align: center">Giá trị giảm</th>
+              <th style="text-align: center">Trạng thái</th>
+              <th style="text-align: center">thời hạn</th>
               <th style="text-align: center">Chức năng</th>
             </tr>
           </thead>
@@ -146,6 +98,7 @@
                   action="/admin/vouchers/delete/<%= voucher.id %>"
                   method="post"
                   style="display: inline"
+                  onsubmit="return confirmDeletion()"
                 >
                   <button type="submit" class="btn btn-danger btn-sm">
                     Xoá
@@ -159,9 +112,144 @@
       </div>
     </div>
 
+    <!-- Create Voucher Modal -->
+    <div
+      class="modal fade"
+      id="createVoucherModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="createVoucherModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="createVoucherModalLabel">
+              Thêm Voucher
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form
+              id="createVoucherForm"
+              action="/admin/vouchers/create"
+              method="post"
+            >
+              <div class="form-group">
+                <label for="modalCode">Voucher Code</label>
+                <input
+                  type="text"
+                  id="modalCode"
+                  name="code"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="modalDescription">Description</label>
+                <input
+                  type="text"
+                  id="modalDescription"
+                  name="description"
+                  class="form-control"
+                />
+              </div>
+              <div class="form-group">
+                <label for="modalQuantity">Quantity</label>
+                <input
+                  type="number"
+                  id="modalQuantity"
+                  name="quantity"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="modalValidFrom">Valid From</label>
+                <input
+                  type="date"
+                  id="modalValidFrom"
+                  name="validFrom"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="modalValidTo">Valid To</label>
+                <input
+                  type="date"
+                  id="modalValidTo"
+                  name="validTo"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="modalDiscountAmount">Discount Amount</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  id="modalDiscountAmount"
+                  name="discountAmount"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="modalStatus">Status</label>
+                <select
+                  id="modalStatus"
+                  name="status"
+                  class="form-control"
+                  required
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                style="background-color: #ff7622"
+              >
+                Thêm Voucher
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-      const today = new Date().toISOString().split("T")[0];
-      document.getElementById("validFrom").setAttribute("min", today);
+      function getTodayInVietnamTimeZone() {
+        const today = new Date();
+        const offset = today.getTimezoneOffset() / 60; // Độ lệch múi giờ theo giờ
+        const vietnamOffset = 7; // Múi giờ Việt Nam là GMT+7
+        today.setHours(today.getHours() + (vietnamOffset - offset));
+        return today.toISOString().split("T")[0];
+      }
+
+      // Cập nhật thuộc tính 'min' của các trường ngày tháng
+      document
+        .getElementById("modalValidFrom")
+        .setAttribute("min", getTodayInVietnamTimeZone());
+      document
+        .getElementById("modalValidTo")
+        .setAttribute("min", getTodayInVietnamTimeZone());
+      function confirmDeletion() {
+        return confirm("Bạn có muốn xoá voucher này không?");
+      }
     </script>
   </body>
 </html>

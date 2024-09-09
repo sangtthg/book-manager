@@ -1,10 +1,22 @@
 const { Op } = require("sequelize");
 const Voucher = require("../models/voucher");
+const moment = require("moment"); // Import thư viện moment
 
 exports.getAllVouchers = async (req, res) => {
   try {
     const vouchers = await Voucher.findAll();
-    res.render("vouchers", { vouchers });
+
+    const formattedVouchers = vouchers.map((voucher) => {
+      return {
+        ...voucher.dataValues,
+        validFrom: moment(voucher.validFrom).format("DD/MM/YYYY HH:mm"),
+        validTo: moment(voucher.validTo).format("DD/MM/YYYY HH:mm"),
+        createdAt: moment(voucher.createdAt).format("DD/MM/YYYY HH:mm"),
+        updatedAt: moment(voucher.updatedAt).format("DD/MM/YYYY HH:mm"),
+      };
+    });
+
+    res.render("vouchers", { vouchers: formattedVouchers });
   } catch (error) {
     res.status(500).send(error.message);
   }
