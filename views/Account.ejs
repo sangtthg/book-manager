@@ -53,6 +53,129 @@
       .logout-btn:hover {
         background-color: #ff5733;
       }
+
+      /* Hiển thị nền mờ khi dialog được mở */
+      /* Hiển thị nền mờ khi dialog được mở */
+      .dialog {
+        display: none; /* Ban đầu ẩn dialog */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Nền mờ đen */
+        justify-content: center;
+        align-items: center;
+        z-index: 1000; /* Đảm bảo dialog luôn ở trên cùng */
+      }
+
+      /* Nội dung chính của dialog */
+      .dialog-content {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Đổ bóng cho dialog */
+        width: 400px;
+        max-width: 90%; /* Đảm bảo dialog không quá lớn trên màn hình nhỏ */
+        text-align: center;
+        animation: showDialog 0.3s ease; /* Hiệu ứng khi dialog hiện lên */
+      }
+
+      /* Nút Lưu và Hủy */
+      .save-btn,
+      .cancel-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      /* Nút Lưu */
+      .save-btn {
+        background-color: #28a745;
+        color: white;
+        margin-right: 10px;
+      }
+
+      .save-btn:hover {
+        background-color: #218838;
+      }
+
+      /* Nút Hủy */
+      .cancel-btn {
+        background-color: #dc3545;
+        color: white;
+      }
+
+      .cancel-btn:hover {
+        background-color: #c82333;
+      }
+
+      /* Input file */
+      input[type="file"] {
+        padding: 10px;
+        font-size: 16px;
+      }
+
+      /* Đảm bảo form có khoảng cách hợp lý */
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* Hiệu ứng fade-in cho dialog */
+      @keyframes showDialog {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      #preview-avatar {
+        width: 200px;
+        height: 200px;
+        display: none; /* Ẩn ảnh xem trước khi không có ảnh */
+      }
+      .image-button-container {
+        display: flex;
+        flex-direction: column; /* Sắp xếp theo chiều dọc */
+        align-items: center; /* Căn giữa theo chiều ngang */
+        margin-top: 20px;
+      }
+
+      /* Nút sửa ảnh dưới dạng thẻ a */
+      .update-btn {
+        display: inline-block; /* Đảm bảo thẻ a hiển thị như một nút */
+        margin-top: 10px; /* Thêm khoảng cách giữa ảnh và thẻ a */
+        padding: 10px 20px;
+
+        color: #ff7622;
+        text-decoration: none; /* Loại bỏ gạch chân của thẻ a */
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center; /* Căn chỉnh biểu tượng và văn bản theo chiều dọc */
+      }
+
+      .update-btn i {
+        margin-right: 8px; /* Thêm khoảng cách giữa biểu tượng và văn bản */
+      }
+      .change-pass-btn {
+        color: #ff7622; /* Màu chữ bạn muốn */
+        text-decoration: none; /* Loại bỏ gạch chân */
+        font-size: 16px; /* Kích thước chữ */
+      }
+
+      .change-pass-btn:hover {
+        color: #ff5733; /* Màu khi hover */
+        text-decoration: none; /* Giữ nguyên không gạch chân khi hover */
+      }
     </style>
   </head>
   <body>
@@ -61,24 +184,96 @@
     <div class="account-container">
       <h2>Thông Tin Tài Khoản</h2>
       <div class="account-details">
-        <img
-          id="avatar-account"
-          src=""
-          alt="User Avatar"
-          width="200px"
-          height="200px"
-        />
+        <div class="image-button-container">
+          <img
+            id="avatar-account"
+            src=""
+            alt="User Avatar"
+            width="200px"
+            height="200px"
+          />
+          <a class="update-btn" id="update">
+            <i class="fas fa-pencil-alt"></i> Sửa ảnh</a
+          >
+        </div>
+
         <p><strong>Email:</strong> <span id="email-account"></span></p>
         <p><strong>Username:</strong> <span id="username-account"></span></p>
         <p><strong>Role:</strong> <span id="role"></span></p>
+        <a class="change-pass-btn" id="change-pass">
+          <i class="fas fa-pencil-alt"></i> Đổi mật khẩu</a
+        >
       </div>
+
       <div>
-        <button class="update-btn" id="update">Cập nhập tài khoản</button>
         <button class="logout-btn" id="logoutBtn">Đăng Xuất</button>
       </div>
     </div>
+    <div id="update-avatar-dialog" class="dialog">
+      <div class="dialog-content">
+        <h3>Cập nhật Avatar</h3>
+        <form id="update-avatar-form">
+          <input type="file" id="avatar-file" name="avatar" accept="image/*" />
+          <br /><br />
+          <img
+            id="preview-avatar"
+            src=""
+            alt="Ảnh xem trước"
+            width="100"
+            height="100"
+            style="display: none; margin-bottom: 10px"
+          />
+          <br />
+          <div style="display: flex">
+            <button type="submit" class="save-btn">Lưu</button>
+            <button type="button" id="cancel-update" class="cancel-btn">
+              Hủy
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
 
+    <div id="change-pass-dialog" class="dialog">
+      <div class="dialog-content">
+        <h3 style="color: #ff7622">Đổi mật khẩu</h3>
+
+        <form id="change-password-form">
+          <input
+            type="password"
+            id="current-password"
+            placeholder="Mật khẩu hiện tại"
+            required
+            style="margin-top: 10px"
+          />
+
+          <input
+            type="password"
+            id="new-password"
+            placeholder="Mật khẩu mới"
+            required
+            style="margin-top: 10px"
+          />
+
+          <input
+            type="password"
+            id="re-password"
+            placeholder="Xác nhận mật khẩu mới"
+            required
+            style="margin-top: 10px"
+          />
+
+          <div style="display: flex; margin-top: 10px">
+            <button type="submit" class="save-btn">Lưu</button>
+            <button type="button" id="cancel-change-pass" class="cancel-btn">
+              Hủy
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
     <script>
+      const token = localStorage.getItem("token");
       document.addEventListener("DOMContentLoaded", function () {
         if (user) {
           document.getElementById("username-account").innerHTML = user.username;
@@ -99,6 +294,135 @@
           localStorage.removeItem("role");
 
           window.location.href = "/admin";
+        });
+      // update avatar
+      document.getElementById("update").addEventListener("click", function () {
+        document.getElementById("update-avatar-dialog").style.display = "flex"; // Hiển thị dialog khi bấm nút
+      });
+
+      document
+        .getElementById("cancel-update")
+        .addEventListener("click", function () {
+          document.getElementById("update-avatar-dialog").style.display =
+            "none"; // Ẩn dialog khi bấm Hủy
+        });
+      // Xử lý chọn file và hiển thị ảnh trong dialog
+      document
+        .getElementById("avatar-file")
+        .addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          const reader = new FileReader();
+          const preview = document.getElementById("preview-avatar");
+
+          if (file) {
+            reader.onload = function (event) {
+              preview.src = event.target.result;
+              preview.style.display = "block"; // Hiển thị ảnh xem trước
+            };
+            reader.readAsDataURL(file);
+          } else {
+            preview.style.display = "none"; // Ẩn ảnh xem trước nếu không có file
+          }
+        });
+
+      document
+        .getElementById("update-avatar-form")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const formData = new FormData();
+          const avatarFile = document.getElementById("avatar-file").files[0];
+
+          if (!avatarFile) {
+            alert("Vui lòng chọn ảnh!");
+            return;
+          }
+
+          formData.append("avatar", avatarFile);
+
+          fetch("/api/user/member/update", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "1") {
+                alert("Cập nhật thành công!");
+                document.getElementById("update-avatar-dialog").style.display =
+                  "none";
+                document.getElementById("avatar-account").src =
+                  URL.createObjectURL(avatarFile);
+              } else {
+                alert(`Cập nhật thất bại: ${data.message}`);
+              }
+            })
+            .catch((error) => {
+              console.error("Error updating avatar:", error);
+              alert("Có lỗi xảy ra khi cập nhật avatar.");
+            });
+        });
+
+      // Mở dialog khi nhấp vào 'Đổi mật khẩu'
+      document
+        .getElementById("change-pass")
+        .addEventListener("click", function () {
+          document.getElementById("change-pass-dialog").style.display = "flex"; // Hiển thị dialog
+        });
+
+      // Đóng dialog khi bấm nút 'Hủy'
+      document
+        .getElementById("cancel-change-pass")
+        .addEventListener("click", function () {
+          document.getElementById("change-pass-dialog").style.display = "none"; // Ẩn dialog
+        });
+
+      // Xử lý gửi yêu cầu đổi mật khẩu
+      document
+        .getElementById("change-password-form")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const currentPassword =
+            document.getElementById("current-password").value;
+          const newPassword = document.getElementById("new-password").value;
+          const rePassword = document.getElementById("re-password").value;
+
+          if (newPassword !== rePassword) {
+            alert("Mật khẩu mới không khớp!");
+            return;
+          }
+
+          const data = {
+            password: currentPassword,
+            new_password: newPassword,
+            re_password: rePassword,
+          };
+
+          fetch("/api/user/change-password", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // Thêm token từ localStorage
+            },
+            body: JSON.stringify(data),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "1") {
+                alert("Đổi mật khẩu thành công!");
+                document.getElementById("change-pass-dialog").style.display =
+                  "none"; // Ẩn dialog sau khi thành công
+              } else {
+                alert(`Đổi mật khẩu thất bại: ${data.message}`);
+              }
+            })
+            .catch((error) => {
+              console.error("Error changing password:", error);
+              alert("Có lỗi xảy ra khi đổi mật khẩu.");
+            });
         });
     </script>
   </body>

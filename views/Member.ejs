@@ -139,6 +139,7 @@
             <th>Email</th>
             <th>Tên đăng nhập</th>
             <th>Quyền</th>
+            <th>Chức năng</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -275,6 +276,7 @@
                   <td>${user.email}</td>
                   <td>${user.username}</td>
                   <td>${user.role}</td>
+                  <td><button onclick="deleteUser('${user.user_id}')">Xóa</button></td>
                 `;
                   tableBody.appendChild(row);
                 });
@@ -293,6 +295,33 @@
           })
           .catch((error) => console.error("Error fetching users:", error));
       }
+      function deleteUser(userId) {
+        const confirmDelete = confirm(
+          "Bạn có chắc chắn muốn xóa nhân viên này không?"
+        );
+        if (confirmDelete) {
+          const role = "admin"; // Bạn có thể điều chỉnh cách lấy role theo logic của bạn
+
+          fetch("/api/user/delete", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ user_id: userId, role: role }), // Gửi cả role và user_id
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "1") {
+                alert("Xóa nhân viên thành công!");
+                fetchUsers(currentPage); // Tải lại danh sách người dùng sau khi xóa
+              } else {
+                alert(`Xóa nhân viên thất bại: ${data.message}`);
+              }
+            })
+            .catch((error) => console.error("Error deleting user:", error));
+        }
+      }
 
       function updatePaginationButtons(page) {
         const prevButton = document.getElementById("prev-page");
@@ -304,4 +333,3 @@
     </script>
   </body>
 </html>
-``

@@ -166,17 +166,20 @@ module.exports.controller = (app, io, socket_list) => {
     }
   );
 
-  app.post("/api/book/get", helpers.authorization, async (req, res) => {
-    try {
-      const page = req.body.page || 1;
-      const limit = req.body.limit || 10;
-      const { search = "", category_id } = req.body.query || {
-        search: "",
-        category_id: undefined,
-      };
-      const offset = (page - 1) * limit;
+  app.post(
+    "/api/book/get",
+    //  helpers.authorization,
+    async (req, res) => {
+      try {
+        const page = req.body.page || 1;
+        const limit = req.body.limit || 10;
+        const { search = "", category_id } = req.body.query || {
+          search: "",
+          category_id: undefined,
+        };
+        const offset = (page - 1) * limit;
 
-      const query = `
+        const query = `
         SELECT 
           books.book_id,
           books.title,
@@ -199,45 +202,46 @@ module.exports.controller = (app, io, socket_list) => {
         INNER JOIN 
           categories ON books.category_id = categories.category_id
         WHERE books.title LIKE '%${search}%' ${
-        category_id ? `AND books.category_id = ${category_id}` : ""
-      }
+          category_id ? `AND books.category_id = ${category_id}` : ""
+        }
         GROUP BY books.book_id
         ORDER BY books.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
 
-      const [results, metadata] = await sequelizeHelpers.query(query);
+        const [results, metadata] = await sequelizeHelpers.query(query);
 
-      const [totalAll] = await sequelizeHelpers.query(
-        `SELECT COUNT(*) as totalAll FROM books`
-      );
+        const [totalAll] = await sequelizeHelpers.query(
+          `SELECT COUNT(*) as totalAll FROM books`
+        );
 
-      for (let index = 0; index < results.length; index++) {
-        const element = results[index];
-        if (!element.avatar_reviews) continue;
-        element.avatar_reviews = stringToArray(element.avatar_reviews);
+        for (let index = 0; index < results.length; index++) {
+          const element = results[index];
+          if (!element.avatar_reviews) continue;
+          element.avatar_reviews = stringToArray(element.avatar_reviews);
+        }
+
+        if (results) {
+          return res.json({
+            status: "1",
+            message: msg_success,
+            data: {
+              page: page,
+              limit: limit,
+              total: results.length,
+              totalAll: totalAll[0].totalAll,
+              data: results,
+            },
+          });
+        }
+
+        return res.json({ status: "0", message: msg_fail });
+      } catch (error) {
+        console.log("/api/book/get error: ", error);
+        res.json({ status: "0", message: msg_fail });
       }
-
-      if (results) {
-        return res.json({
-          status: "1",
-          message: msg_success,
-          data: {
-            page: page,
-            limit: limit,
-            total: results.length,
-            totalAll: totalAll[0].totalAll,
-            data: results,
-          },
-        });
-      }
-
-      return res.json({ status: "0", message: msg_fail });
-    } catch (error) {
-      console.log("/api/book/get error: ", error);
-      res.json({ status: "0", message: msg_fail });
     }
-  });
+  );
 
   async function handleAvatarReview(res, files, existingUrls) {
     var resultAvatarReview = [];
@@ -594,61 +598,65 @@ module.exports.controller = (app, io, socket_list) => {
     }
   );
 
-  app.post("/api/book/get-detail", helpers.authorization, async (req, res) => {
-    helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
-      helpers.CheckParameterNull(res, req.body, ["book_id"], async () => {
-        try {
-          const book = await Book.findOne({
-            where: { book_id: req.body.book_id },
-          });
-
-          if (!book) {
-            return res.json({
-              status: "0",
-              message: "Book not found",
+  app.post(
+    "/api/book/get-detail",
+    //  helpers.authorization,
+    async (req, res) => {
+      helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
+        helpers.CheckParameterNull(res, req.body, ["book_id"], async () => {
+          try {
+            const book = await Book.findOne({
+              where: { book_id: req.body.book_id },
             });
+
+            if (!book) {
+              return res.json({
+                status: "0",
+                message: "Book not found",
+              });
+            }
+
+            // lấy ra 5 review mới nhất và có rating cao nhất
+
+            const [author, category, [reviews]] = await Promise.all([
+              Author.findOne({ where: { author_id: book.author_id } }),
+              Category.findOne({ where: { category_id: book.category_id } }),
+              sequelizeHelpers.query(
+                `SELECT reviews.review_id, reviews.rating, reviews.comment, reviews.review_images, reviews.created_at, users.username, users.avatar FROM reviews INNER JOIN users ON reviews.user_id = users.user_id WHERE reviews.book_id = ${req.body.book_id} ORDER BY reviews.created_at DESC, reviews.rating DESC LIMIT 5;`
+              ),
+            ]);
+
+            const data = {
+              book_id: book.book_id,
+              title: book.title,
+              author_name: author.author_name,
+              category_name: category.category_name,
+              description: book.description,
+              publication_year: book.publication_year,
+              book_avatar: book.book_avatar,
+              old_price: book.old_price,
+              new_price: book.new_price,
+              discount_percentage: Math.round(
+                ((book.old_price - book.new_price) / book.old_price) * 100
+              ),
+              views_count: book.views_count,
+              purchase_count: book.purchase_count,
+              used_books: book.used_books,
+              reviews: reviews,
+            };
+            return res.json({
+              status: "1",
+              message: msg_success,
+              data,
+            });
+          } catch (error) {
+            console.log("/api/book/get-detail error: ", error);
+            res.json({ status: "0", message: msg_fail });
           }
-
-          // lấy ra 5 review mới nhất và có rating cao nhất
-
-          const [author, category, [reviews]] = await Promise.all([
-            Author.findOne({ where: { author_id: book.author_id } }),
-            Category.findOne({ where: { category_id: book.category_id } }),
-            sequelizeHelpers.query(
-              `SELECT reviews.review_id, reviews.rating, reviews.comment, reviews.review_images, reviews.created_at, users.username, users.avatar FROM reviews INNER JOIN users ON reviews.user_id = users.user_id WHERE reviews.book_id = ${req.body.book_id} ORDER BY reviews.created_at DESC, reviews.rating DESC LIMIT 5;`
-            ),
-          ]);
-
-          const data = {
-            book_id: book.book_id,
-            title: book.title,
-            author_name: author.author_name,
-            category_name: category.category_name,
-            description: book.description,
-            publication_year: book.publication_year,
-            book_avatar: book.book_avatar,
-            old_price: book.old_price,
-            new_price: book.new_price,
-            discount_percentage: Math.round(
-              ((book.old_price - book.new_price) / book.old_price) * 100
-            ),
-            views_count: book.views_count,
-            purchase_count: book.purchase_count,
-            used_books: book.used_books,
-            reviews: reviews,
-          };
-          return res.json({
-            status: "1",
-            message: msg_success,
-            data,
-          });
-        } catch (error) {
-          console.log("/api/book/get-detail error: ", error);
-          res.json({ status: "0", message: msg_fail });
-        }
+        });
       });
-    });
-  });
+    }
+  );
 
   app.post(
     "/api/avatar_reviews/get",

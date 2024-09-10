@@ -217,11 +217,21 @@ module.exports = {
       where: { user_id: auth.user_id },
     });
 
+    if (!user) {
+      return res.json({ status: "403", message: "Tài khoản không tồn tại" });
+    }
+
     if (user.is_block) {
       return res.json({ status: "403", message: "Tài khoản đang bị khoá" });
     }
 
-    req.auth = auth;
+    const dataNext = {
+      ...auth,
+      user,
+    };
+
+    req.auth = dataNext;
+
     next();
   },
 
@@ -247,8 +257,9 @@ module.exports = {
   // nếu là admin thì next
   // nếu không phải admin thì trả về lỗi
   checkRole(req, res, next) {
-    if (req.auth.role !== "admin") {
-      return res.json({ status: "0", message: "Error" });
+    const allowedRoles = ["admin", "member"];
+    if (!allowedRoles.includes(req.auth.role)) {
+      return res.json({ status: "0", message: "Bạn không có quyền truy cập." });
     }
     next();
   },

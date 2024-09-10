@@ -154,6 +154,56 @@ module.exports.controller = (app, io, socket_list) => {
       );
     }
   );
+  /// member/updadte
+  app.post(
+    "/api/user/member/update",
+    helper.authorization,
+    upload.single("avatar"),
+    helper.checkRole,
+    async (req, res) => {
+      try {
+        const user = req.auth.user;
+
+        const isSex = checkSex(req.body.sex || user.sex);
+
+        if (!isSex) {
+          return res.json({
+            status: "0",
+            message: "Giới tính không hợp lệ",
+          });
+        }
+
+        const avatar = !req.file
+          ? user.avatar
+          : await uploadFileToCloud(req.file);
+
+        User.update(
+          {
+            username: req.body.username || user.username,
+            avatar: avatar || avatarDefault,
+            sex: req.body.sex || user.sex,
+            is_block: req.body.is_block || user.is_block, /// is_block
+            updated_at: new Date(),
+          },
+          {
+            where: {
+              user_id: user.user_id,
+            },
+          }
+        )
+          .then((result) => {
+            res.json({ status: "1", message: msg_success });
+          })
+          .catch((err) => {
+            console.log("/api/user/update", err);
+            res.json({ status: "0", message: msg_fail });
+          });
+      } catch (error) {
+        console.log("/api/user/update", error);
+        res.json({ status: "0", message: msg_fail });
+      }
+    }
+  );
 
   app.post(
     "/api/user/update",
@@ -164,12 +214,12 @@ module.exports.controller = (app, io, socket_list) => {
       helper.CheckParameterValid(
         res,
         req.body,
-        ["user_id", "email", "role", "username", "sex", "is_block"], // is block
+        ["user_id", "email", "role", "username", "sex", "is_block"],
         async () => {
           helper.CheckParameterNull(
             res,
             req.body,
-            ["user_id", "email", "role", "username", "sex"],
+            ["user_id", "email", "role", "username", "sex", "is_block"],
             async () => {
               try {
                 if (req.auth.role === "user") {
@@ -220,7 +270,7 @@ module.exports.controller = (app, io, socket_list) => {
                     username: req.body.username,
                     avatar: avatar || checkEmail.avatar || avatarDefault,
                     sex: req.body.sex,
-                    is_block: req.body.is_block, /// is_block
+                    is_block: req.body.is_block,
                     updated_at: new Date(),
                   },
                   {
@@ -247,8 +297,6 @@ module.exports.controller = (app, io, socket_list) => {
     }
   );
 
-  // member update
-
   app.post("/api/user/change-password", helper.authorization, (req, res) => {
     helper.Dlog(req.body);
     const reqObj = req.body;
@@ -258,7 +306,7 @@ module.exports.controller = (app, io, socket_list) => {
       ["password", "new_password", "re_password"],
       async () => {
         const { password, new_password, re_password } = reqObj;
-        // const { otp_id, otp } = verify;verify
+
         if (new_password !== re_password) {
           return res.json({ status: "0", message: "Mật khẩu không khớp" });
         }
@@ -266,17 +314,6 @@ module.exports.controller = (app, io, socket_list) => {
         const user = (
           await User.findOne({ where: { user_id: req.auth.user_id } })
         ).get();
-
-        // const _verifyOTP = await verifyOTP(
-        //   otp_id,
-        //   user.email,
-        //   otp,
-        //   OtpTypes.CHANGE_PASSWORD
-        // );
-
-        // if (!_verifyOTP) {
-        //   return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
-        // }
 
         const compare = await comparePassword(password, user.password);
 
@@ -302,21 +339,22 @@ module.exports.controller = (app, io, socket_list) => {
     );
   });
   // delete
+
   app.post(
     "/api/user/delete",
     helper.authorization,
     helper.checkRole,
     async (req, res) => {
       try {
-        const { user_id } = req.body;
+        const { user_id, role } = req.body;
 
-        // Kiểm tra quyền của người thực hiện hành động
-        if (req.auth.role === "admin") {
-          return res.json({
+        if (role !== "admin" && role !== "member") {
+          return res.status(403).json({
             status: "0",
             message: "Bạn không có quyền thực hiện hành động này",
           });
         }
+
         // Kiểm tra người dùng có tồn tại không
         const user = await User.findOne({ where: { user_id } });
 
@@ -326,6 +364,7 @@ module.exports.controller = (app, io, socket_list) => {
             message: "Người dùng không tồn tại.",
           });
         }
+
         // Xóa người dùng
         await User.destroy({ where: { user_id } });
 

@@ -457,6 +457,22 @@
                           book.book_id
                         })">Xóa</button>
                     </td>`;
+
+                row
+                  .querySelector(".edit-button")
+                  .addEventListener("click", (e) => {
+                    e.stopPropagation(); // Ngăn không cho sự kiện click trên hàng xảy ra
+                    const bookId = e.target.getAttribute("data-book-id");
+                    handleEditClick(bookId); // Gọi hàm khi người dùng click vào nút "Sửa"
+                  });
+
+                row
+                  .querySelector(".delete-button")
+                  .addEventListener("click", (e) => {
+                    e.stopPropagation(); // Ngăn sự kiện click trên hàng
+                    const bookId = e.target.getAttribute("data-book-id");
+                    confirmDelete(bookId); // Gọi hàm khi người dùng click vào nút "Xóa"
+                  });
                 row.addEventListener("click", () => {
                   handleRowClick(book.book_id);
                 });
