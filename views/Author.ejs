@@ -206,7 +206,7 @@
         </button>
         <span id="page-indicator">Trang 1</span>
         <button onclick="nextPage()" id="nextPageBtn">
-          <img src="/uploads/right.png" alt="Trang sau" id="prevPageIcon" />
+          <img src="/uploads/right.png" alt="Trang sau" id="nextPageIcon" />
         </button>
       </div>
     </div>
@@ -215,13 +215,17 @@
       const token = localStorage.getItem("token");
       let currentPage = 1;
       let totalItems = 0;
+      const itemsPerPage = 10;
+
       function updatePaginationButtons(page) {
-        const totalPages = Math.ceil(totalItems / 10);
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
         const previousButton = document.querySelector("#prevPageBtn");
         const nextButton = document.querySelector("#nextPageBtn");
 
         previousButton.disabled = page <= 1;
         nextButton.disabled = page >= totalPages;
+
+        document.getElementById("page-indicator").textContent = `Trang ${page}`;
       }
 
       function previousPage() {
@@ -231,7 +235,7 @@
       }
 
       function nextPage() {
-        const totalPages = Math.ceil(totalItems / 10);
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
         if (currentPage < totalPages) {
           fetchAuthors(currentPage + 1);
         }
@@ -405,7 +409,6 @@
               alert("Có lỗi xảy ra.");
             });
         } else {
-          // Nếu người dùng hủy bỏ thao tác
           alert("Thao tác xóa đã bị hủy.");
         }
       }

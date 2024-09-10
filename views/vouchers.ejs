@@ -75,6 +75,7 @@
               <th style="text-align: center">Chức năng</th>
             </tr>
           </thead>
+
           <tbody>
             <% vouchers.forEach(voucher => { %>
             <tr>
@@ -143,7 +144,7 @@
               method="post"
             >
               <div class="form-group">
-                <label for="modalCode">Voucher Code</label>
+                <label for="modalCode"> Mã Voucher</label>
                 <input
                   type="text"
                   id="modalCode"
@@ -153,7 +154,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="modalDescription">Description</label>
+                <label for="modalDescription">Mô tả</label>
                 <input
                   type="text"
                   id="modalDescription"
@@ -162,7 +163,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="modalQuantity">Quantity</label>
+                <label for="modalQuantity">Số lượng</label>
                 <input
                   type="number"
                   id="modalQuantity"
@@ -172,7 +173,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="modalValidFrom">Valid From</label>
+                <label for="modalValidFrom">Ngày bắt đầu</label>
                 <input
                   type="date"
                   id="modalValidFrom"
@@ -182,7 +183,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="modalValidTo">Valid To</label>
+                <label for="modalValidTo">Ngày hết hạn</label>
                 <input
                   type="date"
                   id="modalValidTo"
@@ -192,7 +193,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="modalDiscountAmount">Discount Amount</label>
+                <label for="modalDiscountAmount">Số tiền chiết khấu</label>
                 <input
                   type="number"
                   step="0.01"
@@ -203,7 +204,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="modalStatus">Status</label>
+                <label for="modalStatus">Trạng thái</label>
                 <select
                   id="modalStatus"
                   name="status"

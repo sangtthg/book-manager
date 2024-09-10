@@ -1,6 +1,9 @@
+const { updateRateBook } = require("../common/book_common");
+const db_helpers = require("../helpers/db_helpers");
 const helpers = require("../helpers/helpers");
 const sequelizeHelpers = require("../helpers/sequelize_helpers");
 const { uploadMultipleFilesToCloud } = require("../helpers/upload_helpers");
+const db = require("../models");
 const Book = require("../models/book_model");
 const CartDetail = require("../models/cart_detail_model");
 const Review = require("../models/review_model");
@@ -65,6 +68,7 @@ module.exports.controller = (app, io, socket_list) => {
                   comment,
                   review_images: reviewImagesString,
                 });
+                updateRateBook(book_id);
 
                 return res.json({
                   status: "1",
@@ -158,6 +162,8 @@ module.exports.controller = (app, io, socket_list) => {
           }
 
           await Review.destroy({ where: { review_id } });
+
+          updateRateBook(review.book_id);
 
           return res.json({
             status: "1",

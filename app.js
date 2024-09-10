@@ -16,11 +16,10 @@ const adminRouter = require("./routes/admin");
 const orderRouter = require("./routes/orderRoutes");
 const VnpayTransactionRoutes = require("./routes/VnpayTransactionRoutes");
 const PaymentRoutes = require("./routes/PaymentRoutes");
-const reviewRouter = require('./routes/reviewRoutes');
-const notification = require('./routes/notificationRoutes');
-const statisticsRouter = require('./routes/statisticsRoutes');
-const voucherRoutes = require('./routes/voucherRoutes');
-
+const reviewRouter = require("./routes/reviewRoutes");
+const notification = require("./routes/notificationRoutes");
+const statisticsRouter = require("./routes/statisticsRoutes");
+const voucherRoutes = require("./routes/voucherRoutes");
 
 const serverPort = process.env.PORT || 3002;
 const BASE_URL = process.env.BASE_URL;
@@ -68,12 +67,10 @@ app.use("/orders", orderRouter);
 app.use("/vnpayTransaction", VnpayTransactionRoutes);
 app.use("/payment", PaymentRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use('/reviews', reviewRouter);
-app.use('/notification', notification);
-app.use('/statistics', statisticsRouter);
-app.use('/admin/vouchers', voucherRoutes);
-
-
+app.use("/reviews", reviewRouter);
+app.use("/notification", notification);
+app.use("/statistics", statisticsRouter);
+app.use("/admin/vouchers", voucherRoutes);
 
 const corsOptions = {
   origin: BASE_URL,

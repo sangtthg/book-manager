@@ -19,7 +19,7 @@
 
       table {
         width: 95%;
-        margin: 50px auto;
+        margin: 10px auto;
         border-collapse: collapse;
       }
 
@@ -117,11 +117,6 @@
 
       .dialog .form-actions button.cancel {
         background-color: #6c757d;
-      }
-
-      .pagination {
-        margin: 20px auto;
-        text-align: center;
       }
 
       .pagination button {
@@ -246,14 +241,18 @@
       }
 
       .pagination {
+        display: none; /* Ẩn thanh phân trang ban đầu */
         margin-left: 27px;
         margin-right: 27px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
         display: flex;
-        align-items: center;
-        background-color: #fff;
-        padding: 5px;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        justify-content: center;
+        background-color: #f1f1f1;
+        padding: 10px 0;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
       }
 
       #page-indicator {
@@ -346,6 +345,34 @@
         border: none;
         cursor: pointer;
       }
+      .search-container {
+        /* display: flex; */
+        margin-left: 30px;
+        justify-content: center;
+        margin-top: 40px;
+      }
+
+      #searchInput {
+        width: 300px;
+        padding: 10px;
+        font-size: 16px;
+        margin-right: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .searchbtn {
+        padding: 10px 20px;
+        background-color: #ff7622;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+      }
+
+      .searchbtn:hover {
+        background-color: #ff7622;
+      }
     </style>
   </head>
 
@@ -354,9 +381,16 @@
 
     <div class="main">
       <h3 class="h3_table">Danh sách sản phẩm</h3>
-      <div class="addbook_category">
+      <div class="search-container">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Nhập tên sách để tìm kiếm"
+        />
+        <button class="searchbtn" onclick="searchBooks()">Tìm kiếm sách</button>
         <button class="add-book-btn" id="addBookButton">Thêm sách</button>
       </div>
+      <div class="addbook_category"></div>
       <table id="book-table">
         <thead>
           <tr>
@@ -365,7 +399,6 @@
             <th>Ảnh bìa</th>
             <th>Tên Sách</th>
             <th>Năm xuất bản</th>
-
             <th>Giá cũ</th>
             <th>Giá mới</th>
             <th>Chức năng</th>
@@ -383,6 +416,7 @@
         </button>
       </div>
     </div>
+
     <div id="deleteModal" class="modal" style="display: none">
       <div class="modal-content">
         <h2>Bạn có chắc muốn xóa sách này?</h2>
@@ -394,6 +428,14 @@
     </div>
 
     <script>
+      window.addEventListener("scroll", function () {
+        if (
+          window.innerHeight + window.scrollY >=
+          document.body.offsetHeight - 100
+        ) {
+          document.querySelector(".pagination").style.display = "flex";
+        }
+      });
       document
         .getElementById("addBookButton")
         .addEventListener("click", function () {
@@ -405,11 +447,12 @@
       const token = localStorage.getItem("token");
       const itemsPerPage = 10;
       let currentPage = 1;
-
+      let selectedBookId = null;
       let booksData = []; // Biến toàn cục để lưu dữ liệu sách
 
       function fetchBooks(page = 1) {
         const offset = (page - 1) * itemsPerPage;
+
         fetch(`/api/book/get`, {
           method: "POST",
           headers: {
@@ -428,6 +471,7 @@
             }
             return response.json();
           })
+
           .then((data) => {
             if (data.status == "1") {
               booksData = data.data.data;
@@ -447,51 +491,20 @@
                 
                     <td>${book.publication_year}</td>
               
-                    <td>${book.old_price}</td>
-                    <td>${book.new_price}</td>
+                    <td>${book.old_price} đ</td>
+                    <td>${book.new_price} đ</td>
                     <td>
-                        <button class="edit-button" data-book-id="${
+                        <button class="edit-button" onclick="handleEditButtonClick(${
                           book.book_id
-                        }">Sửa</button>
+                        }, event)">Sửa</button>
                         <button class="delete-button" onclick="confirmDelete(${
                           book.book_id
-                        })">Xóa</button>
+                        }, event)">Xóa</button>
                     </td>`;
-
-                row
-                  .querySelector(".edit-button")
-                  .addEventListener("click", (e) => {
-                    e.stopPropagation(); // Ngăn không cho sự kiện click trên hàng xảy ra
-                    const bookId = e.target.getAttribute("data-book-id");
-                    handleEditClick(bookId); // Gọi hàm khi người dùng click vào nút "Sửa"
-                  });
-
-                row
-                  .querySelector(".delete-button")
-                  .addEventListener("click", (e) => {
-                    e.stopPropagation(); // Ngăn sự kiện click trên hàng
-                    const bookId = e.target.getAttribute("data-book-id");
-                    confirmDelete(bookId); // Gọi hàm khi người dùng click vào nút "Xóa"
-                  });
                 row.addEventListener("click", () => {
                   handleRowClick(book.book_id);
                 });
                 tableBody.appendChild(row);
-              });
-
-              document.querySelectorAll(".edit-button").forEach((button) => {
-                button.addEventListener("click", () => {
-                  const bookId = button.getAttribute("data-book-id");
-                  const book = booksData.find((b) => b.book_id == bookId); // Tìm sách theo ID
-                  console.log(
-                    "Toàn bộ dữ liệu sách trước khi lưu vào sessionStorage:",
-                    book
-                  );
-                  sessionStorage.setItem("bookData", JSON.stringify(book));
-
-                  // Chuyển hướng đến trang cập nhật sách
-                  window.location.href = `/admin/updatebook/${bookId}`;
-                });
               });
 
               document.getElementById(
@@ -538,16 +551,94 @@
           fetchBooks(currentPage);
         }
       }
-      function confirmDelete(bookId) {
+      function handleEditButtonClick(bookId, event) {
+        event.stopPropagation();
+        const book = booksData.find((b) => b.book_id == bookId);
+        console.log(
+          "Toàn bộ dữ liệu sách trước khi lưu vào sessionStorage:",
+          book
+        );
+        // Lưu dữ liệu sách vào sessionStorage
+        sessionStorage.setItem("bookData", JSON.stringify(book));
+        // Chuyển hướng đến trang cập nhật sách
+        window.location.href = `/admin/updatebook/${bookId}`;
+      }
+
+      function confirmDelete(bookId, event) {
+        console.log(" phát đầu tiên:", bookId);
         selectedBookId = bookId;
         document.getElementById("deleteModal").style.display = "block";
+        event.stopPropagation();
+      }
+
+      function searchBooks() {
+        const searchQuery = document.getElementById("searchInput").value;
+
+        fetch(`/api/book/get`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            page: 1,
+            limit: 10,
+            query: { search: searchQuery, category_id: null },
+          }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data.status == "1") {
+              const tableBody = document.querySelector("#book-table tbody");
+              tableBody.innerHTML = ""; // Xóa dữ liệu cũ
+
+              data.data.data.forEach((book, index) => {
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${book.book_id}</td>
+            <td><img src="${book.book_avatar}" alt="${
+                  book.title
+                }" width="70"></td>
+            <td class="csstitle">${book.title}</td>
+            <td>${book.publication_year}</td>
+            <td>${book.old_price} đ</td>
+            <td>${book.new_price} đ</td>
+            <td>
+              <button class="edit-button" onclick="handleEditButtonClick(${
+                book.book_id
+              }, event)">Sửa</button>
+              <button class="delete-button" onclick="confirmDelete(${
+                book.book_id
+              }, event)">Xóa</button>
+            </td>`;
+                tableBody.appendChild(row);
+              });
+            } else {
+              alert("Không tìm thấy sách");
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching books:", error);
+          });
       }
 
       document
         .getElementById("confirmDeleteBtn")
         .addEventListener("click", function () {
-          deleteBook(selectedBookId);
-          document.getElementById("deleteModal").style.display = "none";
+          console.log("xoá phát thứ 2:", selectedBookId); // Log giá trị của selectedBookId
+          if (selectedBookId !== null) {
+            deleteBook(selectedBookId);
+            document.getElementById("deleteModal").style.display = "none";
+          } else {
+            console.warn("selectedBookId không có giá trị");
+          }
         });
 
       document
@@ -556,6 +647,9 @@
           document.getElementById("deleteModal").style.display = "none";
         });
       async function deleteBook(bookId) {
+        console.log("====================================");
+        console.log(bookId);
+        console.log("====================================");
         try {
           const response = await fetch("/api/book/delete", {
             method: "POST",

@@ -194,7 +194,8 @@ module.exports.controller = (app, io, socket_list) => {
           books.purchase_count,
           books.quantity,
           books.used_books,
-          books.avatar_reviews
+          books.avatar_reviews,
+          books.rate_book
         FROM 
           books
         INNER JOIN 
@@ -501,6 +502,7 @@ module.exports.controller = (app, io, socket_list) => {
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
+                rate_book: book.rate_book,
               };
           })
         );
@@ -527,11 +529,12 @@ module.exports.controller = (app, io, socket_list) => {
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
+                rate_book: book.rate_book,
               };
           })
         );
 
-        mostViewBooksData = await Promise.all(
+        const mostViewBooksData = await Promise.all(
           mostViewBooks.map(async (book) => {
             const author = await Author.findOne({
               where: { author_id: book.author_id },
@@ -552,11 +555,12 @@ module.exports.controller = (app, io, socket_list) => {
                 views_count: book.views_count,
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
+                rate_book: book.rate_book,
               };
           })
         );
 
-        randomBooksData = await Promise.all(
+        const randomBooksData = await Promise.all(
           randomBooks.map(async (book) => {
             return {
               book_id: book.book_id,
@@ -573,6 +577,7 @@ module.exports.controller = (app, io, socket_list) => {
               views_count: book.views_count,
               purchase_count: book.purchase_count,
               used_books: book.used_books,
+              rate_book: book.rate_book,
             };
           })
         );
@@ -615,7 +620,6 @@ module.exports.controller = (app, io, socket_list) => {
                 message: "Book not found",
               });
             }
-
             // lấy ra 5 review mới nhất và có rating cao nhất
 
             const [author, category, [reviews]] = await Promise.all([
@@ -642,6 +646,7 @@ module.exports.controller = (app, io, socket_list) => {
               views_count: book.views_count,
               purchase_count: book.purchase_count,
               used_books: book.used_books,
+              rate_book: book.rate_book,
               reviews: reviews,
             };
             return res.json({
