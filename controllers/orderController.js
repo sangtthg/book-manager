@@ -225,6 +225,7 @@ exports.listAllOrders = async (req, res) => {
 
     const orders = await Order.findAll({
       where: searchConditions,
+      order: [["updatedAt", "DESC"]],
     });
 
     const userIds = orders.map((order) => order.userId);
@@ -487,3 +488,44 @@ exports.cancelled = async (req, res) => {
     });
   }
 };
+// orderController.js
+
+// exports.itemDetails = async (req, res) => {
+//   try {
+//     const orderId = req.params.orderId;
+//     const order = await Order.findByPk(orderId, {
+//       include: [
+//         {
+//           model: Author, // Thay thế bằng các model và thông tin cần thiết
+//           as: "author",
+//         },
+//         // Thêm các mô hình khác nếu cần
+//       ],
+//     });
+
+//     if (!order) {
+//       return res.status(404).json({
+//         code: 1,
+//         message: "Không tìm thấy đơn hàng",
+//       });
+//     }
+
+//     const items = JSON.parse(order.dataValues.items);
+
+//     res.render("itemDetails.ejs", {
+//       title: "Chi tiết sách",
+//       items: items,
+//       buyerInfo: {
+//         username: order.username,
+//         phone: order.phone,
+//         address: order.address,
+//       },
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       code: -1,
+//       message: "Hệ thống bận!",
+//     });
+//   }
+// };

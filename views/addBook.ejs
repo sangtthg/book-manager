@@ -102,20 +102,17 @@
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+
 
     </style>
   </style>
   <body>
     <%- include('navbar.ejs') %>
-    <div class="container" style="margin-left: 340px; width: 1100px;" >
+    <div class="container" style="margin-left: 340px; width: 70%;" >
       <h1 style="color: #ff7622;">Thêm sách mới</h1>
       <div class="form-group">
         <label for="bookTitle">Tên sách</label>
-        <input type="text" id="bookTitle" name="title" />
+        <input required type="text" id="bookTitle" name="title"/>
       </div>
       <div class="form-group">
         <label for="authorSelect">Tác giả</label>
@@ -131,33 +128,33 @@
       </div>
       <div class="form-group">
         <label for="quantity">Số lượng</label>
-        <input type="number" id="quantity" name="quantity" />
+        <input required type="number" id="quantity" name="quantity" />
       </div>
       <div class="form-group">
         <label for="publicationYear">Năm xuất bản</label>
-        <input type="number" id="publicationYear" name="publication_year" />
+        <input required type="number" id="publicationYear" name="publication_year" />
       </div>
       <div class="form-group">
         <label for="oldPrice">Giá cũ</label>
-        <input type="number" id="oldPrice" name="old_price" />
+        <input required type="number" id="oldPrice" name="old_price" />
       </div>
       <div class="form-group">
         <label for="newPrice">Giá mới</label>
-        <input type="number" id="newPrice" name="new_price" />
+        <input required type="number" id="newPrice" name="new_price" />
       </div>
       <div class="form-group">
         <label for="bookAvatar" class="custom-file-upload" style="text-decoration: none; color: black;">Chọn ảnh bìa</label>
-        <input type="file" id="bookAvatar" name="book_avatar" />
+        <input required type="file" id="bookAvatar" name="book_avatar" />
         <img id="bookAvatarPreview" style="display: none; max-width: 200px" />
       </div>
       <div class="form-group">
         <label for="avatarReviews" class="custom-file-upload" style="text-decoration: none; color: black;">Chọn ảnh đọc thử (tối đa 3 ảnh)</label>
-        <input type="file" id="avatarReviews" name="avatar_reviews" multiple />
+        <input required type="file" id="avatarReviews" name="avatar_reviews" multiple />
         <div id="avatarReviewsPreviews" style="margin-top: 10px;"></div>
     </div>
       <div class="form-actions">
-        <button onclick="saveBook()" style="width: 100px; margin-left: 200px;" >Lưu</button>
-        <button onclick="closeDialog()" style="width: 100px; margin-right: 200px;">Hủy</button>
+        <button onclick="saveBook()" style="width: 100px; margin-left: 200px;" type="submit" >Lưu</button>
+        <button onclick="closeDialog()" style="width: 100px; margin-right: 200px;" type="submit">Hủy</button>
       </div>
     </div>
     
@@ -218,8 +215,24 @@
         })
         .catch((error) => console.error("Error fetching categories:", error));
     }
+    function validateForm() {
+  const inputs = document.querySelectorAll('.form-group input, .form-group select, .form-group textarea');
+  for (const input of inputs) {
+    if (input.required && !input.value.trim()) {
+      alert(`Vui lòng điền đầy đủ thông tin trong trường: ${input.previousElementSibling.textContent}`);
+      input.focus();
+      return false;
+    }
+  }
+  return true;
+}
+
 
     function saveBook() {
+
+      if (!validateForm()) {
+    return; // Dừng hàm nếu không hợp lệ
+  }
   // Hiển thị overlay loading
   document.getElementById("loadingOverlay").style.display = "flex";
 

@@ -173,14 +173,12 @@
 
               window.location.href = "/admin/ListProduct";
             } else {
-              alert("Login failed. Please check your credentials.");
+              alert("tài khoản hoặc mật khẩu không đúng");
             }
           })
           .catch((error) => {
-            console.error("Error logging in:", error);
-            alert(
-              "An error occurred while logging in. Please try again later."
-            );
+            // console.error("Error logging in:", error);
+            alert("tài khoản hoặc mật khẩu không đúng");
           });
       });
 

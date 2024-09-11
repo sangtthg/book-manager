@@ -58,20 +58,33 @@
     <%- include('navbar.ejs') %>
     <div style="margin-left: 280px; margin-right: 10px">
       <div class="container">
-        <h1><i class="fas fa-book-open mr-3"></i><%= title %></h1>
+        <h1 style="display: flex; gap: 12px; justify-content: center">
+          <i class="fas fa-book-open mr-3"></i><span><%= title %></span>
+        </h1>
+
+        <div
+          style="
+            background-color: antiquewhite;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+          "
+        >
+          <div style="color: brown">Địa chỉ: <%=data.address%></div>
+        </div>
 
         <div class="table-responsive">
           <table class="table table-bordered table-hover">
             <thead class="thead-dark">
               <tr>
-                <th>Sách</th>
-                <th>Thông tin chi tiết</th>
-                <th>Giá</th>
-                <th>Số lượng & Phí vận chuyển</th>
+                <th style="color: rebeccapurple">Sách</th>
+                <th style="color: rebeccapurple">Thông tin chi tiết</th>
+                <th style="color: rebeccapurple">Giá</th>
+                <th style="color: rebeccapurple">Số lượng & Phí vận chuyển</th>
               </tr>
             </thead>
             <tbody>
-              <% items.forEach(item => { %>
+              <% data.items.forEach(item => { %>
               <tr>
                 <td>
                   <img
@@ -83,7 +96,7 @@
                 <td>
                   <h5><%= item.title %></h5>
                   <p><strong>ID:</strong> <%= item.book_id %></p>
-                  <p><strong>Tác giả ID:</strong> <%= item.author_id %></p>
+                  <p><strong>Tác giả ID:</strong> <%= item.author_name %></p>
                   <p><strong>Thể loại ID:</strong> <%= item.category_id %></p>
                   <p>
                     <strong>Năm xuất bản:</strong> <%= item.publication_year %>

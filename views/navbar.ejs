@@ -81,7 +81,7 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="/admin/User">
+          <a class="nav-link" href="/admin/User" id="user">
             <i class="fas fa-users"></i> Danh sách khách hàng
           </a>
         </li>
@@ -118,7 +118,7 @@
         </li>
         <li class="nav-item" id="members">
           <a class="nav-link" href="/admin/Member">
-            <i class="fas fa-user-friends"></i> Thành viên
+            <i class="fas fa-user-friends"></i> Nhân viên
           </a>
         </li>
         <li class="nav-item">
@@ -139,6 +139,8 @@
       if (role === "member") {
         document.getElementById("revenue-stats").style.display = "none";
         document.getElementById("members").style.display = "none";
+        document.getElementById("customers-stats").style.display = "none";
+        document.getElementById("user").style.display = "none";
       }
 
       document

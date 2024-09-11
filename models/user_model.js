@@ -28,14 +28,7 @@ const User = sequelizeHelpers.define(
       type: DataTypes.STRING(255),
       defaultValue: avatarDefault,
     },
-    auth_token: {
-      type: DataTypes.STRING(100),
-      defaultValue: "",
-    },
-    reset_code: {
-      type: DataTypes.STRING(6),
-      defaultValue: "0000",
-    },
+
     user_status: {
       type: DataTypes.INTEGER,
       defaultValue: 1,

@@ -70,49 +70,105 @@ module.exports.controller = (app, io, socket_list) => {
 
   app.post("/api/category/update", helper.authorization, (req, res) => {
     helper.CheckParameterValid(
-        res,
-        req.body,
-        ["name", "category_id"],
-        async () => {
-          const user = await selectUser(req.auth.user_id);
-          if (user.role === "user") {
-            return res.json({
-              status: "0",
-              message: "Bạn không có quyền thực hiện hành động này",
-            });
-          }
-
-          if (!req.body.name || req.body.name === "") {
-            return res.json({
-              status: "0",
-              message: "Category name không được để trống",
-            });
-          }
-          const checkName = await checkUniqueName(req.body.name);
-          if (!checkName) {
-            return res.json({
-              status: "0",
-              message: "Category name đã tồn tại",
-            });
-          }
-
-          const query = `UPDATE categories SET category_name = '${formatName(
-          req.body.name
-        )}' WHERE category_id = '${req.body.category_id}'`;
-          db.query(query, (err, result) => {
-            if (err) {
-              return res.json({
-                status: "0",
-                message: msg_fail,
-              });
-            }
-            return res.json({
-              status: "1",
-              message: msg_success,
-            });
+      res,
+      req.body,
+      ["name", "category_id"],
+      async () => {
+        const user = await selectUser(req.auth.user_id);
+        if (user.role === "user") {
+          return res.json({
+            status: "0",
+            message: "Bạn không có quyền thực hiện hành động này",
           });
         }
+
+        if (!req.body.name || req.body.name === "") {
+          return res.json({
+            status: "0",
+            message: "Category name không được để trống",
+          });
+        }
+        const checkName = await checkUniqueName(req.body.name);
+        if (!checkName) {
+          return res.json({
+            status: "0",
+            message: "Category name đã tồn tại",
+          });
+        }
+
+        const query = `UPDATE categories SET category_name = '${formatName(
+          req.body.name
+        )}' WHERE category_id = '${req.body.category_id}'`;
+        db.query(query, (err, result) => {
+          if (err) {
+            return res.json({
+              status: "0",
+              message: msg_fail,
+            });
+          }
+          return res.json({
+            status: "1",
+            message: msg_success,
+          });
+        });
+      }
     );
+  });
+
+  // delete
+  app.post("/api/category/delete", helper.authorization, (req, res) => {
+    helper.CheckParameterValid(res, req.body, ["category_id"], async () => {
+      const user = await selectUser(req.auth.user_id);
+      if (user.role === "user") {
+        return res.json({
+          status: "0",
+          message: "Bạn không có quyền thực hiện hành động này",
+        });
+      }
+      // check book có chứa category
+      const checkBooksQuery = `SELECT COUNT(*) AS bookCount FROM books WHERE category_id = '${req.body.category_id}'`;
+      db.query(checkBooksQuery, (err, result) => {
+        if (err) {
+          return res.json({
+            status: "0",
+            message: "Lỗi khi kiểm tra books",
+          });
+        }
+
+        const bookCount = result[0].bookCount;
+        if (bookCount > 0) {
+          // Nếu có sách chứa category này, thông báo lỗi
+          return res.json({
+            status: "0",
+            message: `Không thể xóa category vì có ${bookCount} sách đang chứa thể loại này`,
+          });
+        }
+
+        // Sau khi cập nhật book thành công, xóa category
+        const deleteCategoryQuery = `DELETE FROM categories WHERE category_id = '${req.body.category_id}'`;
+        db.query(deleteCategoryQuery, (err, result) => {
+          if (err) {
+            return res.json({
+              status: "0",
+              message: msg_fail,
+            });
+          }
+
+          // Kiểm tra xem có category nào bị xóa không
+          if (result.affectedRows === 0) {
+            return res.json({
+              status: "0",
+              message: "Không tìm thấy category với ID này",
+            });
+          }
+
+          return res.json({
+            status: "1",
+            message: "Xóa category thành công và cập nhật books",
+          });
+        });
+      });
+    });
   });
 
   //GET

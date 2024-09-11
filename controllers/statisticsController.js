@@ -139,14 +139,13 @@ exports.getCustomerStatistics = async (req, res) => {
   }
 };
 const formatNumber = (number) => {
-  return number.toLocaleString('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
+  return number.toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   });
 };
-
 
 exports.getItemDetails = async (req, res) => {
   try {
@@ -158,7 +157,6 @@ exports.getItemDetails = async (req, res) => {
 
     const item = await Order.findOne({
       where: { id },
-      attributes: ["items"],
     });
 
     if (!item) {
@@ -166,16 +164,24 @@ exports.getItemDetails = async (req, res) => {
     }
 
     const items = JSON.parse(item.items);
-    items.forEach(i => {
+
+    items.forEach((i) => {
       i.totalPrice = formatNumber(i.totalPrice);
       i.old_price = formatNumber(parseFloat(i.old_price));
       i.new_price = formatNumber(parseFloat(i.new_price));
       i.shippingFee = formatNumber(i.shippingFee);
     });
 
+    console.log("====================================");
+    console.log(item.address);
+    console.log("====================================");
+
     res.render("itemDetails", {
       title: "Chi tiết mặt hàng",
-      items,
+      data: {
+        items,
+        address: item.address,
+      },
     });
   } catch (error) {
     console.error("Lỗi khi lấy chi tiết mặt hàng:", error);

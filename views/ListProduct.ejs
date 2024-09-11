@@ -447,6 +447,7 @@
       const token = localStorage.getItem("token");
       const itemsPerPage = 10;
       let currentPage = 1;
+
       let selectedBookId = null;
       let booksData = []; // Biến toàn cục để lưu dữ liệu sách
 
@@ -647,9 +648,6 @@
           document.getElementById("deleteModal").style.display = "none";
         });
       async function deleteBook(bookId) {
-        console.log("====================================");
-        console.log(bookId);
-        console.log("====================================");
         try {
           const response = await fetch("/api/book/delete", {
             method: "POST",

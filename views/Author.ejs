@@ -145,6 +145,23 @@
         height: 24px;
         vertical-align: middle;
       }
+      .pagination {
+        display: none; /* Ẩn thanh phân trang ban đầu */
+        margin-left: 27px;
+        margin-right: 27px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        background-color: #f1f1f1;
+        padding: 10px 0;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      }
+      #page-indicator {
+        position: relative;
+      }
     </style>
   </head>
   <body>
@@ -199,68 +216,51 @@
         </thead>
         <tbody></tbody>
       </table>
-
-      <div class="pagination">
-        <button onclick="previousPage()" id="prevPageBtn">
-          <img src="/uploads/left.png" alt="Trang trước" id="prevPageIcon" />
-        </button>
-        <span id="page-indicator">Trang 1</span>
-        <button onclick="nextPage()" id="nextPageBtn">
-          <img src="/uploads/right.png" alt="Trang sau" id="nextPageIcon" />
-        </button>
-      </div>
+    </div>
+    <div class="pagination">
+      <button onclick="previousPage()" id="prevPageBtn">
+        <img src="/uploads/left.png" alt="Trang trước" id="prevPageIcon" />
+      </button>
+      <span id="page-indicator">Trang 1</span>
+      <button onclick="nextPage()" id="prevPageBtn">
+        <img src="/uploads/right.png" alt="Trang sau" id="prevPageIcon" />
+      </button>
     </div>
 
     <script>
       const token = localStorage.getItem("token");
-      let currentPage = 1;
-      let totalItems = 0;
       const itemsPerPage = 10;
+      let totalItems = 0;
+      let currentPage = 1;
+      document.addEventListener("DOMContentLoaded", () =>
+        fetchAuthors(currentPage)
+      );
 
-      function updatePaginationButtons(page) {
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        const previousButton = document.querySelector("#prevPageBtn");
-        const nextButton = document.querySelector("#nextPageBtn");
-
-        previousButton.disabled = page <= 1;
-        nextButton.disabled = page >= totalPages;
-
-        document.getElementById("page-indicator").textContent = `Trang ${page}`;
-      }
-
-      function previousPage() {
-        if (currentPage > 1) {
-          fetchAuthors(currentPage - 1);
-        }
-      }
-
-      function nextPage() {
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        if (currentPage < totalPages) {
-          fetchAuthors(currentPage + 1);
-        }
-      }
       function fetchAuthors(page = 1) {
         fetch("/api/author/get", {
           method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ page, limit: 10 }),
+
+          body: JSON.stringify({
+            page,
+            limit: itemsPerPage,
+          }),
         })
           .then((response) => response.json())
           .then((data) => {
             if (data.status === "1") {
               const tableBody = document.querySelector("#author-table tbody");
               tableBody.innerHTML = "";
-
-              data.data.rows.forEach((author, index) => {
+              data.data.forEach((author, index) => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
                 <td>${index + 1}</td>
                 <td>${author.author_id}</td>
                 <td>${author.author_name}</td>
-                <td>${author.created_by}</td>
+                <td>${author.username}</td>
                 <td>
                   <button class="edit-button" onclick="openEditDialog(${
                     author.author_id
@@ -275,14 +275,40 @@
               document.getElementById(
                 "page-indicator"
               ).textContent = `Trang ${page}`;
-              totalItems = data.totalItems; // Cập nhật tổng số mục
-              currentPage = page; // Cập nhật trang hiện tại
+              totalItems = data.data.count;
+              currentPage = page;
               updatePaginationButtons(page);
             } else {
               alert(`Lấy danh sách tác giả thất bại: ${data.message}`);
             }
           })
           .catch((error) => console.error("Error fetching authors:", error));
+      }
+      function updatePaginationButtons(page) {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const previousButton = document.querySelector(
+          ".pagination button:first-child"
+        );
+        const nextButton = document.querySelector(
+          ".pagination button:last-child"
+        );
+        previousButton.disabled = page <= 1;
+        nextButton.disabled = page >= totalPages;
+      }
+
+      function nextPage() {
+        if (currentPage < Math.ceil(totalItems / itemsPerPage)) {
+          currentPage++;
+
+          fetchAuthors(currentPage);
+        }
+      }
+
+      function previousPage() {
+        if (currentPage > 1) {
+          currentPage--;
+          fetchAuthors(currentPage);
+        }
       }
 
       function openDialog() {
@@ -399,21 +425,21 @@
             .then((data) => {
               if (data.status === "1") {
                 alert("Xóa thể loại thành công!");
-                fetchCategories();
+                fetchAuthors();
               } else {
                 alert(`Xóa thể loại thất bại: ${data.message}`);
               }
             })
             .catch((error) => {
-              console.error("Error:", error);
               alert("Có lỗi xảy ra.");
+              console.log("====================================");
+              console.log(error);
+              console.log("====================================");
             });
         } else {
           alert("Thao tác xóa đã bị hủy.");
         }
       }
-
-      document.addEventListener("DOMContentLoaded", fetchAuthors);
 
       closeDialog();
     </script>
