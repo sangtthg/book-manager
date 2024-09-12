@@ -456,7 +456,7 @@ module.exports.controller = (app, io, socket_list) => {
   // 2. sách bán chạy
   app.post(
     "/api/home/get-list-book",
-    helpers.authorization,
+    // helpers.authorization,
     async (req, res) => {
       try {
         const [newBooks, bestSellerBooks, mostViewBooks, randomBooks] =
@@ -693,7 +693,7 @@ module.exports.controller = (app, io, socket_list) => {
 
   app.post(
     "/api/avatar_reviews/get",
-    helpers.authorization,
+    // helpers.authorization,
     async (req, res) => {
       const { page = 1, limit = 10, query = {} } = req.body;
       const { book_id } = query;
