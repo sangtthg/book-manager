@@ -463,30 +463,21 @@ module.exports.controller = (app, io, socket_list) => {
           await Promise.all([
             Book.findAll({
               where: {
+                quantity: { [Sequelize.Op.gt]: 0 },
                 publication_year: new Date().getFullYear(),
-                quantity: { [Sequelize.Op.gt]: 0 }, // Điều kiện thêm vào
               },
               order: [["created_at", "DESC"]],
               limit: 7,
             }),
             Book.findAll({
-              where: {
-                quantity: { [Sequelize.Op.gt]: 0 }, // Điều kiện thêm vào
-              },
               order: [["purchase_count", "DESC"]],
               limit: 7,
             }),
             Book.findAll({
-              where: {
-                quantity: { [Sequelize.Op.gt]: 0 }, // Điều kiện thêm vào
-              },
               order: [["views_count", "DESC"]],
               limit: 7,
             }),
             Book.findAll({
-              where: {
-                quantity: { [Sequelize.Op.gt]: 0 }, // Điều kiện thêm vào
-              },
               order: Sequelize.literal("rand()"),
               limit: 8,
             }),
@@ -515,6 +506,7 @@ module.exports.controller = (app, io, socket_list) => {
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
                 rate_book: book.rate_book,
+                quantity: book.quantity,
               };
           })
         );
@@ -542,6 +534,7 @@ module.exports.controller = (app, io, socket_list) => {
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
                 rate_book: book.rate_book,
+                quantity: book.quantity,
               };
           })
         );
@@ -568,6 +561,7 @@ module.exports.controller = (app, io, socket_list) => {
                 purchase_count: book.purchase_count,
                 used_books: book.used_books,
                 rate_book: book.rate_book,
+                quantity: book.quantity,
               };
           })
         );
@@ -590,6 +584,7 @@ module.exports.controller = (app, io, socket_list) => {
               purchase_count: book.purchase_count,
               used_books: book.used_books,
               rate_book: book.rate_book,
+              quantity: book.quantity,
             };
           })
         );
