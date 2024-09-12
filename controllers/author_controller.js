@@ -174,9 +174,9 @@ module.exports.controller = (app, io, socket_list) => {
     LIMIT ? OFFSET ?;
   `;
     const args = [
-      `%${req.body.query || ""}%`, // Search query
-      req.body.limit || 10, // Limit
-      (req.body.page || 1 - 1) * (req.body.limit || 10), // Offset
+      `%${req.body.query || ""}%`,
+      req.body.limit || 10,
+      (req.body.page || 1 - 1) * (req.body.limit || 10),
     ];
     db_helpers.query(sqlQuery, args, (error, result) => {
       if (error) {
@@ -185,9 +185,6 @@ module.exports.controller = (app, io, socket_list) => {
           message: "Lỗi xảy ra khi truy vấn dữ liệu",
         });
       }
-      console.log("====================================");
-      console.log(result);
-      console.log("====================================");
 
       return res.json({
         status: "1",

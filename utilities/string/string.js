@@ -1,11 +1,12 @@
 function arrayToString(imageArray) {
   if (!Array.isArray(imageArray)) {
-    throw new Error("Input must be an array");
+    return "";
   }
   return imageArray.join(",");
 }
 
 function stringToArray(imageString) {
+  if (!imageString) return [];
   if (typeof imageString !== "string") {
     throw new Error("Input must be a string");
   }

@@ -622,13 +622,32 @@ module.exports.controller = (app, io, socket_list) => {
             }
             // lấy ra 5 review mới nhất và có rating cao nhất
 
+            // const [author, category, [reviews]] = await Promise.all([
+            //   Author.findOne({ where: { author_id: book.author_id } }),
+            //   Category.findOne({ where: { category_id: book.category_id } }),
+            //   sequelizeHelpers.query(
+            //     `SELECT reviews.review_id, reviews.rating, reviews.comment, reviews.review_images, reviews.created_at, users.username, users.avatar FROM reviews INNER JOIN users ON reviews.user_id = users.user_id WHERE reviews.book_id = ${req.body.book_id} ORDER BY reviews.created_at DESC, reviews.rating DESC LIMIT 5;`
+            //   ),
+            // ]);
+
             const [author, category, [reviews]] = await Promise.all([
               Author.findOne({ where: { author_id: book.author_id } }),
               Category.findOne({ where: { category_id: book.category_id } }),
               sequelizeHelpers.query(
-                `SELECT reviews.review_id, reviews.rating, reviews.comment, reviews.review_images, reviews.created_at, users.username, users.avatar FROM reviews INNER JOIN users ON reviews.user_id = users.user_id WHERE reviews.book_id = ${req.body.book_id} ORDER BY reviews.created_at DESC, reviews.rating DESC LIMIT 5;`
+                `SELECT reviews.review_id, reviews.rating, reviews.comment, reviews.review_images, reviews.created_at, users.username, users.avatar
+                 FROM reviews
+                 INNER JOIN users ON reviews.user_id = users.user_id
+                 WHERE reviews.book_id = ${req.body.book_id}
+                 ORDER BY reviews.created_at DESC, reviews.rating DESC
+                 LIMIT 5;`
               ),
             ]);
+            if (!author || !category) {
+              return res.json({
+                status: "0",
+                message: "Author or category not found",
+              });
+            }
 
             const data = {
               book_id: book.book_id,
@@ -640,6 +659,7 @@ module.exports.controller = (app, io, socket_list) => {
               book_avatar: book.book_avatar,
               old_price: book.old_price,
               new_price: book.new_price,
+              // avatar_reviews: stringToArray(book.avatar_reviews),
               avatar_reviews: stringToArray(book.avatar_reviews),
               discount_percentage: Math.round(
                 ((book.old_price - book.new_price) / book.old_price) * 100

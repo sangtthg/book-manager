@@ -172,13 +172,47 @@ module.exports.controller = (app, io, socket_list) => {
   });
 
   //GET
+  // app.post("/api/category/get", helper.authorization, (req, res) => {
+  //   const query = `SELECT * FROM categories`;
+  //   db.query(query, (err, result) => {
+  //     if (err) {
+  //       return res.json({
+  //         status: "0",
+  //         message: msg_fail,
+  //       });
+  //     }
+  //     return res.json({
+  //       status: "1",
+  //       message: msg_success,
+  //       data: result,
+  //     });
+  //   });
+  // });
   app.post("/api/category/get", helper.authorization, (req, res) => {
-    const query = `SELECT * FROM categories`;
-    db.query(query, (err, result) => {
+    const limit = req.body.limit || 10;
+    const page = req.body.page || 1;
+    const offset = (page - 1) * limit;
+    const query = req.body.query || "";
+
+    const sqlQuery = `
+      SELECT c.category_id, c.category_name, u.username AS created_by_username
+      FROM categories c
+      LEFT JOIN users u ON c.created_by = u.user_id
+      WHERE c.category_name LIKE ?
+      LIMIT ? OFFSET ?;
+    `;
+
+    const args = [
+      `%${query}%`, // Search query
+      limit, // Limit
+      offset, // Offset
+    ];
+
+    db.query(sqlQuery, args, (err, result) => {
       if (err) {
         return res.json({
           status: "0",
-          message: msg_fail,
+          message: "Lỗi xảy ra khi truy vấn dữ liệu",
         });
       }
       return res.json({
