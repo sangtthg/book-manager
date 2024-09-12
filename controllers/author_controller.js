@@ -175,8 +175,8 @@ module.exports.controller = (app, io, socket_list) => {
   `;
     const args = [
       `%${req.body.query || ""}%`,
-      req.body.limit || 10,
-      (req.body.page || 1 - 1) * (req.body.limit || 10),
+      limit, // Sử dụng biến limit
+      offset, // Sử dụng biến offset
     ];
     db_helpers.query(sqlQuery, args, (error, result) => {
       if (error) {

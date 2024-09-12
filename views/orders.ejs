@@ -64,7 +64,7 @@
                         <tr class="<%= order.statusShip.status === 'delivered' ? 'delivered-row' :order.statusShip.status === 'cancelled' ? 'cancelled-row' :
                         order.statusShip.status === 'pending' ? 'pending-row' :'' %>">
                             <td><%= order.id %></td>
-                            <td><%= order.username %></td>
+                            <td><%= order.name %></td>
                             <td><%= order.totalPrice %></td>
                      
                             <td><%= order.statusShip.description %></td>
@@ -88,7 +88,7 @@
                                     <% } %>
                                   </ul>
                                 </div>
-                                <a href="/statistics/items/<%=order.id%>" class="btn btn-sm btn-info">Chi tiết</a>
+                                <a href="/statistics/items/<%=order.id%>" class="btn btn-sm btn-info">Chi tiết đơn hàng</a>
                               </td>
                         </tr>
                     <% }); %>

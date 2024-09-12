@@ -165,19 +165,22 @@
   <script>
     const token = localStorage.getItem("token");
     function fetchAuthors() {
-      const authorSelect = document.getElementById("authorSelect");
+    
+ 
       fetch("/api/author/get", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+ 
       })
         .then((response) => response.json())
         .then((data) => {
           if (data.status === "1") {
+            const authorSelect = document.getElementById("authorSelect");
             authorSelect.innerHTML = "";
-            data.data.rows.forEach((author) => {
+            data.data.forEach((author) => {
               const option = document.createElement("option");
               option.value = author.author_id;
               option.textContent = author.author_name;
@@ -189,6 +192,7 @@
         })
         .catch((error) => console.error("Error fetching authors:", error));
     }
+ 
 
     function fetchCategories() {
       fetch("/api/category/get", {
@@ -203,6 +207,7 @@
           if (data.status === "1") {
             const categorySelect = document.getElementById("categorySelect");
             categorySelect.innerHTML = "";
+
             data.data.forEach((category) => {
               const option = document.createElement("option");
               option.value = category.category_id;

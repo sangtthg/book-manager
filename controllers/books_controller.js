@@ -462,19 +462,31 @@ module.exports.controller = (app, io, socket_list) => {
         const [newBooks, bestSellerBooks, mostViewBooks, randomBooks] =
           await Promise.all([
             Book.findAll({
-              where: { publication_year: new Date().getFullYear() },
+              where: {
+                publication_year: new Date().getFullYear(),
+                quantity: { [Sequelize.Op.gt]: 0 }, // Điều kiện thêm vào
+              },
               order: [["created_at", "DESC"]],
               limit: 7,
             }),
             Book.findAll({
+              where: {
+                quantity: { [Sequelize.Op.gt]: 0 }, // Điều kiện thêm vào
+              },
               order: [["purchase_count", "DESC"]],
               limit: 7,
             }),
             Book.findAll({
+              where: {
+                quantity: { [Sequelize.Op.gt]: 0 }, // Điều kiện thêm vào
+              },
               order: [["views_count", "DESC"]],
               limit: 7,
             }),
             Book.findAll({
+              where: {
+                quantity: { [Sequelize.Op.gt]: 0 }, // Điều kiện thêm vào
+              },
               order: Sequelize.literal("rand()"),
               limit: 8,
             }),
@@ -659,7 +671,6 @@ module.exports.controller = (app, io, socket_list) => {
               book_avatar: book.book_avatar,
               old_price: book.old_price,
               new_price: book.new_price,
-              // avatar_reviews: stringToArray(book.avatar_reviews),
               avatar_reviews: stringToArray(book.avatar_reviews),
               discount_percentage: Math.round(
                 ((book.old_price - book.new_price) / book.old_price) * 100

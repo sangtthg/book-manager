@@ -42,6 +42,19 @@ exports.createOrder = async (req, res) => {
           .status(404)
           .json({ message: "Không tìm thấy sách", status: "-1" });
       }
+      // Kiểm tra số lượng sách trong kho
+      if (book.quantity < cart.quantity) {
+        return res.status(400).json({
+          message: `Sách ${book.title} không đủ số lượng trong kho`,
+          status: "-1",
+        });
+      }
+
+      // Cập nhật lại số lượng sách sau khi tạo đơn hàng
+      await book.update({
+        quantity: book.quantity - cart.quantity,
+      });
+
       totalPrice += book.new_price * cart.quantity;
       totalQuantity += cart.quantity;
       items.push({
@@ -120,8 +133,9 @@ exports.createOrder = async (req, res) => {
       items: JSON.stringify(items),
       listCartId: listCart,
       phone: req.body.phone || "0123456789",
+      name: req.body.name || "",
     });
-
+    console.log("Đơn hàng mới được tạo:", newOrder);
     const notificationResult = await createNotification(
       user_id,
       "createOrder",
@@ -190,6 +204,7 @@ exports.listOrders = async (req, res) => {
         return {
           ...order.dataValues,
           items: itemsWithAuthorName,
+          name: order.name,
         };
       })
     );
@@ -467,9 +482,25 @@ exports.cancelled = async (req, res) => {
 
     if (order.paymentStatus !== "pending") {
       return res.status(400).json({
-        message: "Không thể hủy đơn hàng!",
+        message: "Không thể hủy đơn hàng đã thanh toán!",
         code: -1,
       });
+    }
+
+    // Lấy danh sách các sản phẩm từ đơn hàng đã được lưu trữ
+    const items = JSON.parse(order.items);
+
+    // Cập nhật lại số lượng sách đã bị trừ
+    for (const item of items) {
+      const book = await Book.findOne({
+        where: { book_id: item.book_id },
+      });
+
+      if (book) {
+        await book.update({
+          quantity: book.quantity + item.quantity,
+        });
+      }
     }
 
     order.statusShip = "cancelled";
@@ -488,6 +519,24 @@ exports.cancelled = async (req, res) => {
     });
   }
 };
+
+//     order.statusShip = "cancelled";
+//     await order.save();
+//     await createNotification(order.userId, "cancelled", order.id);
+
+//     return res.json({
+//       message: "Hủy đơn hàng thành công",
+//       code: 0,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       message: "Hệ thống bận!",
+//       code: -1,
+//     });
+//   }
+// };
+
 // orderController.js
 
 // exports.itemDetails = async (req, res) => {

@@ -61,6 +61,9 @@
         object-fit: cover; /* Đảm bảo ảnh không bị biến dạng */
         border-radius: 5px; /* Tạo góc bo tròn */
       }
+      .out-of-stock {
+        color: red;
+      }
     </style>
   </head>
   <body>
@@ -174,7 +177,15 @@
                 book.used_books;
               document.getElementById("bookAvatar").src = book.book_avatar;
               document.getElementById("rateBook").textContent = book.rate_book;
-              document.getElementById("soluong").textContent = book.quantity;
+
+              const quantityElement = document.getElementById("soluong");
+              if (book.quantity === 0) {
+                quantityElement.textContent = "Hết hàng";
+                quantityElement.classList.add("out-of-stock");
+              } else {
+                quantityElement.textContent = book.quantity;
+                quantityElement.classList.remove("out-of-stock");
+              }
 
               const avatarReviewsContainer = document.getElementById(
                 "avatarReviewsContainer"
