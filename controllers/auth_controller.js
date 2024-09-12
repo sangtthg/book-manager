@@ -199,23 +199,66 @@ module.exports.controller = (app, io, socket_list) => {
     );
   });
 
+  // app.post("/api/forgot_password", (req, res) => {
+  //   helper.Dlog(req.body);
+  //   const reqObj = req.body;
+  //   helper.CheckParameterValid(
+  //     res,
+  //     reqObj,
+  //     ["verify", "verify.otp_id", "verify.email", "password", "re_password"],
+  //     async () => {
+  //       const { password, re_password } = reqObj;
+  //       const { email, otp_id } = reqObj.verify;
+
+  //       if (password !== re_password) {
+  //         return res.json({ status: "0", message: "Mật khẩu không khớp" });
+  //       }
+
+  //       const otp = await Otp.findOne({
+  //         where: { id: otp_id, email, type: OtpTypes.FORGOT_PASSWORD },
+  //       });
+  //       if (!otp) {
+  //         return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
+  //       }
+
+  //       const passwordCrypt = await hashPassword(password);
+  //       if (!passwordCrypt) {
+  //         return res.json({ status: "0", message: "Lỗi mã hóa mật khẩu" });
+  //       }
+
+  //       db.query(
+  //         "UPDATE `users` SET `password` = ? WHERE `email` = ?",
+  //         [passwordCrypt, email],
+  //         (err, result) => {
+  //           console.log(result);
+  //           if (err) {
+  //             console.log("/api/forgot_password", err);
+  //             res.json({ status: "0", message: msg_fail });
+  //             return;
+  //           }
+  //           res.json({ status: "1", message: msg_success });
+  //         }
+  //       );
+  //     }
+  //   );
+  // });
   app.post("/api/forgot_password", (req, res) => {
     helper.Dlog(req.body);
     const reqObj = req.body;
     helper.CheckParameterValid(
       res,
       reqObj,
-      ["verify", "verify.otp_id", "verify.email", "password", "re_password"],
+      ["verify", "verify.email", "password", "re_password"],
       async () => {
         const { password, re_password } = reqObj;
-        const { email, otp_id } = reqObj.verify;
+        const { email } = reqObj.verify;
 
         if (password !== re_password) {
           return res.json({ status: "0", message: "Mật khẩu không khớp" });
         }
 
         const otp = await Otp.findOne({
-          where: { id: otp_id, email, type: OtpTypes.FORGOT_PASSWORD },
+          where: { email, type: OtpTypes.FORGOT_PASSWORD },
         });
         if (!otp) {
           return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
@@ -242,7 +285,6 @@ module.exports.controller = (app, io, socket_list) => {
       }
     );
   });
-
   //ADMIN
   app.post("/api/admin/login", (req, res) => {
     login(req, res, true);
