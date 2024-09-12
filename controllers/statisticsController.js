@@ -1,6 +1,6 @@
 const { Op } = require("sequelize");
 const { Order, User, sequelize } = require("../models");
-
+const Author = require("../models/author_model");
 exports.getRevenueStatisticsPage = (req, res) => {
   res.render("revenueStatistics", { title: "Thống kê doanh thu" });
 };
@@ -163,6 +163,10 @@ exports.getItemDetails = async (req, res) => {
       return res.status(404).json({ error: "Mặt hàng không tìm thấy" });
     }
 
+    const user = await User.findOne({
+      where: { user_id: item.userId },
+    });
+
     const items = JSON.parse(item.items);
 
     items.forEach((i) => {
@@ -172,15 +176,14 @@ exports.getItemDetails = async (req, res) => {
       i.shippingFee = formatNumber(i.shippingFee);
     });
 
-    console.log("====================================");
-    console.log(item.address);
-    console.log("====================================");
-
     res.render("itemDetails", {
       title: "Chi tiết mặt hàng",
       data: {
         items,
         address: item.address,
+        phone: item.phone,
+        totalPrice: item.totalPrice,
+        username: user.username,
       },
     });
   } catch (error) {

@@ -52,10 +52,9 @@
                 <thead>
                     <tr>
                         <th>Mã đơn hàng</th>
-                        <th>Người dùng</th>
+                        <th>Tên khách hàng</th>
                         <th>Tổng tiền</th>
-                        <th>Số điện thọai</th>
-                        <th>Địa chỉ</th>
+
                         <th>Trạng thái</th>
                         <th>Hành động</th>
                     </tr>
@@ -67,8 +66,7 @@
                             <td><%= order.id %></td>
                             <td><%= order.username %></td>
                             <td><%= order.totalPrice %></td>
-                            <td><%= order.phone %></td>          
-                            <td><%= order.address %></td>
+                     
                             <td><%= order.statusShip.description %></td>
                             <td>
                                 <div class="btn-group" role="group">

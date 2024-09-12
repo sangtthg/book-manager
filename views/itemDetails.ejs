@@ -64,13 +64,18 @@
 
         <div
           style="
-            background-color: antiquewhite;
+            background-color: rgb(228, 221, 211);
             padding: 8px 16px;
             border-radius: 6px;
             margin-bottom: 12px;
           "
         >
-          <div style="color: brown">Địa chỉ: <%=data.address%></div>
+          <h3>Thông tin khách hàng</h3>
+          <div>Tên khách hàng: <%=data.username%></div>
+
+          <div>Địa chỉ: <%=data.address%></div>
+          <div>Số điện thoại: <%=data.phone%></div>
+          <div>Tồng tiền: <%=data.totalPrice%> VND</div>
         </div>
 
         <div class="table-responsive">
@@ -91,12 +96,13 @@
                     src="<%= item.book_avatar %>"
                     alt="<%= item.title %>"
                     class="book-avatar"
+                    style="width: 200px; height: 300px; object-fit: cover"
                   />
                 </td>
                 <td>
                   <h5><%= item.title %></h5>
                   <p><strong>ID:</strong> <%= item.book_id %></p>
-                  <p><strong>Tác giả ID:</strong> <%= item.author_name %></p>
+                  <p><strong>Tác giả ID:</strong> <%= item.author_id %></p>
                   <p><strong>Thể loại ID:</strong> <%= item.category_id %></p>
                   <p>
                     <strong>Năm xuất bản:</strong> <%= item.publication_year %>

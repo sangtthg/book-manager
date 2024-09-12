@@ -49,6 +49,18 @@
         margin-top: 20px;
         font-weight: bold;
       }
+      #avatarReviewsContainer {
+        display: flex;
+        gap: 10px; /* Khoảng cách giữa các ảnh */
+        flex-wrap: wrap;
+      }
+
+      #avatarReviewsContainer img.review-images {
+        width: 200px; /* Đặt kích thước ảnh */
+        height: 300px;
+        object-fit: cover; /* Đảm bảo ảnh không bị biến dạng */
+        border-radius: 5px; /* Tạo góc bo tròn */
+      }
     </style>
   </head>
   <body>
@@ -96,14 +108,26 @@
         <p style="display: none">
           <strong>Used Books:</strong> <span id="usedBooks"></span>
         </p>
-
-        <div id="reviewImagesContainer">
-          <h3 style="color: #ff7622"><strong>Ảnh đọc thử</strong></h3>
-          <div class="review-images-container" id="reviewImages"></div>
+        <hr />
+        <h3 style="color: #ff7622">
+          <strong>Ảnh đọc thử</strong>
+        </h3>
+        <div id="avatarReviewsContainer">
+          <!-- Hình ảnh từ avatar_reviews sẽ hiển thị ở đây -->
         </div>
 
+        <div id="reviewImagesContainer">
+          <div
+            class="review-images-container"
+            id="reviewImages"
+            style="display: none"
+          ></div>
+        </div>
+        <hr />
+        <h3 style="color: #ff7622">
+          <strong>Đánh giá</strong>
+        </h3>
         <div id="reviews">
-          <h3><strong style="color: #ff7622">Đánh giá</strong></h3>
           <div id="reviews">Review</div>
         </div>
       </div>
@@ -128,7 +152,7 @@
           .then((data) => {
             if (data.status === "1" && data.message === "successfully") {
               const book = data.data;
-
+              console.log("Avatar Reviews:", book.avatar_reviews);
               // Hiển thị thông tin sách
               document.getElementById("title").textContent = book.title;
               document.getElementById("author").textContent = book.author_name;
@@ -152,10 +176,24 @@
               document.getElementById("rateBook").textContent = book.rate_book;
               document.getElementById("soluong").textContent = book.quantity;
 
+              const avatarReviewsContainer = document.getElementById(
+                "avatarReviewsContainer"
+              );
+              avatarReviewsContainer.innerHTML = ""; // Xóa nội dung trước đó
+
+              // Duyệt qua các hình ảnh avatar_reviews và hiển thị
+              book.avatar_reviews.forEach((image) => {
+                const imgElement = document.createElement("img");
+                imgElement.src = image;
+                imgElement.alt = "Avatar Review";
+                imgElement.classList.add("review-images"); // Thêm class để CSS style dễ dàng
+                avatarReviewsContainer.appendChild(imgElement);
+              });
+
               // Hiển thị ảnh đọc thử
               const reviewImagesContainer =
                 document.getElementById("reviewImages");
-              // reviewImagesContainer.innerHTML = ""; // Xóa nội dung cũ
+              reviewImagesContainer.innerHTML = ""; // Xóa nội dung cũ
 
               book.reviews.forEach((review) => {
                 review.review_images.split(",").forEach((image) => {
@@ -173,7 +211,7 @@
               book.reviews.forEach((review) => {
                 const reviewElement = document.createElement("div");
                 reviewElement.innerHTML = `
-                <p> Đánh giá</p>
+              
               <p><strong></strong> <img src="${
                 review.avatar
               }" alt="Reviewer Avatar" style="max-width: 50px;" /></p>
