@@ -77,15 +77,20 @@ exports.createOrder = async (req, res) => {
         return res.json({ code: 5, message: "Không tìm thấy mã voucher" });
       }
 
-      const userVoucher = await UserVoucher.findOne({
+      const usersVoucher = await UserVoucher.findAll({
         where: {
-          userId: user_id,
           voucherId: voucher.id,
         },
       });
 
-      if (userVoucher) {
-        return res.json({ code: 6, message: "Bạn đã sử dụng voucher này rồi" });
+      usersVoucher.forEach((element) => {
+        if (element.user_id == user_id) {
+          return res.json({ code: 5, message: "Bạn đã sử dụng voucher này" });
+        }
+      });
+
+      if (usersVoucher.length == voucher.quantity) {
+        return res.json({ code: 5, message: "Đã hết số lần sử dụng" });
       }
 
       const now = moment();

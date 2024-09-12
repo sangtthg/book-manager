@@ -33,7 +33,7 @@ const Book = sequelizeHelpers.define(
     rate_book: {
       type: DataTypes.FLOAT,
       allowNull: false,
-      defaultValue: 5,
+      defaultValue: 0,
     },
   },
   { tableName: "books", timestamps: false }
