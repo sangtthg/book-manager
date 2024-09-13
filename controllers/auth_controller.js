@@ -25,7 +25,10 @@ const login = async (req, res, isAdmin = true) => {
       }
 
       if (result.length < 1) {
-        res.json({ status: "0", message: msg_invalidUser });
+        res.json({
+          status: "0",
+          message: "Email không tồn tại hoặc tài khoản bị khóa.",
+        });
       }
       try {
         const user = result[0];
@@ -37,9 +40,12 @@ const login = async (req, res, isAdmin = true) => {
           });
         }
         const compare = await comparePassword(reqObj.password, user.password);
-        console.log("compare", compare);
+        // console.log("compare", compare);
         if (!compare) {
-          return res.json({ status: "0", message: msg_invalidUser });
+          return res.json({
+            status: "0",
+            message: "Mật khẩu không chính xác.",
+          });
         }
         const obj = {
           user_id: user.user_id,
@@ -57,7 +63,7 @@ const login = async (req, res, isAdmin = true) => {
             user: user,
             token: token,
           },
-          message: msg_success,
+          message: "Đăng nhập thành công.",
         });
       } catch (error) {
         return res.json({ status: "0", message: msg_fail });
