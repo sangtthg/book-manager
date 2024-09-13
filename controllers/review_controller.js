@@ -1,3 +1,4 @@
+const { auth } = require("firebase-admin");
 const { updateRateBook } = require("../common/book_common");
 const db_helpers = require("../helpers/db_helpers");
 const helpers = require("../helpers/helpers");
@@ -89,51 +90,55 @@ module.exports.controller = (app, io, socket_list) => {
     }
   );
 
-  app.post("/api/review/get", helpers.authorization, async (req, res) => {
-    const reqObj = req.body;
-    helpers.CheckParameterValid(res, reqObj, ["book_id"], async () => {
-      helpers.CheckParameterNull(res, reqObj, ["book_id"], async () => {
-        try {
-          const { book_id, page = 1, limit = 10 } = reqObj;
-          const offset = (page - 1) * limit;
-          const reviews = await Review.findAll({
-            attributes: { exclude: ["book_id", "user_id"] },
-            where: { book_id },
-            include: [{ model: User, attributes: ["username", "avatar"] }],
-            order: [["created_at", "DESC"]],
-            limit,
-            offset,
-          });
-          const transformedReviews = reviews.map((review) => {
-            return {
-              review_id: review.review_id,
-              rating: review.rating,
-              comment: review.comment,
-              username: review.User.username,
-              user_avatar: review.User.avatar,
-              review_images: stringToArray(review.review_images),
-              created_at: review.created_at,
-            };
-          });
+  app.post(
+    "/api/review/get",
+    //  helpers.authorization,
+    async (req, res) => {
+      const reqObj = req.body;
+      helpers.CheckParameterValid(res, reqObj, ["book_id"], async () => {
+        helpers.CheckParameterNull(res, reqObj, ["book_id"], async () => {
+          try {
+            const { book_id, page = 1, limit = 10 } = reqObj;
+            const offset = (page - 1) * limit;
+            const reviews = await Review.findAll({
+              attributes: { exclude: ["book_id", "user_id"] },
+              where: { book_id },
+              include: [{ model: User, attributes: ["username", "avatar"] }],
+              order: [["created_at", "DESC"]],
+              limit,
+              offset,
+            });
+            const transformedReviews = reviews.map((review) => {
+              return {
+                review_id: review.review_id,
+                rating: review.rating,
+                comment: review.comment,
+                username: review.User.username,
+                user_avatar: review.User.avatar,
+                review_images: stringToArray(review.review_images),
+                created_at: review.created_at,
+              };
+            });
 
-          return res.json({
-            status: "1",
-            message: "Lấy review thành công",
-            reviews: {
-              total: transformedReviews.length,
-              data: transformedReviews,
-            },
-          });
-        } catch (error) {
-          console.log("error: ", error);
-          return res.json({
-            status: "0",
-            message: "Lỗi hệ thống",
-          });
-        }
+            return res.json({
+              status: "1",
+              message: "Lấy review thành công",
+              reviews: {
+                total: transformedReviews.length,
+                data: transformedReviews,
+              },
+            });
+          } catch (error) {
+            console.log("error: ", error);
+            return res.json({
+              status: "0",
+              message: "Lỗi hệ thống",
+            });
+          }
+        });
       });
-    });
-  });
+    }
+  );
 
   // delete review
 

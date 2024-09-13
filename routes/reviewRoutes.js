@@ -5,10 +5,10 @@ const router = express.Router();
 
 router.post("/", helpers.authorization, reviewController.create);
 
-router.get("/",  reviewController.getAll);
-router.get("/all",  reviewController.getAllV2);
+router.get("/", reviewController.getAll);
+router.get("/all", reviewController.getAllV2);
 
-router.get("/:bookId", helpers.authorization, reviewController.getById);
+router.get("/:bookId", reviewController.getById);
 
 router.put("/:id", helpers.authorization, reviewController.update);
 

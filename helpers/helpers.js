@@ -257,7 +257,7 @@ module.exports = {
   // nếu là admin thì next
   // nếu không phải admin thì trả về lỗi
   checkRole(req, res, next) {
-    const allowedRoles = ["admin", "member"];
+    const allowedRoles = ["admin", "member", "user"];
     if (!allowedRoles.includes(req.auth.role)) {
       return res.json({ status: "0", message: "Bạn không có quyền truy cập." });
     }
