@@ -111,6 +111,7 @@ module.exports.controller = (app, io, socket_list) => {
             const transformedReviews = reviews.map((review) => {
               return {
                 review_id: review.review_id,
+                book_id: book_id,
                 rating: review.rating,
                 comment: review.comment,
                 username: review.User.username,

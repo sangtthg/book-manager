@@ -5,7 +5,7 @@ const CartDetail = require("./cart_detail_model");
 const VnpayTransaction = require("./VnpayTransaction");
 const PaymentTransaction = require("./PaymentTransaction");
 const User = require("./user_model");
-const Review = require("./reviews.model");
+const Review = require("./review_model");
 const Book = require("./book_model");
 const Notification = require("./NotificationModel");
 const Author = require("./author_model");
@@ -23,7 +23,7 @@ const db = {
   Notification,
   Author,
   Voucher,
-  UserVoucher
+  UserVoucher,
 };
 
 module.exports = db;

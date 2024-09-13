@@ -40,6 +40,7 @@
       .book-details p {
         margin: 10px 0;
       }
+
       .review-images-container {
         display: flex;
         flex-wrap: wrap;
@@ -49,18 +50,20 @@
         margin-top: 20px;
         font-weight: bold;
       }
+
       #avatarReviewsContainer {
         display: flex;
-        gap: 10px; /* Khoảng cách giữa các ảnh */
+        gap: 10px;
         flex-wrap: wrap;
       }
 
       #avatarReviewsContainer img.review-images {
-        width: 200px; /* Đặt kích thước ảnh */
+        width: 200px;
         height: 300px;
-        object-fit: cover; /* Đảm bảo ảnh không bị biến dạng */
-        border-radius: 5px; /* Tạo góc bo tròn */
+        object-fit: cover;
+        border-radius: 5px;
       }
+
       .out-of-stock {
         color: red;
       }
@@ -74,29 +77,27 @@
         <strong>Book ID:</strong> <span id="bookId"><%= bookId %></span>
       </p>
       <div id="bookDetails">
-        <h2>
-          <span id="title" style="font-weight: bold"></span>
-        </h2>
+        <h2 id="title" style="font-weight: bold"></h2>
         <div class="book-info">
           <img id="bookAvatar" alt="Book Avatar" />
           <div class="book-details">
             <p><strong>Tác giả:</strong> <span id="author"></span></p>
             <p><strong>Thể loại:</strong> <span id="category"></span></p>
             <p>
-              <strong>Năm sản xuất:</strong> <span id="publicationYear"></span>
+              <strong>Năm xuất bản:</strong> <span id="publicationYear"></span>
             </p>
             <p><strong>Giá sách:</strong> <span id="oldPrice"></span> đ</p>
             <p>
               <strong>Giá mới:</strong>
               <span id="newPrice" style="color: red; font-style: italic"></span>
-              <span style="color: red; font-style: italic">đ</span>
+              đ
             </p>
             <p>
               <strong>Đánh giá trung bình:</strong>
               <span id="rateBook"></span> sao
             </p>
             <p><strong>Lượt xem:</strong> <span id="viewsCount"></span></p>
-            <p><strong>lượt mua:</strong> <span id="purchaseCount"></span></p>
+            <p><strong>Lượt mua:</strong> <span id="purchaseCount"></span></p>
             <p><strong>Số lượng sách:</strong> <span id="soluong"></span></p>
           </div>
         </div>
@@ -111,7 +112,9 @@
         <p style="display: none">
           <strong>Used Books:</strong> <span id="usedBooks"></span>
         </p>
+
         <hr />
+
         <h3 style="color: #ff7622">
           <strong>Ảnh đọc thử</strong>
         </h3>
@@ -124,14 +127,18 @@
             class="review-images-container"
             id="reviewImages"
             style="display: none"
-          ></div>
+          >
+            <!-- Hình ảnh từ reviews sẽ hiển thị ở đây -->
+          </div>
         </div>
+
         <hr />
+
         <h3 style="color: #ff7622">
           <strong>Đánh giá</strong>
         </h3>
         <div id="reviews">
-          <div id="reviews">Review</div>
+          <!-- Đánh giá sẽ hiển thị ở đây -->
         </div>
       </div>
     </div>
@@ -139,10 +146,9 @@
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const bookIdElement = document.getElementById("bookId");
-        const bookId = bookIdElement.textContent;
+        const bookId = bookIdElement.textContent.trim(); // Loại bỏ khoảng trắng
 
         const token = localStorage.getItem("token");
-
         fetch("/api/book/get-detail", {
           method: "POST",
           headers: {
@@ -153,9 +159,12 @@
         })
           .then((response) => response.json())
           .then((data) => {
-            if (data.status === "1" && data.message === "successfully") {
+            if (
+              data.status === "1" &&
+              data.message === "Lấy thông tin sách và đánh giá thành công"
+            ) {
               const book = data.data;
-              console.log("Avatar Reviews:", book.avatar_reviews);
+
               // Hiển thị thông tin sách
               document.getElementById("title").textContent = book.title;
               document.getElementById("author").textContent = book.author_name;
@@ -167,16 +176,11 @@
                 book.publication_year;
               document.getElementById("oldPrice").textContent = book.old_price;
               document.getElementById("newPrice").textContent = book.new_price;
-              document.getElementById("discountPercentage").textContent =
-                book.discount_percentage;
+              document.getElementById("rateBook").textContent = book.rate_book;
               document.getElementById("viewsCount").textContent =
                 book.views_count;
               document.getElementById("purchaseCount").textContent =
                 book.purchase_count;
-              document.getElementById("usedBooks").textContent =
-                book.used_books;
-              document.getElementById("bookAvatar").src = book.book_avatar;
-              document.getElementById("rateBook").textContent = book.rate_book;
 
               const quantityElement = document.getElementById("soluong");
               if (book.quantity === 0) {
@@ -187,25 +191,23 @@
                 quantityElement.classList.remove("out-of-stock");
               }
 
+              document.getElementById("bookAvatar").src = book.book_avatar;
+
               const avatarReviewsContainer = document.getElementById(
                 "avatarReviewsContainer"
               );
               avatarReviewsContainer.innerHTML = ""; // Xóa nội dung trước đó
-
-              // Duyệt qua các hình ảnh avatar_reviews và hiển thị
               book.avatar_reviews.forEach((image) => {
                 const imgElement = document.createElement("img");
                 imgElement.src = image;
                 imgElement.alt = "Avatar Review";
-                imgElement.classList.add("review-images"); // Thêm class để CSS style dễ dàng
+                imgElement.classList.add("review-images");
                 avatarReviewsContainer.appendChild(imgElement);
               });
 
-              // Hiển thị ảnh đọc thử
               const reviewImagesContainer =
                 document.getElementById("reviewImages");
               reviewImagesContainer.innerHTML = ""; // Xóa nội dung cũ
-
               book.reviews.forEach((review) => {
                 review.review_images.split(",").forEach((image) => {
                   const imgElement = document.createElement("img");
@@ -218,25 +220,23 @@
 
               const reviewsContainer = document.getElementById("reviews");
               reviewsContainer.innerHTML = "";
-
               book.reviews.forEach((review) => {
                 const reviewElement = document.createElement("div");
                 reviewElement.innerHTML = `
-              
-              <p><strong></strong> <img src="${
-                review.avatar
-              }" alt="Reviewer Avatar" style="max-width: 50px;" /></p>
-              <p><strong>Username:</strong> ${review.username}</p>
-              <p style="display: none"><strong>Review ID:</strong> ${
-                review.review_id
-              }</p>
-              <p><strong>Rating:</strong> ${review.rating} sao</p>
-              <p><strong>Nội dung đánh giá:</strong> ${review.comment}</p>
-              <p><strong>Thời gian đánh giá:</strong> ${new Date(
-                review.created_at
-              ).toLocaleString()}</p>
-              <hr />
-            `;
+                  <p><strong></strong> <img src="${
+                    review.avatar
+                  }" alt="Reviewer Avatar" style="max-width: 50px;" /></p>
+                  <p><strong>Ảnh đánh giá:</strong> <img src="${
+                    review.review_images
+                  }" alt="Reviewer Avatar" style="max-width: 50px;" /></p>
+                  <p><strong>Username:</strong> ${review.username}</p>
+                  <p><strong>Rating:</strong> ${review.rating} sao</p>
+                  <p><strong>Content:</strong> ${review.comment}</p>
+                  <p><strong>Date:</strong> ${new Date(
+                    review.created_at
+                  ).toLocaleString()}</p>
+                  <hr />
+                `;
                 reviewsContainer.appendChild(reviewElement);
               });
             } else {

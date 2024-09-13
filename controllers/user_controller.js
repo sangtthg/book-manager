@@ -204,6 +204,35 @@ module.exports.controller = (app, io, socket_list) => {
       }
     }
   );
+  app.post("/api/user/profile", helper.authorization, async (req, res) => {
+    try {
+      const user = req.auth.user;
+
+      if (!user) {
+        return res
+          .status(401)
+          .json({ status: "0", message: "Xác thực không hợp lệ" });
+      }
+
+      const userData = await User.findOne({
+        where: { user_id: user.user_id },
+      });
+
+      if (!userData) {
+        return res
+          .status(404)
+          .json({ status: "0", message: "Người dùng không tồn tại" });
+      }
+      res.json({
+        status: "1",
+        message: "Lấy dữ liệu thành công",
+        user: userData,
+      });
+    } catch (error) {
+      console.log("/api/user/profile", error);
+      res.status(500).json({ status: "0", message: "Lỗi hệ thống" });
+    }
+  });
 
   app.post(
     "/api/user/update",
