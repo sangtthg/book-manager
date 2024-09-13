@@ -84,6 +84,13 @@ module.exports.controller = (app, io, socket_list) => {
     const reqObj = req.body;
     helper.CheckParameterValid(res, reqObj, ["email"], async () => {
       try {
+        const email = req.body.email;
+        const user = await User.findOne({ where: { email: email } });
+
+        if (user) {
+          return res.json({ status: "0", message: "Email đã tồn tại" });
+        }
+
         const db_otp = await sendOTPEmail(reqObj.email, OtpTypes.REGISTER);
         res.json({ status: "1", message: msg_success, data: db_otp });
       } catch (error) {
@@ -205,49 +212,6 @@ module.exports.controller = (app, io, socket_list) => {
     );
   });
 
-  // app.post("/api/forgot_password", (req, res) => {
-  //   helper.Dlog(req.body);
-  //   const reqObj = req.body;
-  //   helper.CheckParameterValid(
-  //     res,
-  //     reqObj,
-  //     ["verify", "verify.email", "password", "re_password"],
-  //     async () => {
-  //       const { password, re_password } = reqObj;
-  //       const { email } = reqObj.verify;
-
-  //       if (password !== re_password) {
-  //         return res.json({ status: "0", message: "Mật khẩu không khớp" });
-  //       }
-
-  //       const otp = await Otp.findOne({
-  //         where: { email, type: OtpTypes.FORGOT_PASSWORD },
-  //       });
-  //       if (!otp) {
-  //         return res.json({ status: "0", message: "Mã OTP không hợp lệ" });
-  //       }
-
-  //       const passwordCrypt = await hashPassword(password);
-  //       if (!passwordCrypt) {
-  //         return res.json({ status: "0", message: "Lỗi mã hóa mật khẩu" });
-  //       }
-
-  //       db.query(
-  //         "UPDATE `users` SET `password` = ? WHERE `email` = ?",
-  //         [passwordCrypt, email],
-  //         (err, result) => {
-  //           console.log(result);
-  //           if (err) {
-  //             console.log("/api/forgot_password", err);
-  //             res.json({ status: "0", message: msg_fail });
-  //             return;
-  //           }
-  //           res.json({ status: "1", message: msg_success });
-  //         }
-  //       );
-  //     }
-  //   );
-  // });
   app.post("/api/verify_otp_forgot_password", async (req, res) => {
     const { email, otp, otp_id } = req.body; // Bổ sung otp_id vào body
 
