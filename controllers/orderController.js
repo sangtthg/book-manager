@@ -53,6 +53,7 @@ exports.createOrder = async (req, res) => {
       // Cập nhật lại số lượng sách sau khi tạo đơn hàng
       await book.update({
         quantity: book.quantity - cart.quantity,
+        purchase_count: book.purchase_count - cart.quantity,
       });
 
       totalPrice += book.new_price * cart.quantity;
@@ -77,21 +78,21 @@ exports.createOrder = async (req, res) => {
         return res.json({ code: 5, message: "Không tìm thấy mã voucher" });
       }
 
-      const usersVoucher = await UserVoucher.findAll({
-        where: {
-          voucherId: voucher.id,
-        },
-      });
+      // const usersVoucher = await UserVoucher.findAll({
+      //   where: {
+      //     voucherId: voucher.id,
+      //   },
+      // });
 
-      usersVoucher.forEach((element) => {
-        if (element.user_id == user_id) {
-          return res.json({ code: 5, message: "Bạn đã sử dụng voucher này" });
-        }
-      });
+      // usersVoucher.forEach((element) => {
+      //   if (element.user_id == user_id) {
+      //     return res.json({ code: 5, message: "Bạn đã sử dụng voucher này" });
+      //   }
+      // });
 
-      if (usersVoucher.length == voucher.quantity) {
-        return res.json({ code: 5, message: "Đã hết số lần sử dụng" });
-      }
+      // if (usersVoucher.length == voucher.quantity) {
+      //   return res.json({ code: 5, message: "Đã hết số lần sử dụng" });
+      // }
 
       const now = moment();
       const validFrom = moment(voucher.validFrom);
@@ -141,15 +142,16 @@ exports.createOrder = async (req, res) => {
       name: req.body.name || "",
     });
     console.log("Đơn hàng mới được tạo:", newOrder);
-    const notificationResult = await createNotification(
-      user_id,
-      "createOrder",
-      newOrder.id
-    );
 
-    if (notificationResult.code === -1) {
-      return res.status(500).json(notificationResult);
-    }
+    // const notificationResult = await createNotification(
+    //   user_id,
+    //   "createOrder",
+    //   newOrder.id
+    // );
+    // console.log("Kết quả tạo thông báo:", notificationResult);
+    // if (notificationResult.code === -1) {
+    //   return res.status(500).json(notificationResult);
+    // }
 
     const currentDate = moment();
     const deliveryStartDate = currentDate
@@ -169,7 +171,7 @@ exports.createOrder = async (req, res) => {
       deliveryDateText,
     });
   } catch (error) {
-    console.log(error);
+    console.error("Chi tiết lỗi:", error);
     res.status(500).json({ message: "Lỗi khi tạo đơn hàng", status: "-1" });
   }
 };
@@ -503,7 +505,8 @@ exports.cancelled = async (req, res) => {
 
       if (book) {
         await book.update({
-          quantity: book.quantity + item.quantity,
+          quantity: book.quantity - item.quantity,
+          purchase_count: book.purchase_count + item.quantity,
         });
       }
     }

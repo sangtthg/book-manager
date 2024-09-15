@@ -206,6 +206,28 @@
         border-radius: 5px;
         margin-left: 10px;
       }
+      #prevPageIcon {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+      }
+      .pagination {
+        display: none; /* Ẩn thanh phân trang ban đầu */
+        margin-left: 27px;
+        margin-right: 27px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        background-color: #f1f1f1;
+        padding: 10px 0;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      }
+      #page-indicator {
+        position: relative;
+      }
     </style>
   </head>
   <body>
@@ -266,7 +288,7 @@
           <img src="/uploads/left.png" alt="Trang trước" id="prevPageIcon" />
         </button>
         <span id="page-indicator">Trang 1</span>
-        <button onclick="nextPage()" id="nextPageBtn">
+        <button onclick="nextPage()" id="prevPageBtn">
           <img src="/uploads/right.png" alt="Trang sau" id="prevPageIcon" />
         </button>
       </div>
@@ -448,7 +470,7 @@
               document.getElementById(
                 "page-indicator"
               ).textContent = `Trang ${page}`;
-              totalItems = data.totalItems;
+              totalItems = data.data.count;
               currentPage = page;
               updatePaginationButtons(page);
             } else {
@@ -460,23 +482,28 @@
 
       function updatePaginationButtons(page) {
         const totalPages = Math.ceil(totalItems / itemsPerPage);
-        const previousButton = document.querySelector("#prevPageBtn");
-        const nextButton = document.querySelector("#nextPageBtn");
-
+        const previousButton = document.querySelector(
+          ".pagination button:first-child"
+        );
+        const nextButton = document.querySelector(
+          ".pagination button:last-child"
+        );
         previousButton.disabled = page <= 1;
         nextButton.disabled = page >= totalPages;
       }
 
-      function previousPage() {
-        if (currentPage > 1) {
-          fetchCategories(currentPage - 1);
+      function nextPage() {
+        if (currentPage < Math.ceil(totalItems / itemsPerPage)) {
+          currentPage++;
+
+          fetchCategories(currentPage);
         }
       }
 
-      function nextPage() {
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        if (currentPage < totalPages) {
-          fetchCategories(currentPage + 1);
+      function previousPage() {
+        if (currentPage > 1) {
+          currentPage--;
+          fetchCategories(currentPage);
         }
       }
 

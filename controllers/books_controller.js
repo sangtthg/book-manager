@@ -27,7 +27,7 @@ module.exports.controller = (app, io, socket_list) => {
     helpers.authorization,
     upload.fields([
       { name: "book_avatar", maxCount: 1 },
-      { name: "avatar_reviews", maxCount: 3 },
+      { name: "avatar_reviews", maxCount: 5 },
     ]),
     (req, res) => {
       helpers.CheckParameterValid(
@@ -59,6 +59,7 @@ module.exports.controller = (app, io, socket_list) => {
             ],
             async () => {
               try {
+                const title = req.body.title; // Khai báo biến title từ req.body
                 const fileBookAvatar = req.files["book_avatar"]
                   ? req.files["book_avatar"][0]
                   : null;
@@ -79,12 +80,12 @@ module.exports.controller = (app, io, socket_list) => {
 
                 if (fileAvatarReviews) {
                   if (
-                    fileAvatarReviews.length > 3 ||
+                    fileAvatarReviews.length > 5 || // Số lượng ảnh tối đa là 5
                     fileAvatarReviews.length < 1
                   ) {
                     return res.json({
                       status: "0",
-                      message: "Only 1 to 3 avatar review images are allowed",
+                      message: "Only 1 to 5 avatar review images are allowed",
                     });
                   }
                   for (let file of fileAvatarReviews) {
@@ -134,7 +135,7 @@ module.exports.controller = (app, io, socket_list) => {
                       "Năm xuất bản không hợp lệ. Năm phải nằm trong khoảng từ 1000 đến 2024.",
                   });
                 }
-                const existingBook = await Book.findOne({ where: { title } });
+                const existingBook = await Book.findOne({ where: { title } }); // Sử dụng biến title đã khai báo
 
                 if (existingBook) {
                   return res.json({
@@ -148,7 +149,6 @@ module.exports.controller = (app, io, socket_list) => {
                   : [];
 
                 const {
-                  title,
                   author_id,
                   category_id,
                   description,
@@ -157,8 +157,6 @@ module.exports.controller = (app, io, socket_list) => {
                   new_price,
                   quantity,
                 } = req.body;
-
-                // Kiểm tra xem tiêu đề sách đã tồn tại chưa
 
                 const book = await Book.create({
                   title: uppercase(title),
@@ -191,7 +189,6 @@ module.exports.controller = (app, io, socket_list) => {
       );
     }
   );
-
   app.post(
     "/api/book/get",
     //  helpers.authorization,
@@ -246,6 +243,7 @@ module.exports.controller = (app, io, socket_list) => {
           const element = results[index];
           if (!element.avatar_reviews) continue;
           element.avatar_reviews = stringToArray(element.avatar_reviews);
+          element.purchase_count = Math.abs(element.purchase_count);
         }
 
         if (results) {
@@ -276,7 +274,7 @@ module.exports.controller = (app, io, socket_list) => {
     if (files && files.length !== 0) {
       var countFiles = files.length;
 
-      if (countFiles > 3) {
+      if (countFiles > 5) {
         return res.json({
           status: "0",
           message: "Số lượng ảnh không hợp lệ",
@@ -346,7 +344,7 @@ module.exports.controller = (app, io, socket_list) => {
     helpers.authorization,
     upload.fields([
       { name: "book_avatar", maxCount: 1 },
-      { name: "avatar_reviews", maxCount: 3 },
+      { name: "avatar_reviews", maxCount: 5 },
     ]),
     async (req, res) => {
       helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
@@ -552,7 +550,7 @@ module.exports.controller = (app, io, socket_list) => {
                   ((book.old_price - book.new_price) / book.old_price) * 100
                 ),
                 views_count: book.views_count,
-                purchase_count: book.purchase_count,
+                purchase_count: Math.abs(book.purchase_count),
                 used_books: book.used_books,
                 rate_book: book.rate_book,
                 quantity: book.quantity,
@@ -659,78 +657,6 @@ module.exports.controller = (app, io, socket_list) => {
     }
   );
 
-  // app.post(
-  //   "/api/book/get-detail",
-  //   //  helpers.authorization,
-  //   async (req, res) => {
-  //     helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
-  //       helpers.CheckParameterNull(res, req.body, ["book_id"], async () => {
-  //         try {
-  //           const book = await Book.findOne({
-  //             where: { book_id: req.body.book_id },
-  //           });
-
-  //           if (!book) {
-  //             return res.json({
-  //               status: "0",
-  //               message: "Book not found",
-  //             });
-  //           }
-
-  //           const [author, category, [reviews]] = await Promise.all([
-  //             Author.findOne({ where: { author_id: book.author_id } }),
-  //             Category.findOne({ where: { category_id: book.category_id } }),
-  //             sequelizeHelpers.query(
-  //               `SELECT reviews.review_id, reviews.rating, reviews.comment, reviews.review_images, reviews.created_at, users.username, users.avatar
-  //                FROM reviews
-  //                INNER JOIN users ON reviews.user_id = users.user_id
-  //                WHERE reviews.book_id = ${req.body.book_id}
-  //                ORDER BY reviews.created_at DESC, reviews.rating DESC
-  //                LIMIT 5;`
-  //             ),
-  //           ]);
-  //           if (!author || !category) {
-  //             return res.json({
-  //               status: "0",
-  //               message: "Author or category not found",
-  //             });
-  //           }
-
-  //           const data = {
-  //             book_id: book.book_id,
-  //             title: book.title,
-  //             author_name: author.author_name,
-  //             category_name: category.category_name,
-  //             description: book.description,
-  //             publication_year: book.publication_year,
-  //             book_avatar: book.book_avatar,
-  //             old_price: book.old_price,
-  //             new_price: book.new_price,
-  //             avatar_reviews: stringToArray(book.avatar_reviews),
-  //             discount_percentage: Math.round(
-  //               ((book.old_price - book.new_price) / book.old_price) * 100
-  //             ),
-  //             views_count: book.views_count,
-  //             purchase_count: book.purchase_count,
-  //             used_books: book.used_books,
-  //             quantity: book.quantity,
-  //             rate_book: book.rate_book,
-  //             reviews: reviews,
-  //           };
-  //           return res.json({
-  //             status: "1",
-  //             message: msg_success,
-  //             data,
-  //           });
-  //         } catch (error) {
-  //           console.log("/api/book/get-detail error: ", error);
-  //           res.json({ status: "0", message: msg_fail });
-  //         }
-  //       });
-  //     });
-  //   }
-  // );
-
   app.post("/api/book/get-detail", async (req, res) => {
     helpers.CheckParameterValid(res, req.body, ["book_id"], async () => {
       helpers.CheckParameterNull(res, req.body, ["book_id"], async () => {
@@ -812,7 +738,7 @@ module.exports.controller = (app, io, socket_list) => {
               ((book.old_price - book.new_price) / book.old_price) * 100
             ),
             views_count: book.views_count,
-            purchase_count: book.purchase_count,
+            purchase_count: Math.abs(book.purchase_count),
             used_books: book.used_books,
             quantity: book.quantity,
             rate_book: book.rate_book,

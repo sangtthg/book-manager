@@ -69,3 +69,5 @@ dist/
 # Temporary folder for builds
 build/
 key-google-analytics
+
+service-account-key.json

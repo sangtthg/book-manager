@@ -10,7 +10,7 @@ module.exports.storage = multer.diskStorage({
     }
     let fileName = file.originalname;
     let arr = fileName.split(".");
-    let newFileName = arr[0] + "-" + Date.now() + "." + arr[1];
+    let newFileName = arr[0] + "-" + dateNow + "." + arr[1];
     cb(null, newFileName);
   },
 });

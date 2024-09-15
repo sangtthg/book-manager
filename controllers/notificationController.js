@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const { Notification, User, Order } = require("../models");
 const { uploadFileToCloud } = require("../helpers/upload_helpers");
+const { pushNotification } = require("../Service/notification");
 
 const createNotification = async (userId, type, orderId) => {
   // const { type, orderId } = req.body;
@@ -13,7 +14,7 @@ const createNotification = async (userId, type, orderId) => {
     let message = "";
 
     if (!user || !order) {
-      return res.status(404).json({ error: "User or Order not found" });
+      throw new Error("User or Order not found");
     }
 
     switch (type) {
@@ -36,8 +37,12 @@ const createNotification = async (userId, type, orderId) => {
         title = "Giao kiện hàng thành công";
         message = `Kiện hàng ${order.id} đã giao thành công đến bạn.`;
         break;
+      // case "pending":
+      //   title = "Đang xử lý";
+      //   message = `Kiện hàng ${order.id} đang được xử lý`;
+      //   break;
       default:
-        return res.status(400).json({ error: "Invalid notification type" });
+        throw new Error("Invalid notification type");
     }
 
     const notification = await Notification.create({
@@ -48,21 +53,47 @@ const createNotification = async (userId, type, orderId) => {
       isRead: false,
     });
 
-    return { code: 0, message: "Tạo thông báo thành công", notification };
+    pushNotification(title, message, userId, null);
   } catch (error) {
     console.log(error);
-    return { code: -1, message: "Lỗi khi tạo thông báo" };
+    throw new Error("Lỗi khi tạo thông báo");
   }
 };
+// const markAsRead = async (req, res) => {
+//   const { notificationId } = req.params;
+//   const userId = req.auth.user_id;
+
+//   try {
+//     const notification = await Notification.findOne({
+//       where: {
+//         id: notificationId,
+//         // userId: userId,
+//         [Op.or]: [{ userId: userId }, { type: "system" }],
+//       },
+//     });
+
+//     if (!notification) {
+//       return res.status(404).json({ message: "Notification not found" });
+//     }
+
+//     // notification.isRead = true;
+//     // await notification.save();
+
+//     res.status(200).json(notification);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 const markAsRead = async (req, res) => {
   const { notificationId } = req.params;
   const userId = req.auth.user_id;
 
   try {
+    // Tìm thông báo thuộc về người dùng hoặc hệ thống
     const notification = await Notification.findOne({
       where: {
         id: notificationId,
-        userId: userId,
+        [Op.or]: [{ userId: userId }, { type: "system" }], // Bao gồm thông báo hệ thống
       },
     });
 
@@ -70,8 +101,11 @@ const markAsRead = async (req, res) => {
       return res.status(404).json({ message: "Notification not found" });
     }
 
-    notification.isRead = true;
-    await notification.save();
+    // Chỉ cập nhật trạng thái đọc nếu thông báo thuộc về người dùng hiện tại
+    if (notification.userId === userId || notification.type === "system") {
+      notification.isRead = true;
+      await notification.save();
+    }
 
     res.status(200).json(notification);
   } catch (error) {
@@ -79,20 +113,6 @@ const markAsRead = async (req, res) => {
   }
 };
 
-const markAllAsRead = async (req, res) => {
-  const userId = req.auth.user_id;
-
-  try {
-    await Notification.update(
-      { isRead: true },
-      { where: { userId: userId, isRead: false } }
-    );
-
-    res.status(200).json({ message: "All notifications marked as read" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 const getNotificationsByUser = async (req, res) => {
   const userId = req.auth.user_id;
 
@@ -109,10 +129,27 @@ const getNotificationsByUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const markAllAsRead = async (req, res) => {
+  const userId = req.auth.user_id;
+
+  try {
+    // Chỉ cập nhật thông báo của người dùng hiện tại
+    await Notification.update(
+      { isRead: true },
+      { where: { userId: userId, isRead: false } }
+    );
+
+    res.status(200).json({ message: "All notifications marked as read" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const createNotificationByadmin = async (req, res) => {
   const { title, message } = req.body;
   const image = req.file;
-  console.log(image, req)
+  console.log(image, req);
   if (!title || !message) {
     return res
       .status(400)
@@ -133,6 +170,8 @@ const createNotificationByadmin = async (req, res) => {
       imageUrl,
     });
 
+    pushNotification(title, message, null, null);
+
     res.status(201).json({
       code: 0,
       message: "Thông báo đã được tạo thành công",
@@ -148,7 +187,8 @@ const getSystemNotifications = async (req, res) => {
   try {
     const notifications = await Notification.findAll({
       where: {
-        type: "system",
+        // type: "system",
+        [Op.or]: [{ userId: userId }, { type: "system" }],
       },
       order: [["createdAt", "DESC"]],
     });

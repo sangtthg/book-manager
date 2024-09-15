@@ -1,5 +1,7 @@
 const { Op } = require("sequelize");
 const { Review, User, Book, Order } = require("../models");
+const db = require("../models");
+const db_helpers = require("../helpers/db_helpers");
 
 const reviewController = {
   create: async (req, res) => {
@@ -101,55 +103,161 @@ const reviewController = {
     }
   },
 
+  // getAllV2: async (req, res) => {
+  //   try {
+  //     const { bookTitle } = req.query;
+
+  //     let reviews = [];
+  //     let booksMap = {};
+
+  //     if (bookTitle) {
+  //       const books = await Book.findAll({
+  //         where: {
+  //           title: {
+  //             [Op.like]: `%${bookTitle}%`,
+  //           },
+  //         },
+  //       });
+
+  //       if (books.length > 0) {
+  //         const bookIds = books.map((book) => book.book_id);
+
+  //         reviews = await Review.findAll({
+  //           where: {
+  //             bookId: bookIds,
+  //           },
+  //         });
+
+  //         booksMap = books.reduce((map, book) => {
+  //           map[book.book_id] = book;
+  //           return map;
+  //         }, {});
+  //       }
+  //     } else {
+  //       reviews = await Review.findAll();
+
+  //       const bookIds = [...new Set(reviews.map((review) => review.bookId))];
+
+  //       const books = await Book.findAll({
+  //         where: {
+  //           book_id: bookIds,
+  //         },
+  //       });
+
+  //       booksMap = books.reduce((map, book) => {
+  //         map[book.book_id] = book;
+  //         return map;
+  //       }, {});
+  //     }
+
+  //     res.json({ reviews, booksMap });
+  //   } catch (error) {
+  //     res.status(500).json({ error: error.message });
+  //   }
+  // },
+
   getAllV2: async (req, res) => {
     try {
-      const { bookTitle } = req.query;
+      const { bookTitle = "" } = req.query;
 
-      let reviews = [];
-      let booksMap = {};
+      const query = `
+        SELECT 
+        b.book_id, b.title, b.author_id, b.description, b.category_id, b.publication_year, 
+        b.book_avatar, b.created_at, b.views_count, b.purchase_count, b.old_price, 
+        b.new_price, b.used_books, b.quantity, b.avatar_reviews, b.rate_book,
+        r.review_id, r.user_id, r.rating, r.comment, r.review_images, r.created_at as review_created_at,
+        u.username as review_user_name, u.avatar as review_user_avatar,
+        u.user_id as review_user_id
+        FROM 
+          books b
+        Inner JOIN 
+          reviews r ON b.book_id = r.book_id
+        Inner JOIN 
+          users u ON r.user_id = u.user_id
+        WHERE 
+          b.title LIKE CONCAT('%', ?, '%');
+      `;
 
-      if (bookTitle) {
-        const books = await Book.findAll({
-          where: {
-            title: {
-              [Op.like]: `%${bookTitle}%`,
-            },
-          },
-        });
+      db_helpers.query(query, [bookTitle], (err, results) => {
+        if (err) throw err;
 
-        if (books.length > 0) {
-          const bookIds = books.map((book) => book.book_id);
+        // Nhóm các đánh giá theo sách
+        const booksMap = results.reduce((acc, row) => {
+          const {
+            book_id,
+            title,
+            author_id,
+            description,
+            category_id,
+            publication_year,
+            book_avatar,
+            created_at,
+            views_count,
+            purchase_count,
+            old_price,
+            new_price,
+            used_books,
+            quantity,
+            avatar_reviews,
+            rate_book,
+            review_id,
+            user_id,
+            rating,
+            comment,
+            review_images,
+            review_created_at,
+            review_user_avatar,
+            review_user_name,
+          } = row;
 
-          reviews = await Review.findAll({
-            where: {
-              bookId: bookIds,
-            },
-          });
+          if (!acc[book_id]) {
+            acc[book_id] = {
+              book_id,
+              title,
+              author_id,
+              description,
+              category_id,
+              publication_year,
+              book_avatar,
+              created_at,
+              views_count,
+              purchase_count,
+              old_price,
+              new_price,
+              used_books,
+              quantity,
+              avatar_reviews,
+              rate_book,
+              reviews: [],
+            };
+          }
 
-          booksMap = books.reduce((map, book) => {
-            map[book.book_id] = book;
-            return map;
-          }, {});
-        }
-      } else {
-        reviews = await Review.findAll();
+          if (review_id) {
+            acc[book_id].reviews.push({
+              review_id,
+              user: {
+                user_id,
+                name: review_user_name,
+                avatar: review_user_avatar,
+              },
+              rating,
+              comment,
+              review_images,
+              created_at: review_created_at,
+            });
+          }
 
-        const bookIds = [...new Set(reviews.map((review) => review.bookId))];
-
-        const books = await Book.findAll({
-          where: {
-            book_id: bookIds,
-          },
-        });
-
-        booksMap = books.reduce((map, book) => {
-          map[book.book_id] = book;
-          return map;
+          return acc;
         }, {});
-      }
 
-      res.json({ reviews, booksMap });
+        // Chuyển đổi sách thành mảng
+        const books = Object.values(booksMap);
+
+        console.log("datta", books);
+        res.json({ books });
+      });
     } catch (error) {
+      console.log(error);
       res.status(500).json({ error: error.message });
     }
   },

@@ -79,49 +79,41 @@
           fetch(`/reviews/all?bookTitle=${query}`)
             .then((response) => response.json())
             .then((data) => {
-              console.log("====================================");
-              console.log(data);
-              console.log("====================================");
+              console.log("API Response Data:", data);
 
               const reviewsContainer =
                 document.getElementById("reviews-container");
               reviewsContainer.innerHTML = "";
-              console.log("Reviews:", data.reviews);
-              data.reviews.forEach((review) => {
-                const book = data.booksMap[review.bookId];
-                const reviewElement = `
-                  <div class="col-md-6 col-lg-4 mb-4" id="review-${review.id}">
+
+              // Vòng lặp qua danh sách sách
+              data.books.forEach((book) => {
+                book.reviews.forEach((review) => {
+                  const reviewElement = `
+                  <div class="col-md-6 col-lg-4 mb-4" id="review-${
+                    review.review_id
+                  }">
                     <div class="card h-100 review-card">
                       <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                           <img src="${
-                            review.reviewerAvatar || "default-avatar.jpg"
+                            review.user.avatar || "default-avatar.jpg"
                           }" class="rounded-circle avatar-img me-3" alt="${
-                  review.reviewerName
-                }">
-                          <h5 class="card-title mb-0">${
-                            review.reviewerName
-                          }</h5>
+                    review.user.name
+                  }">
+                          <h5 class="card-title mb-0">${review.user.name}</h5>
                         </div>
                         <img src="${
-                          book && book.book_avatar
-                            ? book.book_avatar
-                            : "default-image.jpg"
+                          book.book_avatar || "default-image.jpg"
                         }" class="img-fluid mb-3 book-img w-100" alt="${
-                  book ? book.title : "Book Image"
-                }">
+                    book.title
+                  }">
                         <h6 class="card-subtitle mb-2 text-muted">
-                          ${
-                            book
-                              ? `Book: ${book.title}`
-                              : "Book information not available"
-                          }
+                          Book: ${book.title}
                         </h6>
                         <p class="card-text">${review.comment}</p>
-                        
                         <p class="card-text">
                           <small class="text-muted">Reviewed on: ${new Date(
-                            review.createdAt
+                            review.created_at
                           ).toLocaleDateString()}</small>
                         </p>
                         <p class="card-text star-rating">
@@ -129,12 +121,12 @@
                         </p>
                         <div class="d-flex justify-content-between">
                           <button class="btn btn-outline-secondary btn-sm" onclick="hideReview(${
-                            review.id
+                            review.review_id
                           })">
                             <i class="fas fa-eye-slash"></i> Hide
                           </button>
                           <button class="btn btn-outline-danger btn-sm" onclick="deleteReview(${
-                            review.id
+                            review.review_id
                           })">
                             <i class="fas fa-trash"></i> Delete
                           </button>
@@ -143,7 +135,8 @@
                     </div>
                   </div>
                 `;
-                reviewsContainer.innerHTML += reviewElement;
+                  reviewsContainer.innerHTML += reviewElement;
+                });
               });
             })
             .catch((error) => console.error("Error fetching reviews:", error));
@@ -183,7 +176,7 @@
       };
 
       const deleteReview = (id) => {
-        if (confirm("Are you sure you want to delete this review?")) {
+        if (confirm("Bạn có chắc chắn xoá đánh giá này không?")) {
           fetch(`/reviews/byadmin/${id}`, {
             method: "DELETE",
             headers: {
@@ -194,6 +187,7 @@
             .then((data) => {
               if (data.message === "Review deleted") {
                 document.getElementById(`review-${id}`).remove();
+                window.location.reload();
               }
             })
             .catch((error) => console.error("Error deleting review:", error));

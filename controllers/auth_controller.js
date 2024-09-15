@@ -6,9 +6,35 @@ const { comparePassword, hashPassword } = require("../Service/bcrypt");
 const User = require("../models/user_model");
 const OtpTypes = require("../constants/otp_type");
 const Otp = require("../models/otp_model");
+const DevicesModel = require("../models/devices_model");
+const { dateNow } = require("../Service/time");
 const msg_success = "successfully";
 const msg_fail = "fail";
 const msg_invalidUser = "invalid username and password";
+
+async function saveTokenToDatabase(deviceId, deviceToken, userId) {
+  try {
+    const device = await DevicesModel.findOne({
+      where: { device_id: deviceId, user_id: userId },
+    });
+    if (device) {
+      device.device_token = deviceToken;
+      device.updated_at = dateNow;
+      await device.save();
+    }
+
+    const createDevice = await DevicesModel.create({
+      device_id: deviceId,
+      device_token: deviceToken,
+      user_id: userId,
+    });
+    if (!createDevice) {
+      console.log("Save token error");
+    }
+  } catch (error) {
+    console.log("Save token error: ", error);
+  }
+}
 
 const login = async (req, res, isAdmin = true) => {
   helper.Dlog(req.body);
@@ -18,6 +44,7 @@ const login = async (req, res, isAdmin = true) => {
     const query = isAdmin
       ? "SELECT * FROM `users` WHERE `email` = ? AND `user_status` = 1 AND (`role` = 'admin' OR `role` = 'member')"
       : "SELECT * FROM `users` WHERE `email` = ? AND `user_status` = 1";
+
     db.query(query, [reqObj.email], async (err, result) => {
       if (err) {
         helper.ThrowHtmlError(err, res);
@@ -25,7 +52,7 @@ const login = async (req, res, isAdmin = true) => {
       }
 
       if (result.length < 1) {
-        res.json({
+        return res.json({
           status: "0",
           message: "Email không tồn tại hoặc tài khoản bị khóa.",
         });
@@ -50,13 +77,26 @@ const login = async (req, res, isAdmin = true) => {
         const obj = {
           user_id: user.user_id,
           role: user.role,
-          created_at: Date.now(),
+          created_at: dateNow,
         };
         const token = jwt.sign(obj);
         if (!token) {
           return res.json({ status: "0", message: msg_fail });
         }
         delete user.password;
+
+        if (!isAdmin) {
+          const deviceId = req.body.device_id;
+          const deviceToken = req.body.device_token;
+
+          if (!deviceId || !deviceToken) {
+            return res.json({
+              status: "0",
+              message: "device_id hoặc device_token không được bỏ trống",
+            });
+          }
+          await saveTokenToDatabase(deviceId, deviceToken, user.user_id);
+        }
         return res.json({
           status: "1",
           data: {

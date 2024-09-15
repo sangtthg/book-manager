@@ -210,7 +210,7 @@ module.exports = {
     }
     // const exp = auth.created_at;
     // const now = Date.now();
-    // if (now - exp > 1000 * 60 * 60 * 24) {
+    // if (now - exp > 1000 * 6s * 60 * 24) {
     //   return res.json({ status: "0", message: "Token expired" });
     // }
     const user = await User.findOne({

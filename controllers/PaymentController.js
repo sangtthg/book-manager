@@ -7,7 +7,7 @@ const {
 
 const paymentCallback = async (req, res) => {
   const { vnp_TransactionStatus, vnp_Amount, vnp_TxnRef, vnp_ResponseCode } =
-      req.query;
+    req.query;
   console.log(req.query, "lih");
 
   try {
@@ -15,8 +15,8 @@ const paymentCallback = async (req, res) => {
 
     if (!vnpay) {
       return res
-          .status(404)
-          .json({ code: 3, message: "Transaction not found" });
+        .status(404)
+        .json({ code: 3, message: "Transaction not found" });
     }
 
     const trans = await PaymentTransaction.findOne({
@@ -30,26 +30,26 @@ const paymentCallback = async (req, res) => {
 
     if (vnp_TransactionStatus === "00") {
       await VnpayTransaction.update(
-          { status: 1 },
-          { where: { id: vnp_TxnRef } }
+        { status: 1 },
+        { where: { id: vnp_TxnRef } }
       );
 
       await PaymentTransaction.update(
-          { status: "success" },
-          { where: { orderId: vnpay.order } }
+        { status: "success" },
+        { where: { orderId: vnpay.order } }
       );
       await Order.update(
-          {
-            orderStatus: "success",
-            paymentStatus: "success",
-            statusShip: "wait_for_delivery",
-            payDescription:"Thành công!"
+        {
+          orderStatus: "success",
+          paymentStatus: "success",
+          statusShip: "wait_for_delivery",
+          payDescription: "Thành công!",
+        },
+        {
+          where: {
+            id: trans.orderId,
           },
-          {
-            where: {
-              id: trans.orderId,
-            },
-          }
+        }
       );
       const order = await Order.findOne({ where: { id: trans.orderId } });
       if (order) {
@@ -65,46 +65,46 @@ const paymentCallback = async (req, res) => {
 
     if (vnp_TransactionStatus === "02") {
       await VnpayTransaction.update(
-          { status: 2 },
-          { where: { id: vnp_TxnRef } }
+        { status: 2 },
+        { where: { id: vnp_TxnRef } }
       );
 
       await PaymentTransaction.update(
-          { status: "fail" },
-          { where: { orderId: vnpay.order } }
+        { status: "fail" },
+        { where: { orderId: vnpay.order } }
       );
 
       await Order.update(
-          {
-            orderStatus: "fail",
-            paymentStatus: "fail",
-            statusShip: "fail",
-            payDescription:"Thanh toán lỗi!"
-          },
-          { where: { userId: trans.customerId, id: trans.orderId } }
+        {
+          orderStatus: "fail",
+          paymentStatus: "fail",
+          statusShip: "fail",
+          payDescription: "Thanh toán lỗi!",
+        },
+        { where: { userId: trans.customerId, id: trans.orderId } }
       );
     }
     if (vnp_ResponseCode === "11") {
       await VnpayTransaction.update(
-          { status: 2 },
-          { where: { id: vnp_TxnRef } }
+        { status: 2 },
+        { where: { id: vnp_TxnRef } }
       );
 
       await PaymentTransaction.update(
-          { status: "fail" },
-          { where: { orderId: vnpay.order } }
+        { status: "fail" },
+        { where: { orderId: vnpay.order } }
       );
       await Order.update(
-          {
-            orderStatus: "fail",
-            paymentStatus: "fail",
-            statusShip: "fail",
-            payDescription:"Hết thời hạn chờ thanh toán!"
-          },
-          { where: { userId: trans.customerId, id: trans.orderId } }
+        {
+          orderStatus: "fail",
+          paymentStatus: "fail",
+          statusShip: "fail",
+          payDescription: "Hết thời hạn chờ thanh toán!",
+        },
+        { where: { userId: trans.customerId, id: trans.orderId } }
       );
       console.log(
-          "Giao dịch không thành công do: Đã hết hạn chờ thanh toán. Xin quý khách vui lòng thực hiện lại giao dịch."
+        "Giao dịch không thành công do: Đã hết hạn chờ thanh toán. Xin quý khách vui lòng thực hiện lại giao dịch."
       );
     }
 

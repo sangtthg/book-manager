@@ -164,7 +164,7 @@
               data.message === "Lấy thông tin sách và đánh giá thành công"
             ) {
               const book = data.data;
-
+              book.purchase_count = Math.abs(book.purchase_count);
               // Hiển thị thông tin sách
               document.getElementById("title").textContent = book.title;
               document.getElementById("author").textContent = book.author_name;
