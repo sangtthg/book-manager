@@ -128,10 +128,14 @@
               }
             );
 
+            console.log("Dữ liệu phản hồi từ server:", response.data);
+
             if (response.data.code === 0) {
               alert("Thông báo đã được tạo thành công");
               this.reset();
-              loadNotifications();
+
+              // Thêm thông báo mới vào danh sách
+              addNotificationToList(response.data.notification);
             } else {
               alert(response.data.message || "Có lỗi xảy ra");
             }
@@ -156,29 +160,59 @@
             const li = document.createElement("li");
             li.classList.add("list-group-item");
             li.innerHTML = `
-              <div class="d-flex">
-                <div class="flex-grow-1">
-                  <h5>${notification.title}</h5>
-                  <p>${notification.message}</p>
-                  ${
-                    notification.imageUrl
-                      ? `<img src="${notification.imageUrl}" class="notification-image"alt="Notification Image" />`
-                      : ""
-                  }
-                </div>
-                <button
-                  class="btn btn-danger btn-sm ms-3"
-                  onclick="deleteNotification(${notification.id})"
-                >
-                  Delete
-                </button>
-              </div>
-            `;
+        <div class="d-flex">
+          <div class="flex-grow-1">
+            <h5>${notification.title}</h5>
+            <p>${notification.message}</p>
+            ${
+              notification.imageUrl
+                ? `<img src="${notification.imageUrl}" class="notification-image" alt="Notification Image" />`
+                : ""
+            }
+          </div>
+          <button
+            class="btn btn-danger btn-sm ms-3"
+            onclick="deleteNotification(${notification.id})"
+          >
+            Delete
+          </button>
+        </div>
+      `;
             notificationsList.appendChild(li);
           });
         } catch (error) {
           console.error("Error loading notifications:", error);
         }
+      }
+
+      function addNotificationToList(notification) {
+        console.log("====================================");
+        console.log(notification);
+        console.log("====================================");
+        const notificationsList = document.getElementById("notificationsList");
+
+        const li = document.createElement("li");
+        li.classList.add("list-group-item");
+        li.innerHTML = `
+    <div class="d-flex">
+      <div class="flex-grow-1">
+        <h5>${notification.title}</h5>
+        <p>${notification.message}</p>
+        ${
+          notification.imageUrl
+            ? `<img src="${notification.imageUrl}" class="notification-image" alt="Notification Image" />`
+            : ""
+        }
+      </div>
+      <button
+        class="btn btn-danger btn-sm ms-3"
+        onclick="deleteNotification(${notification.id})"
+      >
+        Delete
+      </button>
+    </div>
+  `;
+        notificationsList.appendChild(li);
       }
 
       async function deleteNotification(id) {

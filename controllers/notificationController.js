@@ -59,41 +59,15 @@ const createNotification = async (userId, type, orderId) => {
     throw new Error("Lỗi khi tạo thông báo");
   }
 };
-// const markAsRead = async (req, res) => {
-//   const { notificationId } = req.params;
-//   const userId = req.auth.user_id;
-
-//   try {
-//     const notification = await Notification.findOne({
-//       where: {
-//         id: notificationId,
-//         // userId: userId,
-//         [Op.or]: [{ userId: userId }, { type: "system" }],
-//       },
-//     });
-
-//     if (!notification) {
-//       return res.status(404).json({ message: "Notification not found" });
-//     }
-
-//     // notification.isRead = true;
-//     // await notification.save();
-
-//     res.status(200).json(notification);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
 const markAsRead = async (req, res) => {
   const { notificationId } = req.params;
   const userId = req.auth.user_id;
 
   try {
-    // Tìm thông báo thuộc về người dùng hoặc hệ thống
     const notification = await Notification.findOne({
       where: {
         id: notificationId,
-        [Op.or]: [{ userId: userId }, { type: "system" }], // Bao gồm thông báo hệ thống
+        userId: userId,
       },
     });
 
@@ -101,7 +75,10 @@ const markAsRead = async (req, res) => {
       return res.status(404).json({ message: "Notification not found" });
     }
 
-    // Chỉ cập nhật trạng thái đọc nếu thông báo thuộc về người dùng hiện tại
+    // notification.isRead = true;
+    // await notification.save();
+
+    // Only update notifications that belong to the user or are of type "system"
     if (notification.userId === userId || notification.type === "system") {
       notification.isRead = true;
       await notification.save();
@@ -113,6 +90,20 @@ const markAsRead = async (req, res) => {
   }
 };
 
+const markAllAsRead = async (req, res) => {
+  const userId = req.auth.user_id;
+
+  try {
+    await Notification.update(
+      { isRead: true },
+      { where: { userId: userId, isRead: false } }
+    );
+
+    res.status(200).json({ message: "All notifications marked as read" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 const getNotificationsByUser = async (req, res) => {
   const userId = req.auth.user_id;
 
@@ -125,22 +116,6 @@ const getNotificationsByUser = async (req, res) => {
     });
 
     res.status(200).json(notifications);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-const markAllAsRead = async (req, res) => {
-  const userId = req.auth.user_id;
-
-  try {
-    // Chỉ cập nhật thông báo của người dùng hiện tại
-    await Notification.update(
-      { isRead: true },
-      { where: { userId: userId, isRead: false } }
-    );
-
-    res.status(200).json({ message: "All notifications marked as read" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -188,7 +163,7 @@ const getSystemNotifications = async (req, res) => {
     const notifications = await Notification.findAll({
       where: {
         // type: "system",
-        [Op.or]: [{ userId: userId }, { type: "system" }],
+        [Op.or]: [{ type: "system" }],
       },
       order: [["createdAt", "DESC"]],
     });
