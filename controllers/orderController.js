@@ -53,7 +53,7 @@ exports.createOrder = async (req, res) => {
       // Cập nhật lại số lượng sách sau khi tạo đơn hàng
       await book.update({
         quantity: book.quantity - cart.quantity,
-        purchase_count: book.purchase_count - cart.quantity,
+        purchase_count: book.purchase_count + cart.quantity,
       });
 
       totalPrice += book.new_price * cart.quantity;
