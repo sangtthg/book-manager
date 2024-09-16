@@ -44,7 +44,6 @@ const reviewController = {
     }
   },
 
-
   getAll: async (req, res) => {
     try {
       const { bookTitle } = req.query;
@@ -61,8 +60,12 @@ const reviewController = {
           },
         });
 
+        console.log("books:", books);
+
         if (books.length > 0) {
           const bookIds = books.map((book) => book.book_id);
+
+          console.log("bookIds:", bookIds);
 
           reviews = await Review.findAll({
             where: {
@@ -84,6 +87,8 @@ const reviewController = {
 
         const bookIds = [...new Set(reviews.map((review) => review.bookId))];
 
+        console.log("bookIds (from all reviews):", bookIds);
+
         const books = await Book.findAll({
           where: {
             book_id: bookIds,
@@ -101,7 +106,6 @@ const reviewController = {
       res.status(500).json({ error: error.message });
     }
   },
-
   getAllV2: async (req, res) => {
     try {
       const { bookTitle } = req.query;
@@ -118,8 +122,12 @@ const reviewController = {
           },
         });
 
+        console.log("books:", books);
+
         if (books.length > 0) {
           const bookIds = books.map((book) => book.book_id);
+
+          console.log("bookIds:", bookIds);
 
           reviews = await Review.findAll({
             where: {
@@ -136,6 +144,8 @@ const reviewController = {
         reviews = await Review.findAll();
 
         const bookIds = [...new Set(reviews.map((review) => review.bookId))];
+
+        console.log("bookIds (from all reviews):", bookIds);
 
         const books = await Book.findAll({
           where: {
@@ -164,13 +174,13 @@ const reviewController = {
       }
 
       const reviews = await Review.findAll({
-        where: { bookId: bookId },
+        where: { book_Id: bookId },
       });
 
       if (reviews.length === 0) {
         return res
-          .status(404)
-          .json({ message: "No reviews found for this book" });
+            .status(404)
+            .json({ message: "No reviews found for this book" });
       }
 
       const book = await Book.findOne({
@@ -191,6 +201,9 @@ const reviewController = {
     try {
       const review = await Review.findByPk(req.params.id);
       if (review) {
+        if (review.userId !== req.auth.user_id) {
+          return res.status(403).json({ message: "Unauthorized" });
+        }
         await review.update(req.body);
         res.status(200).json(review);
       } else {
@@ -210,6 +223,10 @@ const reviewController = {
         return res.status(404).json({ message: "Review not found" });
       }
 
+      if (review.userId !== req.auth.user_id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
       await review.destroy();
 
       res.status(200).json({ message: "Review deleted successfully" });
@@ -217,7 +234,6 @@ const reviewController = {
       res.status(500).json({ error: error.message });
     }
   },
-
   deletebyadmin: async (req, res) => {
     try {
       const { id } = req.params;
@@ -234,7 +250,6 @@ const reviewController = {
       res.status(500).json({ error: error.message });
     }
   },
-
   hide: async (req, res) => {
     try {
       const { id } = req.params;
@@ -255,4 +270,3 @@ const reviewController = {
 };
 
 module.exports = reviewController;
-//
