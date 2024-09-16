@@ -4,17 +4,17 @@ const { Review, User, Book, Order } = require("../models");
 const reviewController = {
   create: async (req, res) => {
     try {
-      const user = await User.findByPk(req.body.userId); // Lấy userId từ body nếu cần
+      const user = await User.findByPk(req.auth.user_id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
       const review = await Review.create({
         ...req.body,
+        userId: req.auth.user_id,
         reviewerName: user.username,
         reviewerAvatar: user.avatar,
       });
-
       const order = await Order.findOne({
         where: { id: req.body.orderId },
         attributes: ["items"],
@@ -26,15 +26,15 @@ const reviewController = {
 
       const items = JSON.parse(order.items);
       const itemIndex = items.findIndex(
-        (item) => item.book_id === req.body.bookId
+          (item) => item.book_id === req.body.bookId
       );
 
       if (itemIndex !== -1) {
         items[itemIndex].isReview = true;
 
         await Order.update(
-          { items: JSON.stringify(items) },
-          { where: { id: req.body.orderId } }
+            { items: JSON.stringify(items) },
+            { where: { id: req.body.orderId } }
         );
       }
 
@@ -43,6 +43,7 @@ const reviewController = {
       res.status(500).json({ error: error.message });
     }
   },
+
 
   getAll: async (req, res) => {
     try {
