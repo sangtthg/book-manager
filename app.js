@@ -78,9 +78,14 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+// });
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
 fs.readdirSync("./controllers").forEach((file) => {
   if (file.slice(-3) === ".js") {
