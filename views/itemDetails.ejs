@@ -108,11 +108,14 @@
                     <strong>Năm xuất bản:</strong> <%= item.publication_year %>
                   </p>
                   <p><strong>Lượt xem:</strong> <%= item.views_count %></p>
-                  <p><strong>Lượt mua:</strong> <%= item.purchase_count %></p>
+                  <p>
+                    <strong>Lượt mua:</strong> <%= Math.abs(item.purchase_count)
+                    %>
+                  </p>
                 </td>
                 <td>
                   <p class="price old-price">
-                    <%= item.old_price.toLocaleString('vi-VN') %> ₫
+                    <%= item.old_price.toLocaleString('vi-VN') %>
                   </p>
                   <p class="price new-price">
                     <%= item.new_price.toLocaleString('vi-VN') %> ₫

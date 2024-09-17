@@ -79,7 +79,8 @@
           fetch(`/reviews/all?bookTitle=${query}`)
             .then((response) => response.json())
             .then((data) => {
-              console.log("API Response Data:", data);
+              console.log("sáng", data);
+              // displayReviews(data);
 
               const reviewsContainer =
                 document.getElementById("reviews-container");

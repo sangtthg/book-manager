@@ -6,16 +6,31 @@ const db_helpers = require("../helpers/db_helpers");
 const reviewController = {
   create: async (req, res) => {
     try {
-      const user = await User.findByPk(req.body.userId); // Lấy userId từ body nếu cần
+      const user = await User.findByPk(req.auth.user_id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const review = await Review.create({
-        ...req.body,
-        reviewerName: user.username,
-        reviewerAvatar: user.avatar,
-      });
+      const {
+        bookId,
+        comment,
+        orderId,
+        rating,
+        user_id,
+        reviewerName,
+        reviewerAvatar,
+      } = req.body;
+
+      const obj = {
+        book_id: bookId,
+        rating,
+        comment,
+        user_id: user.user_id,
+        reviewerName: reviewerName,
+        reviewerAvatar: reviewerAvatar,
+      };
+
+      const review = await Review.create(obj);
 
       const order = await Order.findOne({
         where: { id: req.body.orderId },
@@ -103,59 +118,6 @@ const reviewController = {
     }
   },
 
-  // getAllV2: async (req, res) => {
-  //   try {
-  //     const { bookTitle } = req.query;
-
-  //     let reviews = [];
-  //     let booksMap = {};
-
-  //     if (bookTitle) {
-  //       const books = await Book.findAll({
-  //         where: {
-  //           title: {
-  //             [Op.like]: `%${bookTitle}%`,
-  //           },
-  //         },
-  //       });
-
-  //       if (books.length > 0) {
-  //         const bookIds = books.map((book) => book.book_id);
-
-  //         reviews = await Review.findAll({
-  //           where: {
-  //             bookId: bookIds,
-  //           },
-  //         });
-
-  //         booksMap = books.reduce((map, book) => {
-  //           map[book.book_id] = book;
-  //           return map;
-  //         }, {});
-  //       }
-  //     } else {
-  //       reviews = await Review.findAll();
-
-  //       const bookIds = [...new Set(reviews.map((review) => review.bookId))];
-
-  //       const books = await Book.findAll({
-  //         where: {
-  //           book_id: bookIds,
-  //         },
-  //       });
-
-  //       booksMap = books.reduce((map, book) => {
-  //         map[book.book_id] = book;
-  //         return map;
-  //       }, {});
-  //     }
-
-  //     res.json({ reviews, booksMap });
-  //   } catch (error) {
-  //     res.status(500).json({ error: error.message });
-  //   }
-  // },
-
   getAllV2: async (req, res) => {
     try {
       const { bookTitle = "" } = req.query;
@@ -172,7 +134,7 @@ const reviewController = {
           books b
         Inner JOIN 
           reviews r ON b.book_id = r.book_id
-        Inner JOIN 
+          Inner JOIN 
           users u ON r.user_id = u.user_id
         WHERE 
           b.title LIKE CONCAT('%', ?, '%');
@@ -181,8 +143,10 @@ const reviewController = {
       db_helpers.query(query, [bookTitle], (err, results) => {
         if (err) throw err;
 
-        // Nhóm các đánh giá theo sách
+        console.log("datta");
+
         const booksMap = results.reduce((acc, row) => {
+          console.log("Processing row:", row);
           const {
             book_id,
             title,
@@ -231,7 +195,7 @@ const reviewController = {
               reviews: [],
             };
           }
-
+          console.log("datta");
           if (review_id) {
             acc[book_id].reviews.push({
               review_id,
@@ -250,7 +214,6 @@ const reviewController = {
           return acc;
         }, {});
 
-        // Chuyển đổi sách thành mảng
         const books = Object.values(booksMap);
 
         console.log("datta", books);
@@ -271,7 +234,7 @@ const reviewController = {
       }
 
       const reviews = await Review.findAll({
-        where: { bookId: bookId },
+        where: { book_Id: bookId },
       });
 
       if (reviews.length === 0) {

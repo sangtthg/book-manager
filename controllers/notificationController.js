@@ -162,8 +162,7 @@ const getSystemNotifications = async (req, res) => {
   try {
     const notifications = await Notification.findAll({
       where: {
-        // type: "system",
-        [Op.or]: [{ type: "system" }],
+        type: "system",
       },
       order: [["createdAt", "DESC"]],
     });
