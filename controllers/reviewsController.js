@@ -3,6 +3,13 @@ const { Review, User, Book, Order } = require("../models");
 const db = require("../models");
 const db_helpers = require("../helpers/db_helpers");
 
+
+function stringToArray(str) {
+  if (!str) return [];
+  return str.split(',').map(item => item.trim());
+}
+
+
 const reviewController = {
   create: async (req, res) => {
     try {
@@ -240,6 +247,7 @@ const reviewController = {
 
       const reviews = await Review.findAll({
         where: { book_Id: bookId },
+        include: [{ model: User, attributes: ["user_id", "username", "avatar"] }],
       });
 
       if (reviews.length === 0) {
@@ -256,7 +264,21 @@ const reviewController = {
         return res.status(404).json({ message: "Book not found" });
       }
 
-      res.json({ reviews, book });
+      const transformedReviews = reviews.map((review) => {
+        return {
+          review_id: review.review_id,
+          book_id: review.book_Id,
+          rating: review.rating,
+          comment: review.comment,
+          user_id: review.User.user_id,
+          username: review.User.username,
+          user_avatar: review.User.avatar,
+          review_images: stringToArray(review.review_images),
+          created_at: review.created_at,
+        };
+      });
+
+      res.json({ reviews: transformedReviews, book });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
