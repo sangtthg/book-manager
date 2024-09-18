@@ -208,10 +208,13 @@ exports.listOrders = async (req, res) => {
             };
           })
         );
+
         return {
           ...order.dataValues,
           items: itemsWithAuthorName,
           name: order.name,
+          phone: order.phone, // Thêm số điện thoại
+          address: order.address,
         };
       })
     );

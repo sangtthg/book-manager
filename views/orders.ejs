@@ -53,8 +53,10 @@
                     <tr>
                         <th>Mã đơn hàng</th>
                         <th>Tên khách hàng</th>
+                        <th>Số điện thoại</th>
+                        <th>Địa chỉ</th>
                         <th>Tổng tiền</th>
-
+                       
                         <th>Trạng thái</th>
                         <th>Hành động</th>
                     </tr>
@@ -65,8 +67,11 @@
                         order.statusShip.status === 'pending' ? 'pending-row' :'' %>">
                             <td><%= order.id %></td>
                             <td><%= order.name %></td>
+                           
+                            <td><%= order.phone %></td> 
+                            <td><%= order.address.length > 30 ? order.address.substring(0, 20) + '...' : order.address %></td>
+
                             <td><%= order.totalPrice %></td>
-                     
                             <td><%= order.statusShip.description %></td>
                             <td>
                                 <div class="btn-group" role="group">
@@ -114,7 +119,7 @@
                 if (data.code === 0) {
                     alert('Cập nhật trạng thái thành công');
                     location.reload();
-                } else {
+                } else {    
                     alert('Có lỗi xảy ra: ' + data.message);
                 }
             })
