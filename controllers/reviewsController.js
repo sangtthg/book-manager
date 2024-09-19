@@ -11,11 +11,11 @@ function stringToArray(str) {
 
 
 const reviewController = {
-  create: async (req, res) => {
+  create: async(req, res) => {
     try {
       const user = await User.findByPk(req.auth.user_id);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({message: "User not found"});
       }
 
       const {
@@ -40,31 +40,43 @@ const reviewController = {
       const review = await Review.create(obj);
 
       const order = await Order.findOne({
-        where: { id: req.body.orderId },
+        where: {id: req.body.orderId},
         attributes: ["items"],
       });
 
       if (!order) {
-        return res.status(404).json({ message: "Order not found" });
+        return res.status(404).json({message: "Order not found"});
       }
 
       const items = JSON.parse(order.items);
       const itemIndex = items.findIndex(
-        (item) => item.book_id === req.body.bookId
+          (item) => item.book_id === req.body.bookId
       );
 
       if (itemIndex !== -1) {
         items[itemIndex].isReview = true;
 
         await Order.update(
-          { items: JSON.stringify(items) },
-          { where: { id: req.body.orderId } }
+            {items: JSON.stringify(items)},
+            {where: {id: req.body.orderId}}
         );
       }
 
+      //tính tổng số đánh giá và trung bình số sao
+      const reviews = await Review.findAll({where: {book_id: bookId}});
+      const commentCount = reviews.length;
+      const totalStars = reviews.reduce((sum, review) => sum + review.rating, 0);
+      const averageRating = commentCount > 0 ? (totalStars / commentCount).toFixed(1) : 0;
+
+      //cập nhật rate_book trong bảng books
+      await Book.update(
+          {rate_book: averageRating},
+          {where: {book_id: bookId}}
+      );
+
       res.status(201).json(review);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+    } catch(error) {
+      res.status(500).json({error: error.message});
     }
   },
 
